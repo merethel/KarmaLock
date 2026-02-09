@@ -172,8 +172,8 @@ export function ScanButton({
               "transparent",
             ]}
             locations={[0, 0.35, 1]}
-            start={{ x: 0.5, y: -20 }}
-            end={{ x: 0.5, y: 20 }}
+            start={{ x: 0.5, y: -1 }}
+            end={{ x: 0.5, y: 1 }}
             style={styles.sweep}
           />
         </Animated.View>
