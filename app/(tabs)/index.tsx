@@ -1,31 +1,44 @@
-import { StyleSheet } from 'react-native';
+import { useState } from "react";
+import { Button, Text, TextInput, View } from "react-native";
+import { createUser } from "../../src/api/endpoints";
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function HomeScreen() {
+  const [name, setName] = useState("eeee");
+  const [email, setEmail] = useState("m@sldafkøæadskfølx.com");
+  const [password, setPassword] = useState("1234asdklfksæa56");
+  const [result, setResult] = useState<string>("");
 
-export default function TabOneScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+    <View style={{ padding: 16, gap: 12 }}>
+      <TextInput value={name} onChangeText={setName} placeholder="Name" />
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Email"
+        autoCapitalize="none"
+      />
+      <TextInput
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Password"
+        secureTextEntry
+      />
+
+      <Button
+        title="Create user"
+        onPress={async () => {
+          try {
+            const res = await createUser({ name, email, password });
+            setResult(`Created user: ${res.data.user.id}`);
+            console.log("User created:", res.data.user);
+          } catch (e: any) {
+            setResult(`Error: ${e.message}`);
+            console.log("Error creating user:", e);
+          }
+        }}
+      />
+
+      <Text>{result}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
