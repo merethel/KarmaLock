@@ -1,4 +1,5 @@
 import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
+import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { useTheme } from "@/components/theme";
 import { useState } from "react";
@@ -24,7 +25,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background }]}>
+    <Screen style={[styles.screen, { backgroundColor: theme.background }]}>
       <LoadingOverlay
         visible={loading}
         title="LOCKING..."
@@ -82,7 +83,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
-    </View>
+    </Screen>
   );
 }
 
