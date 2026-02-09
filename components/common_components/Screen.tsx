@@ -52,7 +52,7 @@ export function Screen({ style, animate = true, children, ...rest }: Props) {
     <Animated.View
       {...rest}
       style={[
-        { flex: 1, backgroundColor: theme.background },
+        { flex: 1, backgroundColor: theme.background, marginBottom: 90 },
         animate && animStyle,
         style,
       ]}
