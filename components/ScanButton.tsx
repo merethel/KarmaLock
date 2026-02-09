@@ -106,7 +106,7 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
 
   useEffect(() => {
     // Falling orb loop (top -> bottom, clipped in circle)
-    const orbDuration = scanning ? 1200 : 1800;
+    const orbDuration = scanning ? 2000 : 2600;
 
     const o = Animated.loop(
       Animated.sequence([
@@ -260,7 +260,7 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
                     "rgba(0,0,0,1)",
                     "rgba(0,0,0,0)",
                   ]}
-                  locations={[0, 0.62, 0.28, 1]}
+                  locations={[0, 0.52, 0.28, 1]}
                   start={{ x: 0.5, y: 0 }}
                   end={{ x: 0.5, y: 1 }}
                   style={StyleSheet.absoluteFill}
