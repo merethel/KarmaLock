@@ -48,7 +48,7 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
         Animated.sequence([
           Animated.delay(delayMs),
           Animated.timing(v, {
-            toValue: 1,
+            toValue: 0.99, // avoid fully reaching 1 to prevent a hard stop in the animation loop
             duration: pulseDuration,
             easing: Easing.out(Easing.quad),
             useNativeDriver: true,
@@ -65,7 +65,7 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
     const b = loopPulse(pulseB, Math.round(pulseDuration * 0.5));
 
     a.start();
-    b.start();
+    //b.start();
 
     return () => {
       a.stop();
@@ -111,6 +111,8 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
           toValue: 1,
           duration: orbDuration,
           easing: Easing.inOut(Easing.quad),
+          //make orb fall further down
+
           useNativeDriver: true,
         }),
         Animated.delay(scanning ? 80 : 220),
@@ -147,8 +149,8 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
   });
 
   const orbTranslateY = orb.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-sizes.SIZE * 0.55, sizes.SIZE * 0.55],
+    inputRange: [0, 0.7, 1],
+    outputRange: [-sizes.SIZE * 0.7, sizes.SIZE * 0.6, sizes.SIZE * 0.95],
   });
 
   const orbOpacity = orb.interpolate({
