@@ -1,19 +1,20 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+const palette = {
+  text: "#ffffff",
+  background: "#000000",
+
+  accent: "#FF2DAA", // your neon pink
+  line: "rgba(255,255,255,0.12)",
+  tint: "#FF2DAA",
+
+  tabIconDefault: "#888888",
+  tabIconSelected: "#FF2DAA",
+
+  success: "#39D98A",
+  warning: "#FFB020",
+  danger: "#FF3B30",
+};
 
 export default {
-  light: {
-    text: '#000',
-    background: '#fff',
-    tint: tintColorLight,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
-  },
+  light: palette,
+  dark: palette,
 };
