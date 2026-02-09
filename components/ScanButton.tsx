@@ -1,5 +1,8 @@
 import { Text } from "@/components/common_components/Text";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useRef } from "react";
+
 import {
     Animated,
     Easing,
@@ -246,18 +249,37 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
             <View style={styles.haze} />
 
             {/* falling orb */}
-            <Animated.View
-              style={[
-                styles.orb,
-                {
-                  transform: [
-                    { translateY: orbTranslateY },
-                    { scale: orbScale },
-                  ],
-                  opacity: orbOpacity,
-                },
-              ]}
-            />
+            <MaskedView
+              style={StyleSheet.absoluteFill}
+              maskElement={
+                <LinearGradient
+                  // alpha: 0 at top/bottom, 1 in middle
+                  colors={[
+                    "rgba(0,0,0,0)",
+                    "rgba(0,0,0,1)",
+                    "rgba(0,0,0,1)",
+                    "rgba(0,0,0,0)",
+                  ]}
+                  locations={[0, 0.62, 0.28, 1]}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+              }
+            >
+              <Animated.View
+                style={[
+                  styles.orb,
+                  {
+                    transform: [
+                      { translateY: orbTranslateY },
+                      { scale: orbScale },
+                    ],
+                    opacity: orbOpacity,
+                  },
+                ]}
+              />
+            </MaskedView>
           </View>
 
           {/* Text */}
@@ -346,16 +368,19 @@ const styles = StyleSheet.create({
     height: 220,
     marginLeft: -110,
     borderRadius: 9999,
-    backgroundColor: "rgba(255,255,255,0.18)",
+
+    // 👇 pink core instead of white haze
+    backgroundColor: "rgba(255,45,170,0.45)",
+
     ...Platform.select({
       ios: {
-        shadowColor: "#ffffff",
-        shadowOpacity: 0.25,
-        shadowRadius: 18,
+        shadowColor: "#FF2DAA",
+        shadowOpacity: 0.6,
+        shadowRadius: 28,
         shadowOffset: { width: 0, height: 0 },
       },
       android: {
-        elevation: 6,
+        elevation: 8,
       },
     }),
   },
