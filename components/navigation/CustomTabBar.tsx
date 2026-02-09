@@ -1,12 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { BlurView } from "expo-blur";
-import React from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/common_components/Text";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+
+function getIcon(routeName: string) {
+  if (routeName === "index") return "home-outline";
+  if (routeName === "vault") return "briefcase-outline";
+  return "map-outline";
+}
 
 export function CustomTabBar({
   state,
@@ -16,20 +22,34 @@ export function CustomTabBar({
   const scheme = useColorScheme() ?? "dark";
   const theme = Colors[scheme];
 
+  // One animated value per tab: 0 = inactive, 1 = active
+  const anim = useRef<Animated.Value[]>([]);
+
+  // Ensure anim array length matches routes
+  useEffect(() => {
+    if (anim.current.length !== state.routes.length) {
+      anim.current = state.routes.map(
+        (_, i) => anim.current[i] ?? new Animated.Value(0),
+      );
+    }
+    // animate to current focused
+    state.routes.forEach((_, i) => {
+      Animated.spring(anim.current[i], {
+        toValue: state.index === i ? 1 : 0,
+        useNativeDriver: true,
+        damping: 18,
+        stiffness: 220,
+        mass: 0.8,
+      }).start();
+    });
+  }, [state.index, state.routes.length]);
+
   return (
     <View pointerEvents="box-none" style={styles.wrap}>
-      <BlurView intensity={60} tint="dark" style={styles.blur}>
-        {/* Dark overlay to avoid full transparency */}
+      <BlurView intensity={70} tint="dark" style={styles.blur}>
         <View style={styles.overlay} />
 
-        <View
-          style={[
-            styles.bar,
-            {
-              borderColor: "rgba(255,255,255,0.14)",
-            },
-          ]}
-        >
+        <View style={[styles.bar, { borderColor: "rgba(255,255,255,0.14)" }]}>
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key];
             const label =
@@ -40,6 +60,24 @@ export function CustomTabBar({
             const isFocused = state.index === index;
 
             const onPress = () => {
+              // small "tap pop" even if already focused
+              Animated.sequence([
+                Animated.spring(anim.current[index], {
+                  toValue: 1.05,
+                  useNativeDriver: true,
+                  damping: 16,
+                  stiffness: 320,
+                  mass: 0.3,
+                }),
+                Animated.spring(anim.current[index], {
+                  toValue: isFocused ? 1 : 0.9,
+                  useNativeDriver: true,
+                  damping: 18,
+                  stiffness: 240,
+                  mass: 0.6,
+                }),
+              ]).start();
+
               const event = navigation.emit({
                 type: "tabPress",
                 target: route.key,
@@ -51,13 +89,34 @@ export function CustomTabBar({
               }
             };
 
-            const iconName =
-              route.name === "index"
-                ? "home-outline"
-                : route.name === "vault"
-                  ? "briefcase-outline"
-                  : "map-outline";
+            const progress =
+              anim.current[index] ?? new Animated.Value(isFocused ? 1 : 0);
 
+            // Icon scales up slightly when focused
+            const iconScale = progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [1, 1.12],
+            });
+
+            // Label fades a bit when inactive
+            const labelOpacity = progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.8, 1],
+            });
+
+            // Active indicator scales in
+            const lineScaleX = progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.4, 1],
+            });
+
+            // Optional subtle glow (opacity only)
+            const glowOpacity = progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 0.22],
+            });
+
+            const iconName = getIcon(route.name);
             const color = isFocused ? theme.tint : "rgba(255,255,255,0.55)";
 
             return (
@@ -66,22 +125,31 @@ export function CustomTabBar({
                 onPress={onPress}
                 style={({ pressed }) => [
                   styles.item,
-                  pressed && { opacity: 0.75 },
+                  pressed && { opacity: 0.9 },
                 ]}
               >
-                {/* Active top indicator */}
-                <View
+                {/* active top indicator */}
+                <Animated.View
+                  pointerEvents="none"
                   style={[
                     styles.activeLine,
-                    { backgroundColor: isFocused ? theme.tint : "transparent" },
+                    {
+                      backgroundColor: theme.tint,
+                      opacity: progress,
+                      transform: [{ scaleX: lineScaleX }],
+                    },
                   ]}
                 />
 
-                <Ionicons name={iconName as any} size={24} color={color} />
+                <Animated.View style={{ transform: [{ scale: iconScale }] }}>
+                  <Ionicons name={iconName as any} size={24} color={color} />
+                </Animated.View>
 
-                <Text mono style={[styles.label, { color }]}>
-                  {String(label).toUpperCase()}
-                </Text>
+                <Animated.View style={{ opacity: labelOpacity }}>
+                  <Text mono style={[styles.label, { color }]}>
+                    {String(label).toUpperCase()}
+                  </Text>
+                </Animated.View>
               </Pressable>
             );
           })}
@@ -110,18 +178,16 @@ const styles = StyleSheet.create({
 
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.35)", // makes it readable, not transparent
+    backgroundColor: "rgba(0,0,0,0.35)",
   },
 
   bar: {
     height: 78,
     borderRadius: 999,
     borderWidth: 1,
-
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-
     paddingHorizontal: 10,
 
     shadowColor: "#000",
