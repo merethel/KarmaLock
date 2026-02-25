@@ -5,18 +5,17 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
 
-export { ErrorBoundary } from "expo-router";
+import { onUnauthorized } from "../src/auth/authEvents";
+import { getToken } from "../src/auth/session";
 
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-};
+export { ErrorBoundary } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,6 +40,23 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
+
+  // ✅ Auth gate + auto logout redirect
+  useEffect(() => {
+    (async () => {
+      const token = await getToken();
+      setReady(true);
+      router.replace(token ? "/(tabs)" : "/(auth)/login");
+    })();
+
+    const unsubscribe = onUnauthorized(() => {
+      router.replace("/(auth)/login");
+    });
+
+    return unsubscribe;
+  }, []);
 
   // Force navigator backgrounds to black to avoid white behind animations
   const baseTheme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
@@ -60,8 +76,8 @@ function RootLayoutNav() {
           contentStyle: { backgroundColor: "#000000" }, // extra safety
         }}
       >
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
   );
