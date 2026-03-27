@@ -5,7 +5,7 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
+    "ios": "xcrun simctl shutdown all; xcrun simctl boot \"iPhone 15\" || true; open -a Simulator; EXPO_IOS_SIMULATOR_DEVICE=\"iPhone 15\" expo start --ios",
     "web": "expo start --web"
   },
   "dependencies": {
@@ -16,6 +16,7 @@
     "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
+    "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
     "expo-router": "~6.0.23",

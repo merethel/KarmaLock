@@ -2,6 +2,7 @@ import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { ScanButton } from "@/components/ScanButton";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -9,6 +10,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false);
   const [lastChip, setLastChip] = useState<string>("");
   const [mode, setMode] = useState<"idle" | "scanning">("idle");
+  const router = useRouter();
 
   async function mockScan() {
     setLoading(true);
@@ -24,6 +26,7 @@ export default function HomeScreen() {
 
     setLoading(false);
     setMode("idle");
+    router.push({ pathname: "/add-belonging", params: { chipUid } });
   }
 
   return (
