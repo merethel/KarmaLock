@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
+import { palette } from "@/constants/Colors";
 import { register } from "../../src/api/auth";
 import { ApiError, isApiUrlLocalhostOnDevice } from "../../src/api/client";
 import { offerBiometricEnrollmentAfterAuth } from "../../src/auth/biometrics";
@@ -75,7 +76,7 @@ export default function RegisterScreen() {
 
         <Text style={{ fontSize: 28, fontWeight: "900", letterSpacing: 0.5 }}>
           {t("register.titleCreate")}
-          <Text style={{ color: "#FF2DAA" }}>{t("register.titleAccount")}</Text>
+          <Text style={{ color: palette.accent }}>{t("register.titleAccount")}</Text>
         </Text>
 
         <Text dim style={{ marginTop: 6 }}>{t("register.subtitle")}</Text>

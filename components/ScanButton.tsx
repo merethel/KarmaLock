@@ -4,14 +4,15 @@ import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useRef } from "react";
 
+import { palette } from "@/constants/Colors";
 import {
-    Animated,
-    Easing,
-    Platform,
-    Pressable,
-    StyleSheet,
-    View,
-    ViewStyle,
+  Animated,
+  Easing,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  ViewStyle,
 } from "react-native";
 
 type Mode = "idle" | "scanning";
@@ -21,8 +22,6 @@ type Props = {
   onPress?: () => void;
   style?: ViewStyle;
 };
-
-const PINK = "#FF2DAA";
 
 export function ScanButton({ mode = "idle", onPress, style }: Props) {
   const { t } = useI18n();
@@ -180,7 +179,7 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
             {
               width: sizes.RING,
               height: sizes.RING,
-              borderColor: PINK,
+              borderColor: palette.accent,
             },
             pulseStyle(pulseA),
           ]}
@@ -192,7 +191,7 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
             {
               width: sizes.RING,
               height: sizes.RING,
-              borderColor: PINK,
+              borderColor: palette.accent,
             },
             pulseStyle(pulseB),
           ]}
@@ -332,10 +331,10 @@ const styles = StyleSheet.create({
       { translateX: -(260 + 22) / 2 },
       { translateY: -(260 + 22) / 2 },
     ],
-    backgroundColor: "rgba(255,107,213,0.12)",
+    backgroundColor: palette.accentSubtleMid,
     ...Platform.select({
       ios: {
-        shadowColor: PINK,
+        shadowColor: palette.accent,
         shadowOpacity: 0.9,
         shadowRadius: 36,
         shadowOffset: { width: 0, height: 0 },
@@ -361,7 +360,7 @@ const styles = StyleSheet.create({
 
   haze: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,45,170,0.03)",
+    backgroundColor: palette.accentWash,
   },
 
   orb: {
@@ -373,11 +372,11 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
 
     // 👇 pink core instead of white haze
-    backgroundColor: "rgba(255,45,170,0.45)",
+    backgroundColor: palette.accentTrack,
 
     ...Platform.select({
       ios: {
-        shadowColor: "#FF2DAA",
+        shadowColor: palette.accent,
         shadowOpacity: 0.6,
         shadowRadius: 28,
         shadowOffset: { width: 0, height: 0 },

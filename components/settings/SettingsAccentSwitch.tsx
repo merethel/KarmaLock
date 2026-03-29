@@ -1,3 +1,4 @@
+import { palette } from "@/constants/Colors";
 import { settingsTheme } from "./theme";
 import { Switch } from "react-native";
 
@@ -6,7 +7,7 @@ type Props = {
   onValueChange: (value: boolean) => void;
 };
 
-const track = { false: "#333" as const, true: "rgba(255,45,170,0.45)" as const };
+const track = { false: "#333" as const, true: palette.accentTrack };
 
 export function SettingsAccentSwitch({ value, onValueChange }: Props) {
   return (

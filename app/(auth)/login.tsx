@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { InteractionManager, Keyboard, TextInput, View } from "react-native";
 
+import { palette } from "@/constants/Colors";
 import { login } from "@/src/api/auth";
 import { ApiError, isApiUrlLocalhostOnDevice } from "@/src/api/client";
 import { offerBiometricEnrollmentAfterAuth } from "@/src/auth/biometrics";
@@ -87,7 +88,7 @@ export default function LoginScreen() {
 
         <Text style={{ fontSize: 28, fontWeight: "900", letterSpacing: 0.5 }}>
           {t("login.brandKarma")}
-          <Text style={{ color: "#FF2DAA" }}>{t("login.brandLock")}</Text>
+          <Text style={{ color: palette.accent }}>{t("login.brandLock")}</Text>
         </Text>
 
         <Text dim style={{ marginTop: 6 }}>

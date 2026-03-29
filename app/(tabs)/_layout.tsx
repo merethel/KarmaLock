@@ -23,7 +23,7 @@ export default function TabLayout() {
       }}
       tabBar={(props) => <CustomTabBar {...props} />}
     >
-      <Tabs.Screen name="index" options={{ title: t("tabs.cmd") }} />
+      <Tabs.Screen name="index" options={{ title: t("tabs.scan") }} />
       <Tabs.Screen name="vault" options={{ title: t("tabs.vault") }} />
       <Tabs.Screen name="settings" options={{ title: t("tabs.settings") }} />
     </Tabs>

@@ -9,9 +9,9 @@ import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 
 function getIcon(routeName: string) {
-  if (routeName === "index") return "home-outline";
-  if (routeName === "vault") return "briefcase-outline";
-  return "map-outline";
+  if (routeName === "index") return "scan-outline";
+  if (routeName === "vault") return "grid-outline";
+  return "settings-outline";
 }
 
 export function CustomTabBar({

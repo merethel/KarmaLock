@@ -2,6 +2,7 @@ import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { ScanButton } from "@/components/ScanButton";
+import { palette } from "@/constants/Colors";
 import { useI18n } from "@/src/i18n/context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
 
   header: { gap: 6 },
   brand: { fontSize: 26, fontWeight: "900", letterSpacing: 0.5 },
-  brandAccent: { color: "#FF2DAA" },
+  brandAccent: { color: palette.accent },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   lastUid: { marginTop: 18, letterSpacing: 1.4 },

@@ -7,6 +7,7 @@
  */
 import { Button } from "@/components/common_components/Button";
 import { Text } from "@/components/common_components/Text";
+import { palette } from "@/constants/Colors";
 import {
   authenticateWithBiometric,
   setBiometricUnlockEnabled,
@@ -74,7 +75,7 @@ export default function UnlockScreen() {
       </Text>
 
       {busy ? (
-        <ActivityIndicator size="large" color="#FF2DAA" />
+        <ActivityIndicator size="large" color={palette.accent} />
       ) : (
         <Text dim style={{ textAlign: "center", lineHeight: 22 }}>
           {t("biometric.unlockHint")}

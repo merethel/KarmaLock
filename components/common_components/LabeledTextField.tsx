@@ -6,6 +6,8 @@ import {
   View,
 } from "react-native";
 
+import { palette } from "@/constants/Colors";
+
 import { Text } from "./Text";
 
 /** Brighter auth/form fields — border, fill, label, and input text read clearly on dark bg. */
@@ -35,7 +37,7 @@ export const LabeledTextField = forwardRef<TextInput, LabeledTextFieldProps>(
           ref={ref}
           {...rest}
           placeholderTextColor={placeholderTextColor ?? C.placeholder}
-          selectionColor="rgba(255,45,170,0.9)"
+          selectionColor={palette.selection}
           style={[styles.input, style]}
         />
       </View>

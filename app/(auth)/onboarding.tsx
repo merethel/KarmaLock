@@ -1,6 +1,6 @@
 import { Button } from "@/components/common_components/Button";
 import { Text } from "@/components/common_components/Text";
-import Colors from "@/constants/Colors";
+import Colors, { palette } from "@/constants/Colors";
 import { useI18n } from "@/src/i18n/context";
 import type { TranslationKey } from "@/src/i18n/types";
 import { setOnboardingComplete } from "@/src/onboarding/storage";
@@ -174,8 +174,8 @@ export default function OnboardingScreen() {
               <LinearGradient
                 pointerEvents="none"
                 colors={[
-                  "rgba(255,45,170,0.14)",
-                  "rgba(255,45,170,0.04)",
+                  palette.accentGlow,
+                  palette.accentGlowSoft,
                   "transparent",
                 ]}
                 locations={[0, 0.35, 1]}
@@ -189,9 +189,9 @@ export default function OnboardingScreen() {
                   width: 104,
                   height: 104,
                   borderRadius: 34,
-                  backgroundColor: "rgba(255,45,170,0.18)",
+                  backgroundColor: palette.accentSurface,
                   borderWidth: 1,
-                  borderColor: "rgba(255,45,170,0.45)",
+                  borderColor: palette.accentBorder,
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 28,

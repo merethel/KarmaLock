@@ -1,4 +1,5 @@
 import { Text } from "@/components/common_components/Text";
+import { palette } from "@/constants/Colors";
 import { useI18n } from "@/src/i18n/context";
 import type { Locale } from "@/src/i18n/types";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -21,10 +22,10 @@ export function LanguageRow({
         borderRadius: 14,
         borderWidth: 1,
         borderColor: selected
-          ? "rgba(255,45,170,0.55)"
+          ? palette.accentBorderStrong
           : "rgba(255,255,255,0.14)",
         backgroundColor: selected
-          ? "rgba(255,45,170,0.10)"
+          ? palette.accentSubtle
           : "rgba(255,255,255,0.03)",
         paddingHorizontal: 16,
         flexDirection: "row",
@@ -34,7 +35,7 @@ export function LanguageRow({
     >
       <Text style={{ fontSize: 16, fontWeight: "800" }}>{label}</Text>
       {selected ? (
-        <Text style={{ color: "#FF2DAA", fontWeight: "900" }}>✓</Text>
+        <Text style={{ color: palette.accent, fontWeight: "900" }}>✓</Text>
       ) : null}
     </Pressable>
   );
@@ -75,10 +76,10 @@ export function LanguageFlagSwitcher() {
               styles.flagChip,
               {
                 borderColor: selected
-                  ? "rgba(255,45,170,0.45)"
+                  ? palette.accentBorder
                   : "rgba(255,255,255,0.10)",
                 backgroundColor: selected
-                  ? "rgba(255,45,170,0.10)"
+                  ? palette.accentSubtle
                   : "rgba(255,255,255,0.04)",
                 opacity: pressed ? 0.85 : 1,
               },
