@@ -2,11 +2,13 @@ import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { ScanButton } from "@/components/ScanButton";
+import { useI18n } from "@/src/i18n/context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [lastChip, setLastChip] = useState<string>("");
   const [mode, setMode] = useState<"idle" | "scanning">("idle");
@@ -33,18 +35,17 @@ export default function HomeScreen() {
     <Screen style={styles.screen}>
       <LoadingOverlay
         visible={loading}
-        title="LOCKING..."
-        subtitle="VERIFYING NFC SIGNATURE"
+        title={t("home.locking")}
+        subtitle={t("home.verifyingNfc")}
       />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text muted mono style={styles.systemReady}>
-          SYSTEM READY
-        </Text>
-
         <Text style={styles.brand}>
-          KARMA<Text style={[styles.brand, styles.brandAccent]}>LOCK</Text>
+          {t("home.brandKarma")}
+          <Text style={[styles.brand, styles.brandAccent]}>
+            {t("home.brandLock")}
+          </Text>
         </Text>
       </View>
 
@@ -57,18 +58,18 @@ export default function HomeScreen() {
       <View style={styles.footer}>
         <View style={styles.footerBlock}>
           <Text muted mono style={styles.footerLabel}>
-            ASSETS
+            {t("home.assets")}
           </Text>
           <Text style={styles.footerValue}>2</Text>
         </View>
 
         <View style={styles.footerBlockRight}>
           <Text muted mono style={styles.footerLabel}>
-            SYSTEM
+            {t("home.system")}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <View style={[styles.dot, { backgroundColor: "#39D98A" }]} />
-            <Text style={styles.footerValue}>ONLINE</Text>
+            <Text style={styles.footerValue}>{t("home.online")}</Text>
           </View>
         </View>
       </View>
@@ -77,10 +78,9 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingTop: 24, paddingHorizontal: 20 },
+  screen: { flex: 1, paddingHorizontal: 20 },
 
   header: { gap: 6 },
-  systemReady: { letterSpacing: 2, fontSize: 12 },
   brand: { fontSize: 26, fontWeight: "900", letterSpacing: 0.5 },
   brandAccent: { color: "#FF2DAA" },
 

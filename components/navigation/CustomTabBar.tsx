@@ -70,7 +70,7 @@ export function CustomTabBar({
                   mass: 0.3,
                 }),
                 Animated.spring(anim.current[index], {
-                  toValue: isFocused ? 1 : 0.9,
+                  toValue: 1,
                   useNativeDriver: true,
                   damping: 18,
                   stiffness: 240,

@@ -5,12 +5,12 @@ import { Text } from "./Text";
 
 export function LoadingOverlay({
   visible,
-  title = "LOCKING...",
-  subtitle = "VERIFYING NFC SIGNATURE",
+  title,
+  subtitle,
 }: {
   visible: boolean;
-  title?: string;
-  subtitle?: string;
+  title: string;
+  subtitle: string;
 }) {
   const scheme = useColorScheme() ?? "dark";
   const theme = Colors[scheme];

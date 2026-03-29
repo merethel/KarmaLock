@@ -8,12 +8,16 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
 
+import { shouldUseBiometricGate } from "../src/auth/biometrics";
 import { onUnauthorized } from "../src/auth/authEvents";
 import { getToken } from "../src/auth/session";
+import { I18nProvider } from "../src/i18n/context";
+import { getOnboardingComplete } from "../src/onboarding/storage";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -35,20 +39,35 @@ export default function RootLayout() {
 
   if (!loaded) return null;
 
-  return <RootLayoutNav />;
+  return (
+    <I18nProvider>
+      <RootLayoutNav />
+    </I18nProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [navReady, setNavReady] = useState(false);
 
-  // ✅ Auth gate + auto logout redirect
+  // Auth gate, onboarding first launch, auto logout redirect
   useEffect(() => {
     (async () => {
       const token = await getToken();
-      setReady(true);
-      router.replace(token ? "/(tabs)" : "/(auth)/login");
+      const onboardingDone = await getOnboardingComplete();
+      if (token) {
+        if (await shouldUseBiometricGate()) {
+          router.replace("/unlock");
+        } else {
+          router.replace("/(tabs)");
+        }
+      } else if (!onboardingDone) {
+        router.replace("/(auth)/onboarding");
+      } else {
+        router.replace("/(auth)/login");
+      }
+      setNavReady(true);
     })();
 
     const unsubscribe = onUnauthorized(() => {
@@ -71,18 +90,38 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={AppTheme}>
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: "#000000" }, // extra safety
-        }}
-      >
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="add-belonging"
-          options={{ presentation: "modal", headerShown: false }}
-        />
-      </Stack>
+      <View style={{ flex: 1, backgroundColor: "#000000" }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "#000000" },
+            fullScreenGestureEnabled: true,
+            gestureEnabled: true,
+            animationMatchesGesture: true,
+            ...(Platform.OS === "android"
+              ? { animation: "ios_from_right" as const }
+              : {}),
+          }}
+        >
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="unlock" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="add-belonging"
+            options={{
+              presentation: "modal",
+              animation: "slide_from_bottom",
+              animationDuration: 420,
+            }}
+          />
+        </Stack>
+        {!navReady ? (
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: "#000000" }]}
+          />
+        ) : null}
+      </View>
     </ThemeProvider>
   );
 }

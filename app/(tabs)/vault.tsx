@@ -7,31 +7,33 @@ import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, View } from "react-native";
 
 import { Belonging, listMyBelongings } from "../../src/api/belongings";
+import { useI18n } from "../../src/i18n/context";
 
 export default function VaultScreen() {
+  const { t } = useI18n();
   const [items, setItems] = useState<Belonging[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setError("");
       const res = await listMyBelongings();
       setItems(res.data.items || []);
     } catch (e: any) {
-      setError(e?.message || "Failed to load belongings");
+      setError(e?.message || t("errors.loadBelongingsFailed"));
     } finally {
       setLoading(false);
     }
-  }
+  }, [t]);
 
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
-      load();
-    }, []),
+      void load();
+    }, [load]),
   );
 
   async function onRefresh() {
@@ -41,14 +43,12 @@ export default function VaultScreen() {
   }
 
   return (
-    <Screen style={{ paddingTop: 24, paddingHorizontal: 20 }}>
+    <Screen style={{ paddingHorizontal: 20 }}>
       {/* Header */}
       <View style={{ gap: 6 }}>
-        <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-          VAULT INDEX
+        <Text style={{ fontSize: 26, fontWeight: "900" }}>
+          {t("vault.title")}
         </Text>
-
-        <Text style={{ fontSize: 26, fontWeight: "900" }}>YOUR BELONGINGS</Text>
 
         <View
           style={{
@@ -57,13 +57,13 @@ export default function VaultScreen() {
             marginTop: 6,
           }}
         >
-          <Text dim>Registered assets</Text>
+          <Text dim>{t("vault.registeredAssets")}</Text>
           <Text style={{ fontWeight: "900" }}>{items.length}</Text>
         </View>
         {/* ✅ Action */}
         <View style={{ marginTop: 14 }}>
           <Button
-            title="ADD NEW BELONGING"
+            title={t("vault.addNew")}
             variant="outline"
             onPress={() => router.push("/add-belonging")}
           />
@@ -86,17 +86,14 @@ export default function VaultScreen() {
           ListEmptyComponent={
             loading ? (
               <Text dim style={{ marginTop: 20 }}>
-                Loading...
+                {t("vault.loading")}
               </Text>
             ) : (
               <View style={{ marginTop: 20, gap: 10 }}>
                 <Text style={{ fontSize: 18, fontWeight: "800" }}>
-                  No belongings yet
+                  {t("vault.emptyTitle")}
                 </Text>
-                <Text dim>
-                  Scan a chip in CMD and register it to add your first item to
-                  the vault.
-                </Text>
+                <Text dim>{t("vault.emptyBody")}</Text>
               </View>
             )
           }
@@ -109,6 +106,8 @@ export default function VaultScreen() {
 }
 
 function BelongingRow({ item }: { item: Belonging }) {
+  const { t } = useI18n();
+
   return (
     <Pressable
       onPress={() => {
@@ -138,7 +137,7 @@ function BelongingRow({ item }: { item: Belonging }) {
             </Text>
           ) : (
             <Text muted mono style={{ letterSpacing: 1.6, fontSize: 12 }}>
-              CHIP: {item.chipUid}
+              {t("vault.chip")}: {item.chipUid}
             </Text>
           )}
         </View>
@@ -150,6 +149,8 @@ function BelongingRow({ item }: { item: Belonging }) {
 }
 
 function StatusPill({ stolen }: { stolen: boolean }) {
+  const { t } = useI18n();
+
   return (
     <View
       style={{
@@ -165,7 +166,7 @@ function StatusPill({ stolen }: { stolen: boolean }) {
       }}
     >
       <Text mono muted style={{ letterSpacing: 1.6, fontSize: 12 }}>
-        {stolen ? "STOLEN" : "OK"}
+        {stolen ? t("vault.statusStolen") : t("vault.statusOk")}
       </Text>
     </View>
   );

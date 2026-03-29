@@ -1,14 +1,19 @@
+import { LoginLanguageFlags } from "@/components/LanguagePicker";
 import { Button } from "@/components/common_components/Button";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { InteractionManager, Keyboard, TextInput, View } from "react-native";
 
-import { login } from "@/src/api/auth"; // adjust if your path is different
-import { setSession } from "@/src/auth/session"; // adjust if your path is different
+import { login } from "@/src/api/auth";
+import { ApiError, isApiUrlLocalhostOnDevice } from "@/src/api/client";
+import { offerBiometricEnrollmentAfterAuth } from "@/src/auth/biometrics";
+import { setSession } from "@/src/auth/session";
+import { useI18n } from "@/src/i18n/context";
 
 export default function LoginScreen() {
+  const { t } = useI18n();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -16,6 +21,21 @@ export default function LoginScreen() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+
+  function goToRegister() {
+    Keyboard.dismiss();
+    emailRef.current?.blur();
+    passwordRef.current?.blur();
+    setError("");
+    setEmail("");
+    setPassword("");
+    InteractionManager.runAfterInteractions(() => {
+      router.push("/(auth)/register");
+    });
+  }
 
   async function onLogin() {
     try {
@@ -27,28 +47,50 @@ export default function LoginScreen() {
 
       await setSession(token, user);
 
-      router.replace("/(tabs)");
-    } catch (e: any) {
-      setError(e?.message || "Login failed");
+      offerBiometricEnrollmentAfterAuth(router, t);
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        if (e.status === 401) {
+          setError(t("errors.wrongEmailOrPassword"));
+        } else {
+          setError(e.message.trim() ? e.message : t("errors.loginFailed"));
+        }
+      } else if (e instanceof Error) {
+        const m = e.message;
+        if (
+          /network|Network request failed|Failed to fetch|Internet/i.test(m)
+        ) {
+          setError(
+            isApiUrlLocalhostOnDevice()
+              ? t("errors.networkLocalhostOnDevice")
+              : t("errors.network"),
+          );
+        } else {
+          setError(m || t("errors.loginFailed"));
+        }
+      } else {
+        setError(t("errors.loginFailed"));
+      }
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Screen style={{ paddingTop: 24, paddingHorizontal: 20 }}>
+    <Screen style={{ paddingHorizontal: 20 }}>
       {/* Header */}
       <View style={{ gap: 8, marginTop: 10 }}>
         <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-          ACCESS CONTROL
+          {t("login.accessControl")}
         </Text>
 
         <Text style={{ fontSize: 28, fontWeight: "900", letterSpacing: 0.5 }}>
-          KARMA<Text style={{ color: "#FF2DAA" }}>LOCK</Text>
+          {t("login.brandKarma")}
+          <Text style={{ color: "#FF2DAA" }}>{t("login.brandLock")}</Text>
         </Text>
 
         <Text dim style={{ marginTop: 6 }}>
-          Sign in to manage your vault.
+          {t("login.subtitle")}
         </Text>
       </View>
 
@@ -56,14 +98,17 @@ export default function LoginScreen() {
       <View style={{ marginTop: 28, gap: 12 }}>
         <View style={{ gap: 8 }}>
           <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            EMAIL
+            {t("login.email")}
           </Text>
           <TextInput
+            ref={emailRef}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
-            placeholder="merethe@test.com"
+            textContentType="emailAddress"
+            autoComplete="email"
+            placeholder={t("login.placeholderEmail")}
             placeholderTextColor="rgba(255,255,255,0.35)"
             style={{
               height: 54,
@@ -79,12 +124,15 @@ export default function LoginScreen() {
 
         <View style={{ gap: 8 }}>
           <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            PASSWORD
+            {t("login.password")}
           </Text>
           <TextInput
+            ref={passwordRef}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            textContentType="password"
+            autoComplete="password"
             placeholder="••••••••"
             placeholderTextColor="rgba(255,255,255,0.35)"
             style={{
@@ -105,24 +153,26 @@ export default function LoginScreen() {
 
         <View style={{ marginTop: 8, gap: 10 }}>
           <Button
-            title={busy ? "SIGNING IN..." : "SIGN IN"}
+            title={busy ? t("login.signingIn") : t("login.signIn")}
             onPress={onLogin}
             disabled={busy || !email.trim() || !password}
           />
 
           <Button
-            title="CREATE ACCOUNT"
+            title={t("login.createAccount")}
             variant="ghost"
-            onPress={() => router.push("/(auth)/register")}
+            onPress={goToRegister}
             disabled={busy}
           />
+
+          <LoginLanguageFlags />
         </View>
       </View>
 
       {/* Footer */}
       <View style={{ marginTop: "auto", paddingBottom: 24 }}>
         <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-          SYSTEM STATUS
+          {t("login.systemStatus")}
         </Text>
         <View
           style={{
@@ -140,7 +190,9 @@ export default function LoginScreen() {
               backgroundColor: "rgba(57,217,138,1)",
             }}
           />
-          <Text style={{ fontSize: 16, fontWeight: "800" }}>ONLINE</Text>
+          <Text style={{ fontSize: 16, fontWeight: "800" }}>
+            {t("login.online")}
+          </Text>
         </View>
       </View>
     </Screen>

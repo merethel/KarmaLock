@@ -7,13 +7,15 @@ import { useMemo, useState } from "react";
 import { TextInput, View } from "react-native";
 
 import {
-    describeBelongingPhoto,
-    takePhoto,
-    type AiSuggestion,
+  describeBelongingPhoto,
+  takePhoto,
+  type AiSuggestion,
 } from "../src/api/ai";
 import { createBelonging } from "../src/api/belongings";
+import { useI18n } from "../src/i18n/context";
 
 export default function AddBelongingScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const params = useLocalSearchParams<{ chipUid?: string }>();
 
@@ -43,7 +45,7 @@ export default function AddBelongingScreen() {
       setError("");
       setBusy(true);
 
-      if (!chipUid) throw new Error("Scan a chip first");
+      if (!chipUid) throw new Error(t("errors.scanChipFirst"));
 
       const uri = await takePhoto();
       setPhotoUri(uri);
@@ -55,7 +57,7 @@ export default function AddBelongingScreen() {
       setTitle(suggestion.title || "");
       setDescription(suggestion.description || "");
     } catch (e: any) {
-      setError(e?.message || "Failed");
+      setError(e?.message || t("errors.failed"));
     } finally {
       setBusy(false);
     }
@@ -66,8 +68,8 @@ export default function AddBelongingScreen() {
       setError("");
       setBusy(true);
 
-      if (!chipUid) throw new Error("Missing chipUid");
-      if (!title.trim()) throw new Error("Title is required");
+      if (!chipUid) throw new Error(t("errors.missingChip"));
+      if (!title.trim()) throw new Error(t("errors.titleRequired"));
 
       await createBelonging({
         chipUid,
@@ -84,25 +86,27 @@ export default function AddBelongingScreen() {
 
       router.back(); // go back to vault/cmd
     } catch (e: any) {
-      setError(e?.message || "Failed to create belonging");
+      setError(e?.message || t("errors.createBelongingFailed"));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Screen style={{ paddingTop: 24, paddingHorizontal: 20 }}>
+    <Screen style={{ paddingHorizontal: 20 }}>
       <LoadingOverlay
         visible={busy}
-        title="PROCESSING..."
-        subtitle="ANALYZING IMAGE"
+        title={t("addBelonging.processing")}
+        subtitle={t("addBelonging.analyzing")}
       />
 
       <View style={{ gap: 6 }}>
         <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-          NEW ASSET
+          {t("addBelonging.newAsset")}
         </Text>
-        <Text style={{ fontSize: 26, fontWeight: "900" }}>ADD BELONGING</Text>
+        <Text style={{ fontSize: 26, fontWeight: "900" }}>
+          {t("addBelonging.title")}
+        </Text>
       </View>
 
       {error ? (
@@ -113,12 +117,12 @@ export default function AddBelongingScreen() {
         {/* Chip */}
         <View style={{ gap: 8 }}>
           <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            CHIP UID
+            {t("addBelonging.chipUid")}
           </Text>
           <TextInput
             value={chipUid}
             onChangeText={setChipUid}
-            placeholder="Scan chip to fill..."
+            placeholder={t("addBelonging.chipPlaceholder")}
             placeholderTextColor="rgba(255,255,255,0.35)"
             style={{
               height: 54,
@@ -131,7 +135,7 @@ export default function AddBelongingScreen() {
             }}
           />
           <Button
-            title="SCAN CHIP (MOCK)"
+            title={t("addBelonging.scanChipMock")}
             variant="outline"
             onPress={mockScanChip}
           />
@@ -139,26 +143,31 @@ export default function AddBelongingScreen() {
 
         {/* Photo + AI */}
         <Button
-          title={photoUri ? "RETAKE PHOTO + AUTOFILL" : "TAKE PHOTO + AUTOFILL"}
+          title={
+            photoUri
+              ? t("addBelonging.retakePhotoAutofill")
+              : t("addBelonging.takePhotoAutofill")
+          }
           onPress={onTakePhotoAndAutofill}
           disabled={!chipUid}
         />
 
         {ai?.confidence !== undefined ? (
           <Text muted mono style={{ letterSpacing: 1.6 }}>
-            AI CONFIDENCE: {Math.round((ai.confidence || 0) * 100)}%
+            {t("addBelonging.aiConfidence")}:{" "}
+            {Math.round((ai.confidence || 0) * 100)}%
           </Text>
         ) : null}
 
         {/* Form */}
         <View style={{ gap: 8 }}>
           <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            TITLE
+            {t("addBelonging.titleField")}
           </Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder="e.g. Trek FX 2 Disc"
+            placeholder={t("addBelonging.titlePlaceholder")}
             placeholderTextColor="rgba(255,255,255,0.35)"
             style={{
               height: 54,
@@ -174,12 +183,12 @@ export default function AddBelongingScreen() {
 
         <View style={{ gap: 8 }}>
           <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            DESCRIPTION
+            {t("addBelonging.description")}
           </Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Optional notes…"
+            placeholder={t("addBelonging.descriptionPlaceholder")}
             placeholderTextColor="rgba(255,255,255,0.35)"
             multiline
             style={{
@@ -196,12 +205,16 @@ export default function AddBelongingScreen() {
         </View>
 
         <Button
-          title="ADD TO VAULT"
+          title={t("addBelonging.addToVault")}
           onPress={onCreate}
           disabled={!chipUid || !title.trim()}
         />
 
-        <Button title="CANCEL" variant="ghost" onPress={() => router.back()} />
+        <Button
+          title={t("addBelonging.cancel")}
+          variant="ghost"
+          onPress={() => router.back()}
+        />
       </View>
     </Screen>
   );

@@ -1,4 +1,5 @@
 import { Text } from "@/components/common_components/Text";
+import { useI18n } from "@/src/i18n/context";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useRef } from "react";
@@ -24,6 +25,8 @@ type Props = {
 const PINK = "#FF2DAA";
 
 export function ScanButton({ mode = "idle", onPress, style }: Props) {
+  const { t } = useI18n();
+
   // --- outer pulse rings ---
   const pulseA = useRef(new Animated.Value(0)).current;
   const pulseB = useRef(new Animated.Value(0)).current;
@@ -284,11 +287,11 @@ export function ScanButton({ mode = "idle", onPress, style }: Props) {
 
           {/* Text */}
           <View style={styles.textStack}>
-            <Text style={styles.scanText}>SCAN</Text>
+            <Text style={styles.scanText}>{t("scan.scan")}</Text>
 
             <View style={styles.pill}>
               <Text muted mono style={styles.pillText}>
-                INITIATE // NFC
+                {t("scan.initiateNfc")}
               </Text>
             </View>
           </View>
