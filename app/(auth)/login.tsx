@@ -1,5 +1,6 @@
 import { LanguageFlagSwitcher } from "@/components/LanguagePicker";
 import { Button } from "@/components/common_components/Button";
+import { LabeledTextField } from "@/components/common_components/LabeledTextField";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { useRouter } from "expo-router";
@@ -95,57 +96,29 @@ export default function LoginScreen() {
       </View>
 
       {/* Form */}
-      <View style={{ marginTop: 28, gap: 12 }}>
-        <View style={{ gap: 8 }}>
-          <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            {t("login.email")}
-          </Text>
-          <TextInput
-            ref={emailRef}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            autoComplete="email"
-            placeholder={t("login.placeholderEmail")}
-            placeholderTextColor="rgba(255,255,255,0.35)"
-            style={{
-              height: 54,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.14)",
-              paddingHorizontal: 14,
-              color: "white",
-              fontSize: 16,
-            }}
-          />
-        </View>
+      <View style={{ marginTop: 28, gap: 16 }}>
+        <LabeledTextField
+          ref={emailRef}
+          label={t("login.email")}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          autoComplete="email"
+          placeholder={t("login.placeholderEmail")}
+        />
 
-        <View style={{ gap: 8 }}>
-          <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            {t("login.password")}
-          </Text>
-          <TextInput
-            ref={passwordRef}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            textContentType="password"
-            autoComplete="password"
-            placeholder="••••••••"
-            placeholderTextColor="rgba(255,255,255,0.35)"
-            style={{
-              height: 54,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.14)",
-              paddingHorizontal: 14,
-              color: "white",
-              fontSize: 16,
-            }}
-          />
-        </View>
+        <LabeledTextField
+          ref={passwordRef}
+          label={t("login.password")}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          textContentType="password"
+          autoComplete="password"
+          placeholder="••••••••"
+        />
 
         {error ? (
           <Text style={{ color: "tomato", marginTop: 6 }}>{error}</Text>

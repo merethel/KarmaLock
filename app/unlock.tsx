@@ -1,3 +1,10 @@
+/**
+ * Unlock screen
+ *
+ * This screen is displayed when the user tries to access the app without being authenticated.
+ * It displays a message and a button to authenticate with biometrics.
+ * If the authentication fails, it displays a message and a button to sign in with a password.
+ */
 import { Button } from "@/components/common_components/Button";
 import { Text } from "@/components/common_components/Text";
 import {
@@ -76,7 +83,10 @@ export default function UnlockScreen() {
 
       {showActions && !busy ? (
         <View style={{ width: "100%", gap: 12, marginTop: 8 }}>
-          <Button title={t("biometric.retry")} onPress={() => void doUnlock()} />
+          <Button
+            title={t("biometric.retry")}
+            onPress={() => void doUnlock()}
+          />
           <Button
             title={t("biometric.usePassword")}
             variant="ghost"

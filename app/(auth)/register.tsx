@@ -1,9 +1,10 @@
 import { Button } from "@/components/common_components/Button";
+import { LabeledTextField } from "@/components/common_components/LabeledTextField";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { TextInput, View } from "react-native";
+import { View } from "react-native";
 
 import { register } from "../../src/api/auth";
 import { ApiError, isApiUrlLocalhostOnDevice } from "../../src/api/client";
@@ -81,81 +82,39 @@ export default function RegisterScreen() {
       </View>
 
       {/* Form */}
-      <View style={{ marginTop: 28, gap: 12 }}>
-        <View style={{ gap: 8 }}>
-          <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            {t("register.name")}
-          </Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            textContentType="name"
-            autoComplete="name"
-            autoCorrect={false}
-            placeholder={t("register.placeholderName")}
-            placeholderTextColor="rgba(255,255,255,0.35)"
-            style={{
-              height: 54,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.14)",
-              paddingHorizontal: 14,
-              color: "white",
-              fontSize: 16,
-            }}
-          />
-        </View>
+      <View style={{ marginTop: 28, gap: 16 }}>
+        <LabeledTextField
+          label={t("register.name")}
+          value={name}
+          onChangeText={setName}
+          textContentType="name"
+          autoComplete="name"
+          autoCorrect={false}
+          placeholder={t("register.placeholderName")}
+        />
 
-        <View style={{ gap: 8 }}>
-          <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            {t("register.email")}
-          </Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            autoComplete="email"
-            placeholder={t("register.placeholderEmail")}
-            placeholderTextColor="rgba(255,255,255,0.35)"
-            style={{
-              height: 54,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.14)",
-              paddingHorizontal: 14,
-              color: "white",
-              fontSize: 16,
-            }}
-          />
-        </View>
+        <LabeledTextField
+          label={t("register.email")}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          autoComplete="email"
+          placeholder={t("register.placeholderEmail")}
+        />
 
-        <View style={{ gap: 8 }}>
-          <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
-            {t("register.password")}
-          </Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            textContentType="newPassword"
-            autoComplete="password-new"
-            autoCorrect={false}
-            passwordRules=""
-            placeholder={t("register.placeholderPasswordHint")}
-            placeholderTextColor="rgba(255,255,255,0.35)"
-            style={{
-              height: 54,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.14)",
-              paddingHorizontal: 14,
-              color: "white",
-              fontSize: 16,
-            }}
-          />
-        </View>
+        <LabeledTextField
+          label={t("register.password")}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          textContentType="newPassword"
+          autoComplete="password-new"
+          autoCorrect={false}
+          passwordRules=""
+          placeholder={t("register.placeholderPasswordHint")}
+        />
 
         {error ? (
           <Text style={{ color: "tomato", marginTop: 6 }}>{error}</Text>
