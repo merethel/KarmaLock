@@ -86,5 +86,9 @@ export async function apiFetch<T>(
     throw new ApiError(msg, res.status);
   }
 
+  if (json == null) {
+    return { message: "", data: undefined as T };
+  }
+
   return json as ApiResponse<T>;
 }

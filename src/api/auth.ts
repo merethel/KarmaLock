@@ -23,11 +23,7 @@ export async function me() {
   return apiFetch<{ user: any }>("/auth/me");
 }
 
-/** Best-effort remote deletion; callers should clear local session regardless. */
+/** Deletes the account on the server. Throws `ApiError` or network errors if the request fails. */
 export async function deleteRemoteAccount(): Promise<void> {
-  try {
-    await apiFetch<unknown>("/auth/account", { method: "DELETE" });
-  } catch {
-    // Backend may not implement DELETE yet
-  }
+  await apiFetch<unknown>("/auth/account", { method: "DELETE" });
 }

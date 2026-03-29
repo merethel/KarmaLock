@@ -151,6 +151,31 @@ export const en = {
     deleteModalConfirm: "Yes, delete account",
     deleteModalWait: "Wait {{seconds}} s",
     linkUnavailable: "Link is not available yet.",
+    deleteFailedTitle: "Account not deleted",
+    deleteFailedLeadStillSignedIn:
+      "Your account could not be deleted. You are still signed in on this device.",
+    deleteFailedLeadSignedOut:
+      "Your account could not be deleted. You have been signed out because your session is no longer valid.",
+    deleteFailedReason: {
+      connection:
+        "We could not reach the service. Check your internet connection and try again.",
+      server:
+        "The service had a problem on our side. Please try again in a little while.",
+      timeout:
+        "The request took too long. Check your connection and try again shortly.",
+      forbidden:
+        "This action is not allowed for your account right now. Contact support if you need help.",
+      notFound:
+        "The service could not complete this action. Try again later or contact support.",
+      client:
+        "Something went wrong with the request. Try again, or contact support if it keeps happening.",
+      rateLimit:
+        "Too many attempts in a short time. Wait a moment and try again.",
+      session:
+        "Your sign-in had expired or was no longer accepted. Sign in again if you still want to delete your account.",
+      unknown:
+        "Something unexpected happened. Try again in a moment, or contact support.",
+    },
   },
 
   aboutKarmalock: {

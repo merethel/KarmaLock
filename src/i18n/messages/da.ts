@@ -150,6 +150,31 @@ export const da: Dictionary = {
     deleteModalConfirm: "Ja, slet konto",
     deleteModalWait: "Vent {{seconds}} s",
     linkUnavailable: "Link er ikke tilgængelig endnu.",
+    deleteFailedTitle: "Kontoen blev ikke slettet",
+    deleteFailedLeadStillSignedIn:
+      "Din konto kunne ikke slettes. Du er stadig logget ind på denne enhed.",
+    deleteFailedLeadSignedOut:
+      "Din konto kunne ikke slettes. Du er blevet logget ud, fordi din session ikke længere er gyldig.",
+    deleteFailedReason: {
+      connection:
+        "Vi kunne ikke få kontakt til tjenesten. Tjek din internetforbindelse og prøv igen.",
+      server:
+        "Der opstod et problem på vores side. Prøv igen om lidt.",
+      timeout:
+        "Forespørgslen tog for lang tid. Tjek forbindelsen og prøv igen om et øjeblik.",
+      forbidden:
+        "Denne handling er ikke tilladt for din konto lige nu. Kontakt support, hvis du har brug for hjælp.",
+      notFound:
+        "Tjenesten kunne ikke gennemføre handlingen. Prøv igen senere eller kontakt support.",
+      client:
+        "Noget gik galt med anmodningen. Prøv igen, eller kontakt support, hvis det fortsætter.",
+      rateLimit:
+        "For mange forsøg på kort tid. Vent et øjeblik og prøv igen.",
+      session:
+        "Dit login var udløbet eller blev ikke accepteret. Log ind igen, hvis du stadig vil slette kontoen.",
+      unknown:
+        "Der skete noget uventet. Prøv igen om lidt, eller kontakt support.",
+    },
   },
 
   aboutKarmalock: {

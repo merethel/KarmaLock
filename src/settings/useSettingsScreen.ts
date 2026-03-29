@@ -1,5 +1,9 @@
 import { deleteRemoteAccount } from "@/src/api/auth";
 import {
+  deleteAccountFailureReasonKey,
+  deleteAccountFailureSignedOut,
+} from "@/src/settings/deleteAccountFailureMessage";
+import {
   authenticateWithBiometric,
   biometricHardwareReady,
   getBiometricUnlockEnabled,
@@ -73,11 +77,21 @@ export function useSettingsScreen() {
   }, [router]);
 
   const handleDeleteConfirmed = useCallback(async () => {
-    await deleteRemoteAccount();
+    try {
+      await deleteRemoteAccount();
+    } catch (e) {
+      const signedOut = deleteAccountFailureSignedOut(e);
+      const lead = signedOut
+        ? t("settings.deleteFailedLeadSignedOut")
+        : t("settings.deleteFailedLeadStillSignedIn");
+      const reason = t(deleteAccountFailureReasonKey(e));
+      Alert.alert(t("settings.deleteFailedTitle"), `${lead}\n\n${reason}`);
+      return;
+    }
     await clearSession();
     setDeleteOpen(false);
     router.replace("/(auth)/login");
-  }, [router]);
+  }, [router, t]);
 
   const openUrl = useCallback(
     async (url: string) => {
