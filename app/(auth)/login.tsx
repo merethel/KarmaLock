@@ -1,4 +1,4 @@
-import { LoginLanguageFlags } from "@/components/LanguagePicker";
+import { LanguageFlagSwitcher } from "@/components/LanguagePicker";
 import { Button } from "@/components/common_components/Button";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
@@ -165,7 +165,7 @@ export default function LoginScreen() {
             disabled={busy}
           />
 
-          <LoginLanguageFlags />
+          <LanguageFlagSwitcher />
         </View>
       </View>
 

@@ -1,7 +1,7 @@
 import { Text } from "@/components/common_components/Text";
 import { useI18n } from "@/src/i18n/context";
 import type { Locale } from "@/src/i18n/types";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 /** Full-width row (e.g. settings). */
 export function LanguageRow({
@@ -52,20 +52,15 @@ const A11Y_LABEL: Record<Locale, string> = {
 
 const LOCALES: readonly Locale[] = ["en", "da"];
 
-/** Small flag chips for login — subtle, under primary actions. */
-export function LoginLanguageFlags() {
+/**
+ * Compact flag buttons to switch app language (no labels).
+ * Use on sign-in and anywhere else the same control is needed.
+ */
+export function LanguageFlagSwitcher() {
   const { locale, setLocale } = useI18n();
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        marginTop: 14,
-      }}
-    >
+    <View style={styles.flagRow}>
       {LOCALES.map((code) => {
         const selected = locale === code;
         return (
@@ -76,26 +71,42 @@ export function LoginLanguageFlags() {
             accessibilityState={{ selected }}
             onPress={() => void setLocale(code)}
             hitSlop={8}
-            style={({ pressed }) => ({
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: selected
-                ? "rgba(255,45,170,0.45)"
-                : "rgba(255,255,255,0.10)",
-              backgroundColor: selected
-                ? "rgba(255,45,170,0.10)"
-                : "rgba(255,255,255,0.04)",
-              opacity: pressed ? 0.85 : 1,
-            })}
+            style={({ pressed }) => [
+              styles.flagChip,
+              {
+                borderColor: selected
+                  ? "rgba(255,45,170,0.45)"
+                  : "rgba(255,255,255,0.10)",
+                backgroundColor: selected
+                  ? "rgba(255,45,170,0.10)"
+                  : "rgba(255,255,255,0.04)",
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
           >
-            <Text style={{ fontSize: 22, lineHeight: 26 }}>{FLAG[code]}</Text>
+            <Text style={styles.flagEmoji}>{FLAG[code]}</Text>
           </Pressable>
         );
       })}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  flagRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 14,
+  },
+  flagChip: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  flagEmoji: { fontSize: 22, lineHeight: 26 },
+});

@@ -114,6 +114,7 @@ function RootLayoutNav() {
               animationDuration: 420,
             }}
           />
+          <Stack.Screen name="about-karmalock" />
         </Stack>
         {!navReady ? (
           <View

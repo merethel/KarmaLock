@@ -22,3 +22,12 @@ export async function register(payload: {
 export async function me() {
   return apiFetch<{ user: any }>("/auth/me");
 }
+
+/** Best-effort remote deletion; callers should clear local session regardless. */
+export async function deleteRemoteAccount(): Promise<void> {
+  try {
+    await apiFetch<unknown>("/auth/account", { method: "DELETE" });
+  } catch {
+    // Backend may not implement DELETE yet
+  }
+}
