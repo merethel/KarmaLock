@@ -1,11 +1,12 @@
 import { Button } from "@/components/common_components/Button";
+import { RegisterPrimaryCta } from "@/components/common_components/RegisterPrimaryCta";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { formatVaultSyncLabel } from "@/components/vault/formatSyncLabel";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -24,6 +25,7 @@ import { useI18n } from "@/src/i18n/context";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
 const CARD_BORDER = "rgba(255,255,255,0.10)";
+const LOAD_STALL_MS = 30_000;
 
 export default function VaultDashboard() {
   const { t } = useI18n();
@@ -35,23 +37,46 @@ export default function VaultDashboard() {
   const [error, setError] = useState("");
   const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
   const [search, setSearch] = useState("");
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const loadSeq = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     try {
       setError("");
+      setLoadTimedOut(false);
       const res = await listMyBelongings();
+      if (seq !== loadSeq.current) return;
       setItems(res.data.items || []);
       setLastSyncAt(new Date());
     } catch (e: unknown) {
+      if (seq !== loadSeq.current) return;
       const msg =
         e && typeof e === "object" && "message" in e
           ? String((e as { message?: string }).message)
           : "";
       setError(msg || t("errors.loadBelongingsFailed"));
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) {
+        setLoading(false);
+      }
     }
   }, [t]);
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadTimedOut(false);
+      return;
+    }
+    const timer = setTimeout(() => setLoadTimedOut(true), LOAD_STALL_MS);
+    return () => clearTimeout(timer);
+  }, [loading, loadAttempt]);
+
+  const retryLoad = useCallback(() => {
+    setLoadAttempt((a) => a + 1);
+    void load();
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {
@@ -140,6 +165,16 @@ export default function VaultDashboard() {
               <Text dim style={{ marginTop: 12 }}>
                 {t("vault.loading")}
               </Text>
+              {loadTimedOut ? (
+                <>
+                  <Text dim style={styles.loadTimeoutHint}>
+                    {t("vault.loadTakingLong")}
+                  </Text>
+                  <View style={styles.loadTimeoutActions}>
+                    <Button title={t("vault.tryAgain")} onPress={retryLoad} />
+                  </View>
+                </>
+              ) : null}
             </View>
           ) : items.length === 0 ? (
             <VaultEmptyState
@@ -255,37 +290,14 @@ function VaultEmptyState({
         {t("vault.emptyBody")}
       </Text>
       <View style={styles.emptyCta}>
-        <RegisterFirstAssetCta
+        <RegisterPrimaryCta
           label={t("vault.registerFirstAsset")}
           onPress={onRegister}
+          icon="add"
+          iconSize={24}
         />
       </View>
     </View>
-  );
-}
-
-function RegisterFirstAssetCta({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.registerCta,
-        pressed && { opacity: 0.92 },
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <View style={styles.registerCtaIconCircle}>
-        <Ionicons name="add" size={24} color={palette.accent} />
-      </View>
-      <Text style={styles.registerCtaLabel}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -427,6 +439,18 @@ const styles = StyleSheet.create({
   loadingBlock: {
     paddingVertical: 48,
     alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  loadTimeoutHint: {
+    marginTop: 20,
+    textAlign: "center",
+    fontSize: 14,
+    lineHeight: 20,
+    maxWidth: 320,
+  },
+  loadTimeoutActions: {
+    marginTop: 16,
+    alignSelf: "center",
   },
   emptyWrap: {
     paddingTop: 28,
@@ -447,8 +471,6 @@ const styles = StyleSheet.create({
   },
   emptyCta: {
     marginTop: 22,
-    maxWidth: 320,
-    alignSelf: "center",
     width: "100%",
   },
   noMatchesWrap: {
@@ -459,32 +481,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 15,
     lineHeight: 22,
-  },
-  registerCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    minHeight: 54,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 999,
-    backgroundColor: palette.accent,
-  },
-  registerCtaIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  registerCtaLabel: {
-    flexShrink: 1,
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0.4,
   },
   listRow: {
     flexDirection: "row",

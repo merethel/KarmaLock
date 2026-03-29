@@ -109,9 +109,18 @@ function RootLayoutNav() {
           <Stack.Screen
             name="add-belonging"
             options={{
-              presentation: "modal",
+              // `modal` on iOS is often a sheet with empty space above the card.
+              // Full-screen covers from the top edge so content can sit flush under the status bar.
+              presentation:
+                Platform.OS === "ios" ? "fullScreenModal" : "modal",
               animation: "slide_from_bottom",
               animationDuration: 420,
+              contentStyle: {
+                flex: 1,
+                backgroundColor: "#000000",
+                justifyContent: "flex-start",
+                alignItems: "stretch",
+              },
             }}
           />
           <Stack.Screen name="about-karmalock" />
