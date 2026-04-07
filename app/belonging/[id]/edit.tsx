@@ -6,7 +6,13 @@ import { listMyBelongings, updateBelonging } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function asString(v: unknown): string {
@@ -122,7 +128,7 @@ export default function EditBelongingDetailsScreen() {
       <BackButton
         onPress={() => router.back()}
         topInset={0}
-        style={{ position: "absolute", left: 20, top: 12, zIndex: 10 }}
+        style={{ position: "absolute", left: 20, top: 60, zIndex: 10 }}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -145,7 +151,9 @@ export default function EditBelongingDetailsScreen() {
           </View>
         ) : !item ? (
           <View style={styles.center}>
-            <Text style={styles.error}>{errorMessage || t("errors.failed")}</Text>
+            <Text style={styles.error}>
+              {errorMessage || t("errors.failed")}
+            </Text>
           </View>
         ) : (
           <BelongingDetailsForm
@@ -189,4 +197,3 @@ const styles = StyleSheet.create({
   },
   error: { color: "tomato", textAlign: "center" },
 });
-
