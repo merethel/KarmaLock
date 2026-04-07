@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   Image,
@@ -182,7 +183,7 @@ export default function BelongingDetailsScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <Ionicons name="hourglass-outline" size={22} color={palette.accent} />
+          <ActivityIndicator color={palette.accent} />
           <Text dim style={{ marginTop: 12 }}>
             {t("vault.loading")}
           </Text>
