@@ -109,6 +109,15 @@ export const da: Dictionary = {
     deleteBelongingModalCancel: "Annuller",
     deleteBelongingModalConfirm: "Ja, slet ejendel",
     deleteBelongingModalWait: "Vent {{seconds}} s",
+
+    actionTransfer: "OVERFØR",
+    actionGrant: "GIV ADGANG",
+    actionReportStolen: "ANMELD STJÅLET",
+    testAlertSystem: "TEST ALARMSYSTEM",
+    log: "LOG",
+    getReport: "HENT RAPPORT",
+    addDoc: "+ TILFØJ DOK",
+    saving: "Gemmer…",
   },
 
   addBelonging: {

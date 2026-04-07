@@ -51,6 +51,25 @@ export async function deleteBelonging(id: string) {
   });
 }
 
+export async function updateBelonging(
+  id: string,
+  payload: Partial<{
+    title: string;
+    description: string;
+    category: string;
+    brand: string;
+    model: string;
+    color: string;
+    serialNumber: string;
+    attributes: Record<string, unknown>;
+  }>,
+) {
+  return apiFetch<{ item: Belonging }>(`/belongings/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function describeBelongingPhoto(photoUri: string) {
   const API_URL = process.env.EXPO_PUBLIC_API_URL!;
   const form = new FormData();

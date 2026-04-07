@@ -1,12 +1,15 @@
 import { Text } from "@/components/common_components/Text";
+import type { TranslationKey } from "@/src/i18n/types";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 export function BelongingLogActions({
+  t,
   onTestAlert,
   onGetReport,
   onAddDoc,
 }: {
+  t: (k: TranslationKey) => string;
   onTestAlert: () => void;
   onGetReport: () => void;
   onAddDoc: () => void;
@@ -14,17 +17,17 @@ export function BelongingLogActions({
   return (
     <View>
       <Pressable onPress={onTestAlert} style={styles.testBtn}>
-        <Text style={styles.testBtnText}>TEST ALERT SYSTEM</Text>
+        <Text style={styles.testBtnText}>{t("vault.testAlertSystem")}</Text>
       </Pressable>
 
       <View style={styles.logHeader}>
-        <Text style={styles.logTitle}>LOG</Text>
+        <Text style={styles.logTitle}>{t("vault.log")}</Text>
         <View style={styles.logActions}>
           <Pressable onPress={onGetReport} style={styles.smallPill}>
-            <Text style={styles.smallPillText}>GET REPORT</Text>
+            <Text style={styles.smallPillText}>{t("vault.getReport")}</Text>
           </Pressable>
           <Pressable onPress={onAddDoc} style={styles.smallPillDark}>
-            <Text style={styles.smallPillDarkText}>+ ADD DOC</Text>
+            <Text style={styles.smallPillDarkText}>{t("vault.addDoc")}</Text>
           </Pressable>
         </View>
       </View>

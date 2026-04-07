@@ -14,7 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { RegisterEditStep } from "./RegisterEditStep";
+import { BelongingDetailsForm } from "@/components/belonging/BelongingDetailsForm";
 import { RegisterInlineErrorBanner } from "./RegisterInlineErrorBanner";
 import { RegisterIntroStep } from "./RegisterIntroStep";
 import { RegisterPhotosStep } from "./RegisterPhotosStep";
@@ -341,7 +341,7 @@ export function RegisterBelongingWizard({
           ) : null}
 
           {step === "edit" ? (
-            <RegisterEditStep
+            <BelongingDetailsForm
               t={t}
               errorMessage={error}
               title={title}
@@ -362,7 +362,9 @@ export function RegisterBelongingWizard({
               setPurchaseDate={setPurchaseDate}
               description={description}
               setDescription={setDescription}
-              onContinue={continueFromEdit}
+              onSubmit={continueFromEdit}
+              submitLabel={t("registerFlow.continue")}
+              showHeader
             />
           ) : null}
 

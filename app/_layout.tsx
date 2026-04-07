@@ -55,6 +55,7 @@ function RootLayoutNav() {
   useEffect(() => {
     (async () => {
       const token = await getToken();
+      console.log("token", token);
       const onboardingDone = await getOnboardingComplete();
       if (token) {
         if (await shouldUseBiometricGate()) {
@@ -126,8 +127,7 @@ function RootLayoutNav() {
             name="belonging/[id]"
             options={{
               // Full-screen so hero image can reach screen top.
-              presentation:
-                Platform.OS === "ios" ? "fullScreenModal" : "card",
+              presentation: Platform.OS === "ios" ? "fullScreenModal" : "card",
               animation:
                 Platform.OS === "ios" ? "slide_from_bottom" : "default",
               gestureEnabled: true,

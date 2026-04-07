@@ -110,6 +110,15 @@ export const en = {
     deleteBelongingModalCancel: "Cancel",
     deleteBelongingModalConfirm: "Yes, delete belonging",
     deleteBelongingModalWait: "Wait {{seconds}} s",
+
+    actionTransfer: "TRANSFER",
+    actionGrant: "GRANT",
+    actionReportStolen: "REPORT STOLEN",
+    testAlertSystem: "TEST ALERT SYSTEM",
+    log: "LOG",
+    getReport: "GET REPORT",
+    addDoc: "+ ADD DOC",
+    saving: "Saving…",
   },
 
   addBelonging: {

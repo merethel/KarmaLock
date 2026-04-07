@@ -1,8 +1,14 @@
 import { Text } from "@/components/common_components/Text";
 import type { Belonging } from "@/src/api/belongings";
 import type { TranslationKey } from "@/src/i18n/types";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+
+function asString(v: unknown): string {
+  if (v == null) return "";
+  return typeof v === "string" ? v : String(v);
+}
 
 function Row({
   label,
@@ -27,17 +33,37 @@ function Row({
 export function BelongingAttributesCard({
   t,
   item,
+  onEdit,
 }: {
   t: (k: TranslationKey) => string;
   item: Belonging;
+  onEdit?: () => void;
 }) {
+  const attrs = item.attributes ?? {};
+  const brand = item.brand ?? asString(attrs.brand);
+  const model = item.model ?? asString(attrs.model);
+  const color = item.color ?? asString(attrs.color);
+  const category = item.category ?? asString(attrs.category);
+  const serialNumber = item.serialNumber ?? asString(attrs.serialNumber);
+
   return (
-    <View style={styles.card}>
-      <Row label={t("registerFlow.sumBrand")} value={item.brand} />
-      <Row label={t("registerFlow.sumModel")} value={item.model} />
-      <Row label={t("registerFlow.sumColor")} value={item.color} />
-      <Row label={t("registerFlow.sumType")} value={item.category} />
-      <Row label={t("registerFlow.sumSerial")} value={item.serialNumber} />
+    <View style={[styles.card, onEdit && styles.cardWithEdit]}>
+      {onEdit ? (
+        <Pressable
+          onPress={onEdit}
+          hitSlop={10}
+          style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.85 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Edit details"
+        >
+          <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.75)" />
+        </Pressable>
+      ) : null}
+      <Row label={t("registerFlow.sumBrand")} value={brand} />
+      <Row label={t("registerFlow.sumModel")} value={model} />
+      <Row label={t("registerFlow.sumColor")} value={color} />
+      <Row label={t("registerFlow.sumType")} value={category} />
+      <Row label={t("registerFlow.sumSerial")} value={serialNumber} />
     </View>
   );
 }
@@ -54,6 +80,23 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     marginTop: 6,
+  },
+  cardWithEdit: {
+    paddingTop: 16 + 34,
+  },
+  editBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    zIndex: 2,
   },
   specRow: {
     flexDirection: "row",

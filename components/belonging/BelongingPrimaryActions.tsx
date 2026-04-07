@@ -1,12 +1,15 @@
 import { Text } from "@/components/common_components/Text";
+import type { TranslationKey } from "@/src/i18n/types";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 export function BelongingPrimaryActions({
+  t,
   onTransfer,
   onGrant,
   onReportStolen,
 }: {
+  t: (k: TranslationKey) => string;
   onTransfer: () => void;
   onGrant: () => void;
   onReportStolen: () => void;
@@ -15,15 +18,15 @@ export function BelongingPrimaryActions({
     <View>
       <View style={styles.actionsRow}>
         <Pressable onPress={onTransfer} style={[styles.actionBtn, styles.primaryBtn]}>
-          <Text style={styles.primaryBtnText}>TRANSFER</Text>
+          <Text style={styles.primaryBtnText}>{t("vault.actionTransfer")}</Text>
         </Pressable>
         <Pressable onPress={onGrant} style={[styles.actionBtn, styles.secondaryBtn]}>
-          <Text style={styles.secondaryBtnText}>GRANT</Text>
+          <Text style={styles.secondaryBtnText}>{t("vault.actionGrant")}</Text>
         </Pressable>
       </View>
 
       <Pressable onPress={onReportStolen} style={styles.reportBtn}>
-        <Text style={styles.reportBtnText}>REPORT STOLEN</Text>
+        <Text style={styles.reportBtnText}>{t("vault.actionReportStolen")}</Text>
       </Pressable>
     </View>
   );

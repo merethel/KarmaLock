@@ -2,16 +2,16 @@ import { Button } from "@/components/common_components/Button";
 import { LabeledTextField } from "@/components/common_components/LabeledTextField";
 import { Text } from "@/components/common_components/Text";
 import { palette } from "@/constants/Colors";
+import type { TranslationKey } from "@/src/i18n/types";
+import React from "react";
 import { TextInput, View } from "react-native";
 
-import { RegisterInlineErrorBanner } from "./RegisterInlineErrorBanner";
-import { registerStyles as s } from "./registerStyles";
-
-import type { TranslationKey } from "@/src/i18n/types";
+import { RegisterInlineErrorBanner } from "../register/RegisterInlineErrorBanner";
+import { registerStyles as s } from "../register/registerStyles";
 
 type T = (key: TranslationKey) => string;
 
-export function RegisterEditStep({
+export function BelongingDetailsForm({
   t,
   errorMessage,
   title,
@@ -32,7 +32,9 @@ export function RegisterEditStep({
   setPurchaseDate,
   description,
   setDescription,
-  onContinue,
+  onSubmit,
+  submitLabel,
+  showHeader = true,
 }: {
   t: T;
   errorMessage?: string;
@@ -54,15 +56,21 @@ export function RegisterEditStep({
   setPurchaseDate: (v: string) => void;
   description: string;
   setDescription: (v: string) => void;
-  onContinue: () => void;
+  onSubmit: () => void;
+  submitLabel: string;
+  showHeader?: boolean;
 }) {
   return (
     <>
-      <Text style={s.accentEyebrow}>{t("registerFlow.stepEditEyebrow")}</Text>
-      <Text style={s.sectionTitle}>{t("registerFlow.stepEditTitle")}</Text>
-      <Text dim style={s.sectionHint}>
-        {t("registerFlow.stepEditHint")}
-      </Text>
+      {showHeader ? (
+        <>
+          <Text style={s.accentEyebrow}>{t("registerFlow.stepEditEyebrow")}</Text>
+          <Text style={s.sectionTitle}>{t("registerFlow.stepEditTitle")}</Text>
+          <Text dim style={s.sectionHint}>
+            {t("registerFlow.stepEditHint")}
+          </Text>
+        </>
+      ) : null}
 
       <View style={s.formGap}>
         <LabeledTextField
@@ -139,7 +147,8 @@ export function RegisterEditStep({
           />
         </View>
       ) : null}
-      <Button title={t("registerFlow.continue")} onPress={onContinue} />
+      <Button title={submitLabel} onPress={onSubmit} />
     </>
   );
 }
+

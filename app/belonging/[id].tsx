@@ -11,6 +11,7 @@ import { DangerRow } from "@/components/common_components/DangerRow";
 import type { Belonging } from "@/src/api/belongings";
 import { deleteBelonging, listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
+import { useFocusEffect } from "expo-router";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
@@ -83,6 +84,13 @@ export default function BelongingDetailsScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Returning from the edit screen should show updated values immediately.
+      void load();
+    }, [load]),
+  );
 
   const photoUri = useMemo(() => normalizePhotoUri(item?.photoUrl), [item]);
   const valueLabel = useMemo(
@@ -239,13 +247,21 @@ export default function BelongingDetailsScreen() {
 
               <View style={styles.body}>
                 <BelongingPrimaryActions
+                  t={t}
                   onTransfer={onTransfer}
                   onGrant={onGrant}
                   onReportStolen={onReportStolen}
                 />
 
-                <BelongingAttributesCard t={t} item={item} />
+                <BelongingAttributesCard
+                  t={t}
+                  item={item}
+                  onEdit={() =>
+                    router.push((`/belonging/${item._id}/edit` as unknown) as any)
+                  }
+                />
                 <BelongingLogActions
+                  t={t}
                   onTestAlert={onTestAlert}
                   onGetReport={onGetReport}
                   onAddDoc={onAddDoc}
