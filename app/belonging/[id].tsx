@@ -342,6 +342,19 @@ export default function BelongingDetailsScreen() {
                   <Text style={styles.reportBtnText}>REPORT STOLEN</Text>
                 </Pressable>
 
+                <View style={styles.card}>
+                  <Spec label={t("registerFlow.sumBrand")} value={item.brand} />
+                  <Spec label={t("registerFlow.sumModel")} value={item.model} />
+                  <Spec label={t("registerFlow.sumColor")} value={item.color} />
+                  <Spec
+                    label={t("registerFlow.sumType")}
+                    value={item.category}
+                  />
+                  <Spec
+                    label={t("registerFlow.sumSerial")}
+                    value={item.serialNumber}
+                  />
+                </View>
                 <Pressable onPress={onTestAlert} style={styles.testBtn}>
                   <Text style={styles.testBtnText}>TEST ALERT SYSTEM</Text>
                 </Pressable>
@@ -356,20 +369,6 @@ export default function BelongingDetailsScreen() {
                       <Text style={styles.smallPillDarkText}>+ ADD DOC</Text>
                     </Pressable>
                   </View>
-                </View>
-
-                <View style={styles.card}>
-                  <Spec label={t("registerFlow.sumBrand")} value={item.brand} />
-                  <Spec label={t("registerFlow.sumModel")} value={item.model} />
-                  <Spec label={t("registerFlow.sumColor")} value={item.color} />
-                  <Spec
-                    label={t("registerFlow.sumType")}
-                    value={item.category}
-                  />
-                  <Spec
-                    label={t("registerFlow.sumSerial")}
-                    value={item.serialNumber}
-                  />
                 </View>
               </View>
             </Animated.ScrollView>
@@ -516,6 +515,7 @@ const styles = StyleSheet.create({
   },
 
   testBtn: {
+    marginTop: 54,
     height: 46,
     borderRadius: 999,
     alignItems: "center",
