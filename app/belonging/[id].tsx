@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
   },
-  idLine: { color: "rgba(255,255,255,0.78)", letterSpacing: 2, fontSize: 11 },
+  idLine: { color: "rgba(255,255,255,0.78)", letterSpacing: 2, fontSize: 14 },
   heroTitle: {
     color: "rgba(255,255,255,0.98)",
     fontWeight: "900",
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   pillText: {
     color: "rgba(255,255,255,0.92)",
     letterSpacing: 1.4,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "900",
   },
 
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.92)",
     fontWeight: "900",
     letterSpacing: 1.5,
-    fontSize: 13,
+    fontSize: 14,
   },
   secondaryBtn: {
     backgroundColor: "transparent",
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.92)",
     fontWeight: "900",
     letterSpacing: 1.5,
-    fontSize: 13,
+    fontSize: 14,
   },
 
   reportBtn: {
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
     color: "rgba(255, 75, 160, 0.95)",
     fontWeight: "900",
     letterSpacing: 1.6,
-    fontSize: 13,
+    fontSize: 14,
   },
 
   testBtn: {
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.55)",
     fontWeight: "800",
     letterSpacing: 2,
-    fontSize: 11,
+    fontSize: 12,
   },
 
   logHeader: {
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   },
   specLabel: {
     width: 120,
-    fontSize: 10,
+    fontSize: 14,
     letterSpacing: 1.4,
     color: "rgba(255,255,255,0.75)",
   },
