@@ -6,8 +6,16 @@ import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,8 +27,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 
 function normalizePhotoUri(photoUrl?: string): string {
   const v = (photoUrl ?? "").trim();
@@ -68,7 +74,7 @@ function Spec({ label, value }: { label: string; value?: string }) {
   const v = (value ?? "").trim();
   return (
     <View style={styles.specRow}>
-      <Text muted mono style={styles.specLabel}>
+      <Text mono style={styles.specLabel}>
         {label}
       </Text>
       <Text style={styles.specValue} numberOfLines={2}>
@@ -221,142 +227,152 @@ export default function BelongingDetailsScreen() {
               },
             ]}
           >
-          <View
-            style={[
-              styles.heroBg,
-              { top: -insets.top, height: HERO_H + insets.top },
-            ]}
-          >
-            {photoUri ? (
-              <Image
-                source={{ uri: photoUri }}
-                style={[styles.heroImage, { height: HERO_H + insets.top }]}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.heroPlaceholder,
-                  { height: HERO_H + insets.top },
-                ]}
-              >
-                <Ionicons
-                  name="image-outline"
-                  size={34}
-                  color="rgba(255,255,255,0.25)"
+            <View
+              style={[
+                styles.heroBg,
+                { top: -insets.top, height: HERO_H + insets.top },
+              ]}
+            >
+              {photoUri ? (
+                <Image
+                  source={{ uri: photoUri }}
+                  style={[styles.heroImage, { height: HERO_H + insets.top }]}
                 />
-              </View>
-            )}
+              ) : (
+                <View
+                  style={[
+                    styles.heroPlaceholder,
+                    { height: HERO_H + insets.top },
+                  ]}
+                >
+                  <Ionicons
+                    name="image-outline"
+                    size={34}
+                    color="rgba(255,255,255,0.25)"
+                  />
+                </View>
+              )}
 
-            <Animated.View style={[styles.heroBlur, { opacity: blurOpacity }]}>
-              <BlurView
-                intensity={42}
-                tint="dark"
-                style={StyleSheet.absoluteFillObject}
-              />
-            </Animated.View>
-
-            <LinearGradient
-              colors={["rgba(0,0,0,0.00)", "rgba(0,0,0,0.80)"]}
-              locations={[0.2, 1]}
-              style={styles.heroFade}
-            />
-          </View>
-
-          <View style={styles.heroTopLeft}>
-            <BackButton onPress={() => router.back()} topInset={insets.top + 8} />
-          </View>
-
-          <Animated.ScrollView
-            style={{ flex: 1 }}
-            showsVerticalScrollIndicator={false}
-            contentInsetAdjustmentBehavior="never"
-            bounces
-            alwaysBounceVertical
-            scrollEventThrottle={16}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: false },
-            )}
-            onScrollEndDrag={(e) => {
-              if (didDismiss.current) return;
-              const y = e.nativeEvent.contentOffset.y;
-              // Pull down past the top to dismiss.
-              if (y < -80) {
-                didDismiss.current = true;
-                router.back();
-              }
-            }}
-            contentContainerStyle={{
-              paddingTop: HERO_H - 40,
-              paddingBottom: 120,
-            }}
-          >
-            <View style={styles.heroCard}>
-              <Text mono style={styles.idLine}>
-                ID // {item.chipUid}
-              </Text>
-              <Text style={styles.heroTitle} numberOfLines={2}>
-                {item.title}
-              </Text>
-
-              <View style={styles.heroPills}>
-                <Pill
-                  label={
-                    item.isStolen ? t("vault.statusStolen") : t("vault.statusOk")
-                  }
+              <Animated.View
+                style={[styles.heroBlur, { opacity: blurOpacity }]}
+              >
+                <BlurView
+                  intensity={42}
+                  tint="dark"
+                  style={StyleSheet.absoluteFillObject}
                 />
-                <Pill label={valueLabel} icon="cash-outline" />
-              </View>
-            </View>
+              </Animated.View>
 
-            <View style={styles.body}>
-            <View style={styles.actionsRow}>
-              <Pressable
-                onPress={onTransfer}
-                style={[styles.actionBtn, styles.primaryBtn]}
-              >
-                <Text style={styles.primaryBtnText}>TRANSFER</Text>
-              </Pressable>
-              <Pressable
-                onPress={onGrant}
-                style={[styles.actionBtn, styles.secondaryBtn]}
-              >
-                <Text style={styles.secondaryBtnText}>GRANT</Text>
-              </Pressable>
-            </View>
-
-            <Pressable onPress={onReportStolen} style={styles.reportBtn}>
-              <Text style={styles.reportBtnText}>REPORT STOLEN</Text>
-            </Pressable>
-
-            <Pressable onPress={onTestAlert} style={styles.testBtn}>
-              <Text style={styles.testBtnText}>TEST ALERT SYSTEM</Text>
-            </Pressable>
-
-            <View style={styles.logHeader}>
-              <Text style={styles.logTitle}>LOG</Text>
-              <View style={styles.logActions}>
-                <Pressable onPress={onGetReport} style={styles.smallPill}>
-                  <Text style={styles.smallPillText}>GET REPORT</Text>
-                </Pressable>
-                <Pressable onPress={onAddDoc} style={styles.smallPillDark}>
-                  <Text style={styles.smallPillDarkText}>+ ADD DOC</Text>
-                </Pressable>
-              </View>
-            </View>
-
-            <View style={styles.card}>
-              <Spec label={t("registerFlow.sumBrand")} value={item.brand} />
-              <Spec label={t("registerFlow.sumModel")} value={item.model} />
-              <Spec label={t("registerFlow.sumColor")} value={item.color} />
-              <Spec label={t("registerFlow.sumType")} value={item.category} />
-              <Spec
-                label={t("registerFlow.sumSerial")}
-                value={item.serialNumber}
+              <LinearGradient
+                colors={["rgba(0,0,0,0.00)", "rgba(0,0,0,0.80)"]}
+                locations={[0.2, 1]}
+                style={styles.heroFade}
               />
             </View>
+
+            <View style={styles.heroTopLeft}>
+              <BackButton
+                onPress={() => router.back()}
+                topInset={insets.top + 8}
+              />
             </View>
-          </Animated.ScrollView>
+
+            <Animated.ScrollView
+              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={false}
+              contentInsetAdjustmentBehavior="never"
+              bounces
+              alwaysBounceVertical
+              scrollEventThrottle={16}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: false },
+              )}
+              onScrollEndDrag={(e) => {
+                if (didDismiss.current) return;
+                const y = e.nativeEvent.contentOffset.y;
+                // Pull down past the top to dismiss.
+                if (y < -80) {
+                  didDismiss.current = true;
+                  router.back();
+                }
+              }}
+              contentContainerStyle={{
+                paddingTop: HERO_H - 40,
+                paddingBottom: 120,
+              }}
+            >
+              <View style={styles.heroCard}>
+                <Text mono style={styles.idLine}>
+                  ID // {item.chipUid}
+                </Text>
+                <Text style={styles.heroTitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+
+                <View style={styles.heroPills}>
+                  <Pill
+                    label={
+                      item.isStolen
+                        ? t("vault.statusStolen")
+                        : t("vault.statusOk")
+                    }
+                  />
+                  <Pill label={valueLabel} icon="cash-outline" />
+                </View>
+              </View>
+
+              <View style={styles.body}>
+                <View style={styles.actionsRow}>
+                  <Pressable
+                    onPress={onTransfer}
+                    style={[styles.actionBtn, styles.primaryBtn]}
+                  >
+                    <Text style={styles.primaryBtnText}>TRANSFER</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={onGrant}
+                    style={[styles.actionBtn, styles.secondaryBtn]}
+                  >
+                    <Text style={styles.secondaryBtnText}>GRANT</Text>
+                  </Pressable>
+                </View>
+
+                <Pressable onPress={onReportStolen} style={styles.reportBtn}>
+                  <Text style={styles.reportBtnText}>REPORT STOLEN</Text>
+                </Pressable>
+
+                <Pressable onPress={onTestAlert} style={styles.testBtn}>
+                  <Text style={styles.testBtnText}>TEST ALERT SYSTEM</Text>
+                </Pressable>
+
+                <View style={styles.logHeader}>
+                  <Text style={styles.logTitle}>LOG</Text>
+                  <View style={styles.logActions}>
+                    <Pressable onPress={onGetReport} style={styles.smallPill}>
+                      <Text style={styles.smallPillText}>GET REPORT</Text>
+                    </Pressable>
+                    <Pressable onPress={onAddDoc} style={styles.smallPillDark}>
+                      <Text style={styles.smallPillDarkText}>+ ADD DOC</Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View style={styles.card}>
+                  <Spec label={t("registerFlow.sumBrand")} value={item.brand} />
+                  <Spec label={t("registerFlow.sumModel")} value={item.model} />
+                  <Spec label={t("registerFlow.sumColor")} value={item.color} />
+                  <Spec
+                    label={t("registerFlow.sumType")}
+                    value={item.category}
+                  />
+                  <Spec
+                    label={t("registerFlow.sumSerial")}
+                    value={item.serialNumber}
+                  />
+                </View>
+              </View>
+            </Animated.ScrollView>
           </Animated.View>
         </View>
       )}
@@ -460,9 +476,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  primaryBtn: { backgroundColor: "#111" },
+  primaryBtn: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
   primaryBtnText: {
-    color: "#fff",
+    color: "rgba(255,255,255,0.92)",
     fontWeight: "900",
     letterSpacing: 1.5,
     fontSize: 13,
@@ -566,7 +586,12 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: "flex-start",
   },
-  specLabel: { width: 120, fontSize: 10, letterSpacing: 1.4 },
+  specLabel: {
+    width: 120,
+    fontSize: 10,
+    letterSpacing: 1.4,
+    color: "rgba(255,255,255,0.75)",
+  },
   specValue: {
     flex: 1,
     textAlign: "right",
@@ -575,4 +600,3 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.92)",
   },
 });
-
