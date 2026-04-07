@@ -1,8 +1,8 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
@@ -13,8 +13,8 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
 
-import { shouldUseBiometricGate } from "../src/auth/biometrics";
 import { onUnauthorized } from "../src/auth/authEvents";
+import { shouldUseBiometricGate } from "../src/auth/biometrics";
 import { getToken } from "../src/auth/session";
 import { I18nProvider } from "../src/i18n/context";
 import { getOnboardingComplete } from "../src/onboarding/storage";
@@ -111,8 +111,7 @@ function RootLayoutNav() {
             options={{
               // `modal` on iOS is often a sheet with empty space above the card.
               // Full-screen covers from the top edge so content can sit flush under the status bar.
-              presentation:
-                Platform.OS === "ios" ? "fullScreenModal" : "modal",
+              presentation: Platform.OS === "ios" ? "fullScreenModal" : "modal",
               animation: "slide_from_bottom",
               animationDuration: 420,
               contentStyle: {
@@ -128,7 +127,10 @@ function RootLayoutNav() {
         {!navReady ? (
           <View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, { backgroundColor: "#000000" }]}
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: "#000000" },
+            ]}
           />
         ) : null}
       </View>

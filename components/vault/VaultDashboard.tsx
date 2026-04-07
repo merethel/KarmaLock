@@ -7,21 +7,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Pressable,
-    RefreshControl,
-    StyleSheet,
-    TextInput,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  TextInput,
+  View,
 } from "react-native";
 
 import { palette } from "@/constants/Colors";
