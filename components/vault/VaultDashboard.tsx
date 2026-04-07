@@ -163,7 +163,7 @@ export default function VaultDashboard() {
           pointerEvents="none"
           style={[
             styles.topSpinner,
-            { top: Math.max(8, insets.top + 8) },
+            { top: Math.max(16, insets.top + 16) },
           ]}
         >
           <ActivityIndicator size="small" color={palette.accent} />
