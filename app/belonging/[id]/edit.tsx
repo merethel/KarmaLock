@@ -179,7 +179,7 @@ export default function EditBelongingDetailsScreen() {
             setDescription={setDescription}
             onSubmit={busy ? () => {} : onSubmit}
             submitLabel={busy ? t("vault.saving") : submitLabel}
-            showHeader
+            showHeader={false}
           />
         )}
       </ScrollView>
