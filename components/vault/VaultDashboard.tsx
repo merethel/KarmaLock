@@ -23,6 +23,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
@@ -36,6 +37,7 @@ const LOAD_STALL_MS = 30_000;
 export default function VaultDashboard() {
   const { t } = useI18n();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [items, setItems] = useState<Belonging[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,6 +158,17 @@ export default function VaultDashboard() {
 
   return (
     <Screen style={styles.screen}>
+      {loading || refreshing ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.topSpinner,
+            { top: Math.max(8, insets.top + 8) },
+          ]}
+        >
+          <ActivityIndicator size="small" color={palette.accent} />
+        </View>
+      ) : null}
       <FlatList
         data={filtered}
         keyExtractor={(item) => item._id}
@@ -167,20 +180,22 @@ export default function VaultDashboard() {
         onScrollEndDrag={(e) => {
           // Some layouts prevent native pull-to-refresh from triggering reliably.
           // If user pulls down while already at top, refresh anyway.
-          if (refreshing) return;
+          if (refreshing || loading) return;
           const y = e.nativeEvent.contentOffset.y;
-          if (y < -60) void onRefresh();
+          if (y < -30) void onRefresh();
         }}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
             <View style={styles.headerBlock}>
               <Text style={styles.pageTitle}>{t("vault.simpleTitle")}</Text>
-              <Text dim style={styles.pageSub}>
-                {countLabel}
-                {" · "}
-                {t("vault.syncedPrefix")} {syncLabel}
-              </Text>
+              <View style={styles.pageSubRow}>
+                <Text dim style={styles.pageSub}>
+                  {countLabel}
+                  {" · "}
+                  {t("vault.syncedPrefix")} {syncLabel}
+                </Text>
+              </View>
             </View>
 
             <VaultStatCards
@@ -424,6 +439,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
+  topSpinner: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 50,
+  },
   listContent: {
     paddingBottom: 120,
     flexGrow: 1,
@@ -468,6 +490,11 @@ const styles = StyleSheet.create({
   pageSub: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  pageSubRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   searchWrap: {
     flexDirection: "row",
