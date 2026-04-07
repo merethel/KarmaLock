@@ -8,6 +8,7 @@ import {
 } from "@/src/api/ai";
 import { createBelonging } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
+import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -19,12 +20,12 @@ import { RegisterIntroStep } from "./RegisterIntroStep";
 import { RegisterPhotosStep } from "./RegisterPhotosStep";
 import { RegisterReviewStep } from "./RegisterReviewStep";
 import { RegisterWizardHeader } from "./RegisterWizardHeader";
+import { registerStyles as s } from "./registerStyles";
 import {
   applySuggestionToFields,
   PHOTO_COUNT,
   type WizardStep,
 } from "./registerTypes";
-import { registerStyles as s } from "./registerStyles";
 
 export function RegisterBelongingWizard({
   initialChipUid,
@@ -184,6 +185,14 @@ export function RegisterBelongingWizard({
     setStep("edit");
   }
 
+  async function photoUriToDataUrl(uri: string): Promise<string> {
+    // Store as a data URL so it works across devices without a separate upload service.
+    const b64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return `data:image/jpeg;base64,${b64}`;
+  }
+
   async function submit() {
     try {
       setError("");
@@ -197,10 +206,23 @@ export function RegisterBelongingWizard({
       }
       setBusy(true);
       setBusyMessage(t("addBelonging.processing"));
+
+      const firstPhotoUri = photos[0];
+      let photoUrl: string | undefined = undefined;
+      if (firstPhotoUri != null) {
+        try {
+          photoUrl = await photoUriToDataUrl(firstPhotoUri);
+        } catch {
+          // Non-critical: allow registration without a thumbnail.
+          photoUrl = undefined;
+        }
+      }
+
       await createBelonging({
         chipUid: chipUid.trim(),
         title: title.trim(),
         description: description.trim() || undefined,
+        photoUrl,
         category: category.trim() || undefined,
         brand: brand.trim() || undefined,
         model: model.trim() || undefined,
@@ -235,6 +257,11 @@ export function RegisterBelongingWizard({
     }
     setStep("review");
   }
+
+  useEffect(() => {
+    // Changing step should clear any prior error state.
+    setError("");
+  }, [step]);
 
   useEffect(() => {
     if (!error || step !== "photos") return;
@@ -281,7 +308,7 @@ export function RegisterBelongingWizard({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {error && step !== "photos" ? (
+          {error && step !== "photos" && step !== "edit" ? (
             <RegisterInlineErrorBanner
               title={t("registerFlow.stepErrorTitle")}
               message={error}
@@ -316,6 +343,7 @@ export function RegisterBelongingWizard({
           {step === "edit" ? (
             <RegisterEditStep
               t={t}
+              errorMessage={error}
               title={title}
               setTitle={setTitle}
               brand={brand}

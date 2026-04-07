@@ -2,8 +2,8 @@ import { Text } from "@/components/common_components/Text";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
-import type { WizardStep } from "./registerTypes";
 import { registerStyles as s } from "./registerStyles";
+import type { WizardStep } from "./registerTypes";
 
 import type { TranslationKey } from "@/src/i18n/types";
 
@@ -13,10 +13,7 @@ function ProgressRow({ filled, total }: { filled: number; total: number }) {
   return (
     <View style={s.progressRow}>
       {Array.from({ length: total }, (_, i) => (
-        <View
-          key={i}
-          style={[s.progressSeg, i < filled && s.progressSegOn]}
-        />
+        <View key={i} style={[s.progressSeg, i < filled && s.progressSegOn]} />
       ))}
     </View>
   );
@@ -47,7 +44,7 @@ export function RegisterWizardHeader({
         <View style={{ width: 72 }} />
       </View>
 
-      <ProgressRow filled={filledSegments} total={4} />
+      <ProgressRow filled={filledSegments} total={3} />
 
       {step !== "intro" ? (
         <Pressable onPress={onCancelRegistration} style={s.cancelRow}>

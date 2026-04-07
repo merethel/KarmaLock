@@ -11,20 +11,40 @@ export type SessionUser = {
 };
 
 export async function setSession(token: string, user: SessionUser) {
+  const available = await SecureStore.isAvailableAsync();
+  if (!available) return;
   await SecureStore.setItemAsync(TOKEN_KEY, token);
   await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
 }
 
 export async function getToken() {
-  return SecureStore.getItemAsync(TOKEN_KEY);
+  try {
+    const available = await SecureStore.isAvailableAsync();
+    if (!available) return null;
+    return await SecureStore.getItemAsync(TOKEN_KEY);
+  } catch {
+    return null;
+  }
 }
 
 export async function getUser(): Promise<SessionUser | null> {
-  const raw = await SecureStore.getItemAsync(USER_KEY);
-  return raw ? (JSON.parse(raw) as SessionUser) : null;
+  try {
+    const available = await SecureStore.isAvailableAsync();
+    if (!available) return null;
+    const raw = await SecureStore.getItemAsync(USER_KEY);
+    return raw ? (JSON.parse(raw) as SessionUser) : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function clearSession() {
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
-  await SecureStore.deleteItemAsync(USER_KEY);
+  try {
+    const available = await SecureStore.isAvailableAsync();
+    if (!available) return;
+    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await SecureStore.deleteItemAsync(USER_KEY);
+  } catch {
+    // non-critical
+  }
 }

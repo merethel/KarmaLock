@@ -9,18 +9,26 @@ const PREF_KEY = "karmalock_unlock_with_biometrics";
 const TABS_HREF = "/(tabs)" as Href;
 
 export async function getBiometricUnlockEnabled(): Promise<boolean> {
-  return (await SecureStore.getItemAsync(PREF_KEY)) === "1";
+  try {
+    const available = await SecureStore.isAvailableAsync();
+    if (!available) return false;
+    return (await SecureStore.getItemAsync(PREF_KEY)) === "1";
+  } catch {
+    return false;
+  }
 }
 
 export async function setBiometricUnlockEnabled(enabled: boolean): Promise<void> {
-  if (enabled) {
-    await SecureStore.setItemAsync(PREF_KEY, "1");
-  } else {
-    try {
+  try {
+    const available = await SecureStore.isAvailableAsync();
+    if (!available) return;
+    if (enabled) {
+      await SecureStore.setItemAsync(PREF_KEY, "1");
+    } else {
       await SecureStore.deleteItemAsync(PREF_KEY);
-    } catch {
-      /* no stored value */
     }
+  } catch {
+    // non-critical
   }
 }
 

@@ -4,6 +4,7 @@ import { Text } from "@/components/common_components/Text";
 import { palette } from "@/constants/Colors";
 import { TextInput, View } from "react-native";
 
+import { RegisterInlineErrorBanner } from "./RegisterInlineErrorBanner";
 import { registerStyles as s } from "./registerStyles";
 
 import type { TranslationKey } from "@/src/i18n/types";
@@ -12,6 +13,7 @@ type T = (key: TranslationKey) => string;
 
 export function RegisterEditStep({
   t,
+  errorMessage,
   title,
   setTitle,
   brand,
@@ -33,6 +35,7 @@ export function RegisterEditStep({
   onContinue,
 }: {
   t: T;
+  errorMessage?: string;
   title: string;
   setTitle: (v: string) => void;
   brand: string;
@@ -95,9 +98,9 @@ export function RegisterEditStep({
         <LabeledTextField
           label={t("registerFlow.fieldValue")}
           value={estimatedValue}
-          onChangeText={setEstimatedValue}
+          onChangeText={(v) => setEstimatedValue(v.replace(/[^\d]/g, ""))}
           placeholder="0"
-          keyboardType="numeric"
+          keyboardType="number-pad"
         />
         <LabeledTextField
           label={t("registerFlow.fieldSerial")}
@@ -127,6 +130,15 @@ export function RegisterEditStep({
         </View>
       </View>
 
+      {errorMessage ? (
+        <View style={{ marginTop: 12 }}>
+          <RegisterInlineErrorBanner
+            title={t("registerFlow.stepErrorTitle")}
+            message={errorMessage}
+            compact
+          />
+        </View>
+      ) : null}
       <Button title={t("registerFlow.continue")} onPress={onContinue} />
     </>
   );

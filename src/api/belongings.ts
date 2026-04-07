@@ -7,6 +7,10 @@ export type Belonging = {
   title: string;
   description?: string;
   photoUrl?: string;
+  attributes?: {
+    estimatedValueDkk?: string | number;
+    [key: string]: unknown;
+  };
   isStolen: boolean;
   stolenAt?: string | null;
   stolenLocation?: string;

@@ -3,24 +3,30 @@ import { RegisterPrimaryCta } from "@/components/common_components/RegisterPrima
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { formatVaultSyncLabel } from "@/components/vault/formatSyncLabel";
-import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  TextInput,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Pressable,
+    RefreshControl,
+    StyleSheet,
+    TextInput,
+    View,
 } from "react-native";
 
+import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings } from "@/src/api/belongings";
-import { palette } from "@/constants/Colors";
 import { useI18n } from "@/src/i18n/context";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
@@ -95,7 +101,8 @@ export default function VaultDashboard() {
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter((i) => {
-      const hay = `${i.title} ${i.description ?? ""} ${i.chipUid}`.toLowerCase();
+      const hay =
+        `${i.title} ${i.description ?? ""} ${i.chipUid}`.toLowerCase();
       return hay.includes(q);
     });
   }, [items, search]);
@@ -108,6 +115,28 @@ export default function VaultDashboard() {
     () => items.filter((i) => i.isStolen).length,
     [items],
   );
+
+  const totalValueDkk = useMemo(() => {
+    return items.reduce((sum, i) => {
+      const raw = i.attributes?.estimatedValueDkk;
+      if (raw == null || raw === "") return sum;
+      if (typeof raw === "number" && Number.isFinite(raw)) return sum + raw;
+      if (typeof raw === "string") {
+        // Integers only (registration enforces digits-only).
+        const cleaned = raw.replace(/[^\d]/g, "");
+        if (!cleaned) return sum;
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? sum + n : sum;
+      }
+      return sum;
+    }, 0);
+  }, [items]);
+
+  const totalValueLabel = useMemo(() => {
+    const n = Math.round(totalValueDkk);
+    // If no items have a value, keep the dash.
+    return n > 0 ? n.toLocaleString(undefined) : "—";
+  }, [totalValueDkk]);
 
   const syncLabel = formatVaultSyncLabel(lastSyncAt, t);
   const countLabel = t("vault.itemsCount").replace(
@@ -138,6 +167,7 @@ export default function VaultDashboard() {
             <VaultStatCards
               protectedCount={protectedCount}
               stolenCount={stolenCount}
+              valueLabel={totalValueLabel}
               t={t}
             />
 
@@ -153,9 +183,7 @@ export default function VaultDashboard() {
               </View>
             ) : null}
 
-            {error ? (
-              <Text style={styles.error}>{error}</Text>
-            ) : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
           </>
         }
         ListEmptyComponent={
@@ -199,10 +227,12 @@ export default function VaultDashboard() {
 function VaultStatCards({
   protectedCount,
   stolenCount,
+  valueLabel,
   t,
 }: {
   protectedCount: number;
   stolenCount: number;
+  valueLabel: string;
   t: (k: import("@/src/i18n/types").TranslationKey) => string;
 }) {
   return (
@@ -219,7 +249,7 @@ function VaultStatCards({
       />
       <StatCard
         icon="cash-outline"
-        value="—"
+        value={valueLabel}
         label={t("vault.statValue")}
       />
     </View>
@@ -310,10 +340,7 @@ function VaultListRow({
 }) {
   return (
     <Pressable
-      style={({ pressed }) => [
-        styles.listRow,
-        pressed && { opacity: 0.92 },
-      ]}
+      style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.92 }]}
     >
       <View style={styles.rowThumb}>
         {item.photoUrl ? (
