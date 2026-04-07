@@ -100,6 +100,15 @@ export const da: Dictionary = {
     chip: "CHIP",
     statusOk: "OK",
     statusStolen: "STJÅLET",
+
+    deleteBelonging: "Slet ejendel",
+    deleteBelongingSubtitle: "Fjern denne ejendel permanent fra dit vault.",
+    deleteBelongingModalTitle: "Slet ejendel?",
+    deleteBelongingModalBody:
+      "Er du sikker på, at du vil slette denne ejendel? Denne handling kan ikke fortrydes.",
+    deleteBelongingModalCancel: "Annuller",
+    deleteBelongingModalConfirm: "Ja, slet ejendel",
+    deleteBelongingModalWait: "Vent {{seconds}} s",
   },
 
   addBelonging: {

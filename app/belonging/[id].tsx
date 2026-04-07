@@ -6,8 +6,10 @@ import { BelongingHeroHeader } from "@/components/belonging/BelongingHeroHeader"
 import { BelongingHeroCard } from "@/components/belonging/BelongingHeroCard";
 import { BelongingLogActions } from "@/components/belonging/BelongingLogActions";
 import { BelongingPrimaryActions } from "@/components/belonging/BelongingPrimaryActions";
+import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
+import { DangerRow } from "@/components/common_components/DangerRow";
 import type { Belonging } from "@/src/api/belongings";
-import { listMyBelongings } from "@/src/api/belongings";
+import { deleteBelonging, listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
@@ -50,16 +52,6 @@ function formatDkk(value: unknown): string {
   return "—";
 }
 
-function Spec({ label, value }: { label: string; value?: string }) {
-  const v = (value ?? "").trim();
-  return (
-    <View>
-      <Text>{label}</Text>
-      <Text>{v || "—"}</Text>
-    </View>
-  );
-}
-
 export default function BelongingDetailsScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -71,6 +63,7 @@ export default function BelongingDetailsScreen() {
   const [item, setItem] = useState<Belonging | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -104,6 +97,12 @@ export default function BelongingDetailsScreen() {
   const onTestAlert = () => Alert.alert("Test alert", "Not implemented yet.");
   const onGetReport = () => Alert.alert("Get report", "Not implemented yet.");
   const onAddDoc = () => Alert.alert("Add doc", "Not implemented yet.");
+
+  const onDelete = useCallback(async () => {
+    if (!item?._id) return;
+    await deleteBelonging(item._id);
+    router.back();
+  }, [item?._id, router]);
 
   const blurOpacity = useMemo(
     () =>
@@ -251,11 +250,42 @@ export default function BelongingDetailsScreen() {
                   onGetReport={onGetReport}
                   onAddDoc={onAddDoc}
                 />
+
+                <DangerRow
+                  title={t("vault.deleteBelonging")}
+                  subtitle={t("vault.deleteBelongingSubtitle")}
+                  onPress={() => setDeleteOpen(true)}
+                  marginTop={22}
+                />
               </View>
             </Animated.ScrollView>
           </Animated.View>
         </View>
       )}
+
+      <DangerConfirmModal
+        visible={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={async () => {
+          try {
+            await onDelete();
+          } catch (e: unknown) {
+            Alert.alert(
+              t("errors.failed"),
+              e instanceof Error ? e.message : t("errors.failed"),
+            );
+          } finally {
+            setDeleteOpen(false);
+          }
+        }}
+        title={t("vault.deleteBelongingModalTitle")}
+        body={t("vault.deleteBelongingModalBody")}
+        cancelLabel={t("vault.deleteBelongingModalCancel")}
+        confirmLabel={t("vault.deleteBelongingModalConfirm")}
+        waitLabel={(s) =>
+          t("vault.deleteBelongingModalWait").replace("{{seconds}}", String(s))
+        }
+      />
     </View>
   );
 }

@@ -1,23 +1,32 @@
 import { Text } from "@/components/common_components/Text";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
-type Props = {
+export function DangerRow({
+  title,
+  subtitle,
+  onPress,
+  marginTop = 20,
+}: {
   title: string;
   subtitle: string;
   onPress: () => void;
-};
-
-export function DeleteAccountRow({ title, subtitle, onPress }: Props) {
+  marginTop?: number;
+}) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.deleteRow, pressed && { opacity: 0.85 }]}
+      style={({ pressed }) => [
+        styles.row,
+        { marginTop },
+        pressed && { opacity: 0.85 },
+      ]}
       onPress={onPress}
     >
       <Ionicons name="trash-outline" size={22} color="#E57373" />
       <View style={styles.textBlock}>
-        <Text style={styles.deleteTitle}>{title}</Text>
-        <Text dim style={styles.deleteSub}>
+        <Text style={styles.title}>{title}</Text>
+        <Text dim style={styles.subtitle}>
           {subtitle}
         </Text>
       </View>
@@ -26,10 +35,9 @@ export function DeleteAccountRow({ title, subtitle, onPress }: Props) {
 }
 
 const styles = StyleSheet.create({
-  deleteRow: {
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 20,
     paddingVertical: 14,
     paddingHorizontal: 14,
     borderRadius: 16,
@@ -38,13 +46,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(229,115,115,0.06)",
   },
   textBlock: { flex: 1, marginLeft: 12 },
-  deleteTitle: {
+  title: {
     color: "#E57373",
     fontSize: 16,
     fontWeight: "800",
   },
-  deleteSub: {
+  subtitle: {
     fontSize: 12,
     marginTop: 4,
   },
 });
+

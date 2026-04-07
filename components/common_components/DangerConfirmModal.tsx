@@ -1,7 +1,4 @@
-import { Button } from "@/components/common_components/Button";
-import { Text } from "@/components/common_components/Text";
 import { useCountdown } from "@/hooks/useCountdown";
-import type { TranslationKey } from "@/src/i18n/types";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,23 +8,36 @@ import {
   View,
 } from "react-native";
 
-const COUNTDOWN_SEC = 5;
+import { Button } from "./Button";
+import { Text } from "./Text";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void>;
-  t: (key: TranslationKey) => string;
+
+  title: string;
+  body: string;
+  cancelLabel: string;
+  confirmLabel: string;
+
+  countdownSeconds?: number;
+  waitLabel?: (secondsLeft: number) => string;
 };
 
-export function DeleteAccountModal({
+export function DangerConfirmModal({
   visible,
   onClose,
   onConfirm,
-  t,
+  title,
+  body,
+  cancelLabel,
+  confirmLabel,
+  countdownSeconds = 3,
+  waitLabel,
 }: Props) {
   const [busy, setBusy] = useState(false);
-  const secondsLeft = useCountdown(visible, COUNTDOWN_SEC);
+  const secondsLeft = useCountdown(visible, countdownSeconds);
 
   useEffect(() => {
     if (!visible) setBusy(false);
@@ -54,18 +64,19 @@ export function DeleteAccountModal({
     >
       <Pressable style={styles.backdrop} onPress={busy ? undefined : onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-          <Text style={styles.title}>{t("settings.deleteModalTitle")}</Text>
+          <Text style={styles.title}>{title}</Text>
           <Text dim style={styles.body}>
-            {t("settings.deleteModalBody")}
+            {body}
           </Text>
 
           <View style={styles.actions}>
             <Button
-              title={t("settings.deleteModalCancel")}
+              title={cancelLabel}
               variant="outline"
               disabled={busy}
               onPress={onClose}
             />
+
             <Pressable
               disabled={!canConfirm}
               onPress={() => void handleConfirm()}
@@ -80,11 +91,10 @@ export function DeleteAccountModal({
               ) : (
                 <Text style={styles.dangerBtnText}>
                   {secondsLeft > 0
-                    ? t("settings.deleteModalWait").replace(
-                        "{{seconds}}",
-                        String(secondsLeft),
-                      )
-                    : t("settings.deleteModalConfirm")}
+                    ? waitLabel
+                      ? waitLabel(secondsLeft)
+                      : `Wait ${secondsLeft} s`
+                    : confirmLabel}
                 </Text>
               )}
             </Pressable>

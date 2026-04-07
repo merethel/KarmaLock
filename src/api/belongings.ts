@@ -45,6 +45,12 @@ export async function createBelonging(payload: {
   });
 }
 
+export async function deleteBelonging(id: string) {
+  return apiFetch<{}>(`/belongings/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
 export async function describeBelongingPhoto(photoUri: string) {
   const API_URL = process.env.EXPO_PUBLIC_API_URL!;
   const form = new FormData();

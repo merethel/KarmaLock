@@ -1,5 +1,3 @@
-export { DeleteAccountModal } from "./DeleteAccountModal";
-export { DeleteAccountRow } from "./DeleteAccountRow";
 export { SectionTitle } from "./SectionTitle";
 export { SettingsAccentSwitch } from "./SettingsAccentSwitch";
 export { SettingsCard } from "./SettingsCard";

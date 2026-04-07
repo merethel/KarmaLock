@@ -2,9 +2,9 @@ import { LanguageFlagSwitcher } from "@/components/LanguagePicker";
 import { Button } from "@/components/common_components/Button";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
+import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
+import { DangerRow } from "@/components/common_components/DangerRow";
 import {
-  DeleteAccountModal,
-  DeleteAccountRow,
   SectionTitle,
   SettingsAccentSwitch,
   SettingsCard,
@@ -162,20 +162,27 @@ export default function SettingsScreen() {
           {t("settings.signOutHint")}
         </Text>
 
-        <DeleteAccountRow
+        <DangerRow
           title={t("settings.deleteAccount")}
           subtitle={t("settings.deleteSubtitle")}
           onPress={() => setDeleteOpen(true)}
+          marginTop={20}
         />
 
         <View style={styles.spacerLg} />
       </ScrollView>
 
-      <DeleteAccountModal
+      <DangerConfirmModal
         visible={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDeleteConfirmed}
-        t={t}
+        title={t("settings.deleteModalTitle")}
+        body={t("settings.deleteModalBody")}
+        cancelLabel={t("settings.deleteModalCancel")}
+        confirmLabel={t("settings.deleteModalConfirm")}
+        waitLabel={(s) =>
+          t("settings.deleteModalWait").replace("{{seconds}}", String(s))
+        }
       />
     </Screen>
   );

@@ -101,6 +101,15 @@ export const en = {
     chip: "CHIP",
     statusOk: "OK",
     statusStolen: "STOLEN",
+
+    deleteBelonging: "Delete belonging",
+    deleteBelongingSubtitle: "Permanently remove this belonging from your vault.",
+    deleteBelongingModalTitle: "Delete belonging?",
+    deleteBelongingModalBody:
+      "Are you sure you want to delete this belonging? This action cannot be undone.",
+    deleteBelongingModalCancel: "Cancel",
+    deleteBelongingModalConfirm: "Yes, delete belonging",
+    deleteBelongingModalWait: "Wait {{seconds}} s",
   },
 
   addBelonging: {
