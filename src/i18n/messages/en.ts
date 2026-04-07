@@ -118,6 +118,7 @@ export const en = {
     log: "LOG",
     getReport: "GET REPORT",
     addDoc: "+ ADD DOC",
+    save: "Save",
     saving: "Saving…",
   },
 

@@ -134,6 +134,15 @@ function RootLayoutNav() {
               contentStyle: { backgroundColor: "#000000" },
             }}
           />
+          <Stack.Screen
+            name="belonging/[id]/edit"
+            options={{
+              presentation: Platform.OS === "ios" ? "fullScreenModal" : "modal",
+              animation: "slide_from_bottom",
+              gestureEnabled: true,
+              contentStyle: { backgroundColor: "#000000" },
+            }}
+          />
           <Stack.Screen name="about-karmalock" />
         </Stack>
         {!navReady ? (

@@ -117,6 +117,7 @@ export const da: Dictionary = {
     log: "LOG",
     getReport: "HENT RAPPORT",
     addDoc: "+ TILFØJ DOK",
+    save: "Gem",
     saving: "Gemmer…",
   },
 

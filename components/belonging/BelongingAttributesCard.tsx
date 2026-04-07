@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
   },
   cardWithEdit: {
     paddingTop: 16 + 34,
+    paddingBottom: 16 + 10,
   },
   editBtn: {
     position: "absolute",

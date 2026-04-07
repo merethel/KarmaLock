@@ -1,4 +1,5 @@
 import { BelongingDetailsForm } from "@/components/belonging/BelongingDetailsForm";
+import { BackButton } from "@/components/common_components/BackButton";
 import { Text } from "@/components/common_components/Text";
 import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings, updateBelonging } from "@/src/api/belongings";
@@ -66,7 +67,7 @@ export default function EditBelongingDetailsScreen() {
     setPurchaseDate(asString(item.attributes?.purchaseDate ?? ""));
   }, [item]);
 
-  const submitLabel = useMemo(() => t("registerFlow.continue"), [t]);
+  const submitLabel = useMemo(() => t("vault.save"), [t]);
 
   const onSubmit = useCallback(async () => {
     if (!id) return;
@@ -112,11 +113,28 @@ export default function EditBelongingDetailsScreen() {
   ]);
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: insets.bottom }]}>
+    <View
+      style={[
+        styles.screen,
+        { paddingTop: insets.top + 12, paddingBottom: insets.bottom },
+      ]}
+    >
+      <BackButton
+        onPress={() => router.back()}
+        topInset={0}
+        style={{ position: "absolute", left: 20, top: 12, zIndex: 10 }}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        bounces
+        alwaysBounceVertical
+        onScrollEndDrag={(e) => {
+          const y = e.nativeEvent.contentOffset.y;
+          // Pull down past the top to dismiss (full-screen modal feel).
+          if (y < -80) router.back();
+        }}
       >
         {loading ? (
           <View style={styles.center}>
@@ -163,7 +181,7 @@ export default function EditBelongingDetailsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#000", paddingHorizontal: 20 },
-  content: { paddingBottom: 120, gap: 14 },
+  content: { paddingBottom: 120, gap: 14, paddingTop: 56 },
   center: {
     paddingTop: 120,
     alignItems: "center",
