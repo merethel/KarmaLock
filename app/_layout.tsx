@@ -1,8 +1,8 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
-    DarkTheme,
-    DefaultTheme,
-    ThemeProvider,
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
@@ -120,6 +120,18 @@ function RootLayoutNav() {
                 justifyContent: "flex-start",
                 alignItems: "stretch",
               },
+            }}
+          />
+          <Stack.Screen
+            name="belonging/[id]"
+            options={{
+              // Full-screen so hero image can reach screen top.
+              presentation:
+                Platform.OS === "ios" ? "fullScreenModal" : "card",
+              animation:
+                Platform.OS === "ios" ? "slide_from_bottom" : "default",
+              gestureEnabled: true,
+              contentStyle: { backgroundColor: "#000000" },
             }}
           />
           <Stack.Screen name="about-karmalock" />

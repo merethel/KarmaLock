@@ -7,6 +7,11 @@ export type Belonging = {
   title: string;
   description?: string;
   photoUrl?: string;
+  category?: string;
+  brand?: string;
+  model?: string;
+  color?: string;
+  serialNumber?: string;
   attributes?: {
     estimatedValueDkk?: string | number;
     [key: string]: unknown;

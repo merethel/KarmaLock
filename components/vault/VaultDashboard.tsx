@@ -338,13 +338,25 @@ function VaultListRow({
   item: Belonging;
   t: (k: import("@/src/i18n/types").TranslationKey) => string;
 }) {
+  const router = useRouter();
+
+  const thumbUri =
+    item.photoUrl && item.photoUrl.trim()
+      ? item.photoUrl.startsWith("data:image/")
+        ? item.photoUrl
+        : item.photoUrl.startsWith("http")
+          ? item.photoUrl
+          : `data:image/jpeg;base64,${item.photoUrl}`
+      : "";
+
   return (
     <Pressable
       style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.92 }]}
+      onPress={() => router.push((`/belonging/${item._id}` as unknown) as any)}
     >
       <View style={styles.rowThumb}>
-        {item.photoUrl ? (
-          <Image source={{ uri: item.photoUrl }} style={styles.rowImage} />
+        {thumbUri ? (
+          <Image source={{ uri: thumbUri }} style={styles.rowImage} />
         ) : (
           <Ionicons
             name="cube-outline"
