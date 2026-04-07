@@ -112,8 +112,8 @@ export default function BelongingDetailsScreen() {
       // Unmark should be instant (no modal).
       try {
         setMarkBusy(true);
-        await updateBelonging(item._id, { isStolen: false });
-        await load();
+        const res = await updateBelonging(item._id, { isStolen: false });
+        setItem(res.data.item);
       } catch (e: unknown) {
         Alert.alert(
           t("errors.failed"),
@@ -125,7 +125,7 @@ export default function BelongingDetailsScreen() {
       return;
     }
     setStolenOpen(true);
-  }, [item?._id, item?.isStolen, load, t]);
+  }, [item?._id, item?.isStolen, t]);
   const onTestAlert = () => Alert.alert("Test alert", "Not implemented yet.");
   const onGetReport = () => Alert.alert("Get report", "Not implemented yet.");
   const onAddDoc = () => Alert.alert("Add doc", "Not implemented yet.");
@@ -335,8 +335,10 @@ export default function BelongingDetailsScreen() {
         onConfirm={async () => {
           try {
             if (!item?._id) return;
-            await updateBelonging(item._id, { isStolen: !item.isStolen });
-            await load();
+            const res = await updateBelonging(item._id, {
+              isStolen: !item.isStolen,
+            });
+            setItem(res.data.item);
           } catch (e: unknown) {
             Alert.alert(
               t("errors.failed"),
