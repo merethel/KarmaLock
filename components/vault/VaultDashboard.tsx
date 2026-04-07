@@ -42,6 +42,7 @@ export default function VaultDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
+  const [syncTick, setSyncTick] = useState(0);
   const [search, setSearch] = useState("");
   const [loadTimedOut, setLoadTimedOut] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -97,6 +98,12 @@ export default function VaultDashboard() {
     setRefreshing(false);
   }
 
+  // Keep “Synced just now / X min ago” fresh.
+  useEffect(() => {
+    const id = setInterval(() => setSyncTick((x) => x + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return items;
@@ -138,7 +145,10 @@ export default function VaultDashboard() {
     return n > 0 ? n.toLocaleString(undefined) : "—";
   }, [totalValueDkk]);
 
-  const syncLabel = formatVaultSyncLabel(lastSyncAt, t);
+  const syncLabel = useMemo(
+    () => formatVaultSyncLabel(lastSyncAt, t),
+    [lastSyncAt, t, syncTick],
+  );
   const countLabel = t("vault.itemsCount").replace(
     "{{count}}",
     String(items.length),
@@ -152,6 +162,15 @@ export default function VaultDashboard() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        bounces
+        alwaysBounceVertical
+        onScrollEndDrag={(e) => {
+          // Some layouts prevent native pull-to-refresh from triggering reliably.
+          // If user pulls down while already at top, refresh anyway.
+          if (refreshing) return;
+          const y = e.nativeEvent.contentOffset.y;
+          if (y < -60) void onRefresh();
+        }}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
