@@ -111,9 +111,23 @@ export const en = {
     deleteBelongingModalConfirm: "Yes, delete belonging",
     deleteBelongingModalWait: "Wait {{seconds}} s",
 
+    reportStolenModalTitle: "Report stolen?",
+    reportStolenModalBody:
+      "This will mark the belonging as STOLEN in your vault. Others can scan the item and see it marked as stolen. You can change this later.",
+    reportStolenModalCancel: "Cancel",
+    reportStolenModalConfirm: "Yes, mark as stolen",
+    reportStolenModalWait: "Wait {{seconds}} s",
+
+    markNotStolenModalTitle: "Mark as not stolen?",
+    markNotStolenModalBody:
+      "This will remove the STOLEN mark from the belonging. Others scanning the item will no longer see it as stolen.",
+    markNotStolenModalCancel: "Cancel",
+    markNotStolenModalConfirm: "Yes, mark as not stolen",
+
     actionTransfer: "TRANSFER",
     actionGrant: "GRANT",
     actionReportStolen: "REPORT STOLEN",
+    actionMarkNotStolen: "MARK NOT STOLEN",
     testAlertSystem: "TEST ALERT SYSTEM",
     log: "LOG",
     getReport: "GET REPORT",

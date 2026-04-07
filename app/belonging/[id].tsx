@@ -9,7 +9,11 @@ import { BelongingPrimaryActions } from "@/components/belonging/BelongingPrimary
 import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
 import { DangerRow } from "@/components/common_components/DangerRow";
 import type { Belonging } from "@/src/api/belongings";
-import { deleteBelonging, listMyBelongings } from "@/src/api/belongings";
+import {
+  deleteBelonging,
+  listMyBelongings,
+  updateBelonging,
+} from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
 import { useFocusEffect } from "expo-router";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -65,6 +69,8 @@ export default function BelongingDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [stolenOpen, setStolenOpen] = useState(false);
+  const [markBusy, setMarkBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -100,8 +106,26 @@ export default function BelongingDetailsScreen() {
 
   const onTransfer = () => Alert.alert("Transfer", "Not implemented yet.");
   const onGrant = () => Alert.alert("Grant", "Not implemented yet.");
-  const onReportStolen = () =>
-    Alert.alert("Report stolen", "Not implemented yet.");
+  const onReportStolen = useCallback(async () => {
+    if (!item?._id) return;
+    if (item.isStolen) {
+      // Unmark should be instant (no modal).
+      try {
+        setMarkBusy(true);
+        await updateBelonging(item._id, { isStolen: false });
+        await load();
+      } catch (e: unknown) {
+        Alert.alert(
+          t("errors.failed"),
+          e instanceof Error ? e.message : t("errors.failed"),
+        );
+      } finally {
+        setMarkBusy(false);
+      }
+      return;
+    }
+    setStolenOpen(true);
+  }, [item?._id, item?.isStolen, load, t]);
   const onTestAlert = () => Alert.alert("Test alert", "Not implemented yet.");
   const onGetReport = () => Alert.alert("Get report", "Not implemented yet.");
   const onAddDoc = () => Alert.alert("Add doc", "Not implemented yet.");
@@ -251,6 +275,8 @@ export default function BelongingDetailsScreen() {
                   onTransfer={onTransfer}
                   onGrant={onGrant}
                   onReportStolen={onReportStolen}
+                  stolen={Boolean(item?.isStolen)}
+                  reportBusy={markBusy}
                 />
 
                 <BelongingAttributesCard
@@ -301,6 +327,46 @@ export default function BelongingDetailsScreen() {
         waitLabel={(s) =>
           t("vault.deleteBelongingModalWait").replace("{{seconds}}", String(s))
         }
+      />
+
+      <DangerConfirmModal
+        visible={stolenOpen}
+        onClose={() => setStolenOpen(false)}
+        onConfirm={async () => {
+          try {
+            if (!item?._id) return;
+            await updateBelonging(item._id, { isStolen: !item.isStolen });
+            await load();
+          } catch (e: unknown) {
+            Alert.alert(
+              t("errors.failed"),
+              e instanceof Error ? e.message : t("errors.failed"),
+            );
+          } finally {
+            setStolenOpen(false);
+          }
+        }}
+        title={
+          item?.isStolen
+            ? t("vault.markNotStolenModalTitle")
+            : t("vault.reportStolenModalTitle")
+        }
+        body={
+          item?.isStolen
+            ? t("vault.markNotStolenModalBody")
+            : t("vault.reportStolenModalBody")
+        }
+        cancelLabel={
+          item?.isStolen
+            ? t("vault.markNotStolenModalCancel")
+            : t("vault.reportStolenModalCancel")
+        }
+        confirmLabel={
+          item?.isStolen
+            ? t("vault.markNotStolenModalConfirm")
+            : t("vault.reportStolenModalConfirm")
+        }
+        countdownSeconds={0}
       />
     </View>
   );

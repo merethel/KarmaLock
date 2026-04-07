@@ -8,11 +8,15 @@ export function BelongingPrimaryActions({
   onTransfer,
   onGrant,
   onReportStolen,
+  stolen,
+  reportBusy = false,
 }: {
   t: (k: TranslationKey) => string;
   onTransfer: () => void;
   onGrant: () => void;
   onReportStolen: () => void;
+  stolen: boolean;
+  reportBusy?: boolean;
 }) {
   return (
     <View>
@@ -25,8 +29,20 @@ export function BelongingPrimaryActions({
         </Pressable>
       </View>
 
-      <Pressable onPress={onReportStolen} style={styles.reportBtn}>
-        <Text style={styles.reportBtnText}>{t("vault.actionReportStolen")}</Text>
+      <Pressable
+        onPress={onReportStolen}
+        disabled={reportBusy}
+        style={[styles.reportBtn, stolen && styles.notStolenBtn]}
+      >
+        <Text
+          style={[
+            styles.reportBtnText,
+            stolen && styles.notStolenBtnText,
+            reportBusy && { opacity: 0.6 },
+          ]}
+        >
+          {stolen ? t("vault.actionMarkNotStolen") : t("vault.actionReportStolen")}
+        </Text>
       </Pressable>
     </View>
   );
@@ -78,6 +94,13 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1.6,
     fontSize: 14,
+  },
+  notStolenBtn: {
+    borderColor: "rgba(42, 214, 110, 0.85)",
+    backgroundColor: "rgba(42, 214, 110, 0.08)",
+  },
+  notStolenBtnText: {
+    color: "rgba(42, 214, 110, 0.95)",
   },
 });
 

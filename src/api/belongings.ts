@@ -61,6 +61,8 @@ export async function updateBelonging(
     model: string;
     color: string;
     serialNumber: string;
+    isStolen: boolean;
+    stolenLocation: string;
     attributes: Record<string, unknown>;
   }>,
 ) {

@@ -110,9 +110,23 @@ export const da: Dictionary = {
     deleteBelongingModalConfirm: "Ja, slet ejendel",
     deleteBelongingModalWait: "Vent {{seconds}} s",
 
+    reportStolenModalTitle: "Anmeld stjålet?",
+    reportStolenModalBody:
+      "Dette markerer ejendelen som STJÅLET i dit vault. Andre kan scanne genstanden og se, at den er markeret som stjålet. Du kan ændre dette senere.",
+    reportStolenModalCancel: "Annuller",
+    reportStolenModalConfirm: "Ja, markér som stjålet",
+    reportStolenModalWait: "Vent {{seconds}} s",
+
+    markNotStolenModalTitle: "Markér som ikke stjålet?",
+    markNotStolenModalBody:
+      "Dette fjerner STJÅLET-markeringen fra ejendelen. Andre der scanner genstanden vil ikke længere se den som stjålet.",
+    markNotStolenModalCancel: "Annuller",
+    markNotStolenModalConfirm: "Ja, markér som ikke stjålet",
+
     actionTransfer: "OVERFØR",
     actionGrant: "GIV ADGANG",
     actionReportStolen: "ANMELD STJÅLET",
+    actionMarkNotStolen: "MARKÉR IKKE STJÅLET",
     testAlertSystem: "TEST ALARMSYSTEM",
     log: "LOG",
     getReport: "HENT RAPPORT",
