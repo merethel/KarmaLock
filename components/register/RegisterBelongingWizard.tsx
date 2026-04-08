@@ -7,8 +7,8 @@ import {
   takePhoto,
 } from "@/src/api/ai";
 import { createBelonging } from "@/src/api/belongings";
+import { uploadImage } from "@/src/api/uploads";
 import { useI18n } from "@/src/i18n/context";
-import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -185,14 +185,6 @@ export function RegisterBelongingWizard({
     setStep("edit");
   }
 
-  async function photoUriToDataUrl(uri: string): Promise<string> {
-    // Store as a data URL so it works across devices without a separate upload service.
-    const b64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    return `data:image/jpeg;base64,${b64}`;
-  }
-
   async function submit() {
     try {
       setError("");
@@ -210,12 +202,8 @@ export function RegisterBelongingWizard({
       const firstPhotoUri = photos[0];
       let photoUrl: string | undefined = undefined;
       if (firstPhotoUri != null) {
-        try {
-          photoUrl = await photoUriToDataUrl(firstPhotoUri);
-        } catch {
-          // Non-critical: allow registration without a thumbnail.
-          photoUrl = undefined;
-        }
+        // Backend no longer accepts base64. Upload first, then store the HTTPS URL.
+        photoUrl = await uploadImage(firstPhotoUri);
       }
 
       await createBelonging({
@@ -382,6 +370,7 @@ export function RegisterBelongingWizard({
               setChipUid={setChipUid}
               onMockScanChip={mockScanChip}
               onSubmit={submit}
+              errorMessage={error}
             />
           ) : null}
         </ScrollView>

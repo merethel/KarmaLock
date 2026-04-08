@@ -55,7 +55,6 @@ function RootLayoutNav() {
   useEffect(() => {
     (async () => {
       const token = await getToken();
-      console.log("token", token);
       const onboardingDone = await getOnboardingComplete();
       if (token) {
         if (await shouldUseBiometricGate()) {

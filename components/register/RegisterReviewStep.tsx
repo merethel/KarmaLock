@@ -4,6 +4,7 @@ import { Text } from "@/components/common_components/Text";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
+import { RegisterInlineErrorBanner } from "./RegisterInlineErrorBanner";
 import { RegisterSummaryRow } from "./RegisterSummaryRow";
 import { PHOTO_COUNT } from "./registerTypes";
 import { registerStyles as s } from "./registerStyles";
@@ -25,6 +26,7 @@ export function RegisterReviewStep({
   setChipUid,
   onMockScanChip,
   onSubmit,
+  errorMessage,
 }: {
   t: T;
   title: string;
@@ -38,6 +40,7 @@ export function RegisterReviewStep({
   setChipUid: (v: string) => void;
   onMockScanChip: () => void;
   onSubmit: () => void;
+  errorMessage?: string;
 }) {
   const canSubmit = Boolean(title.trim() && chipUid.trim());
 
@@ -105,6 +108,16 @@ export function RegisterReviewStep({
         <Text dim style={s.patchHint}>
           {t("registerFlow.noPatchHint")}
         </Text>
+      ) : null}
+
+      {errorMessage ? (
+        <View style={{ marginTop: 12 }}>
+          <RegisterInlineErrorBanner
+            title={t("registerFlow.stepErrorTitle")}
+            message={errorMessage}
+            compact
+          />
+        </View>
       ) : null}
 
       <Pressable
