@@ -98,6 +98,9 @@ function RootLayoutNav() {
             fullScreenGestureEnabled: true,
             gestureEnabled: true,
             animationMatchesGesture: true,
+            ...(Platform.OS === "ios"
+              ? { animation: "ios_from_right" as const }
+              : {}),
             ...(Platform.OS === "android"
               ? { animation: "ios_from_right" as const }
               : {}),
@@ -109,11 +112,8 @@ function RootLayoutNav() {
           <Stack.Screen
             name="add-belonging"
             options={{
-              // `modal` on iOS is often a sheet with empty space above the card.
-              // Full-screen covers from the top edge so content can sit flush under the status bar.
-              presentation: Platform.OS === "ios" ? "fullScreenModal" : "modal",
-              animation: "slide_from_bottom",
-              animationDuration: 420,
+              // Use a normal card push so iOS edge-swipe back feels native.
+              presentation: "card",
               contentStyle: {
                 flex: 1,
                 backgroundColor: "#000000",
@@ -136,8 +136,9 @@ function RootLayoutNav() {
           <Stack.Screen
             name="belonging/[id]/edit"
             options={{
-              presentation: Platform.OS === "ios" ? "fullScreenModal" : "modal",
-              animation: "slide_from_bottom",
+              // Use a normal card push so iOS edge-swipe back feels native.
+              presentation: "card",
+              animation: Platform.OS === "ios" ? "ios_from_right" : "default",
               gestureEnabled: true,
               contentStyle: { backgroundColor: "#000000" },
             }}
