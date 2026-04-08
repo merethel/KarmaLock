@@ -41,21 +41,24 @@ export function RegisterWizardHeader({
         <Text mono style={s.headerTitle}>
           {t("registerFlow.headerTitle")}
         </Text>
-        <View style={{ width: 72 }} />
+        {step !== "intro" ? (
+          <Pressable
+            onPress={onCancelRegistration}
+            hitSlop={12}
+            style={s.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("registerFlow.cancelRegistration")}
+          >
+            <Ionicons name="close" size={18} color="rgba(255,255,255,0.7)" />
+          </Pressable>
+        ) : (
+          <View style={{ width: 32 }} />
+        )}
       </View>
 
       <ProgressRow filled={filledSegments} total={3} />
 
-      {step !== "intro" ? (
-        <Pressable onPress={onCancelRegistration} style={s.cancelRow}>
-          <Ionicons name="close" size={16} color="rgba(255,255,255,0.5)" />
-          <Text muted style={s.cancelText}>
-            {t("registerFlow.cancelRegistration")}
-          </Text>
-        </Pressable>
-      ) : (
-        <View style={{ height: 28 }} />
-      )}
+      <View style={{ height: 12 }} />
     </>
   );
 }

@@ -19,6 +19,16 @@ export const registerStyles = StyleSheet.create({
   },
   backBtn: { paddingVertical: 4, width: 72 },
   backText: { color: "rgba(255,255,255,0.85)", fontSize: 15 },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
   headerTitle: {
     fontSize: 12,
     letterSpacing: 3,
@@ -39,14 +49,6 @@ export const registerStyles = StyleSheet.create({
   progressSegOn: {
     backgroundColor: palette.accent,
   },
-  cancelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    alignSelf: "flex-start",
-    marginBottom: 12,
-  },
-  cancelText: { fontSize: 13 },
   scroll: { flex: 1 },
   scrollContent: {
     paddingBottom: 120,
