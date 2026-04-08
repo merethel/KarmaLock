@@ -9,6 +9,7 @@ import {
 import { createBelonging } from "@/src/api/belongings";
 import { uploadImage } from "@/src/api/uploads";
 import { useI18n } from "@/src/i18n/context";
+import { useEdgeSwipeBack } from "@/hooks/useEdgeSwipeBack";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -115,6 +116,11 @@ export function RegisterBelongingWizard({
     else if (step === "edit") setStep("photos");
     else setStep("edit");
   }, [router, step]);
+
+  const swipeBackResponder = useEdgeSwipeBack({
+    onBack: goBack,
+    disabled: busy,
+  });
 
   const confirmCancel = () => {
     Alert.alert(t("registerFlow.cancelTitle"), t("registerFlow.cancelBody"), [
@@ -261,6 +267,7 @@ export function RegisterBelongingWizard({
 
   return (
     <View
+      {...swipeBackResponder.panHandlers}
       style={[
         s.root,
         {
