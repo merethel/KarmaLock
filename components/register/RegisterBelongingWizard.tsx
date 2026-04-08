@@ -11,7 +11,7 @@ import { uploadImage } from "@/src/api/uploads";
 import { useI18n } from "@/src/i18n/context";
 import { useEdgeSwipeBack } from "@/hooks/useEdgeSwipeBack";
 import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
-import { useScrollFieldToTop } from "@/hooks/useScrollFieldToTop";
+import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform, ScrollView, View } from "react-native";
@@ -63,10 +63,11 @@ export function RegisterBelongingWizard({
   const scrollRef = useRef<ScrollView>(null);
   const kb = useKeyboardBottomInset();
   const scrollYRef = useRef(0);
-  const scrollFieldToTop = useScrollFieldToTop({
+  const scrollFieldAboveKeyboard = useScrollFieldAboveKeyboard({
     scrollRef,
     getScrollY: () => scrollYRef.current,
-    getTopY: () => insets.top + 90,
+    keyboardHeight: kb,
+    gap: 18,
   });
 
   const quality = keepQuality ? 1 : 0.72;
@@ -378,7 +379,7 @@ export function RegisterBelongingWizard({
               submitLabel={t("registerFlow.continue")}
               showHeader
               onFieldFocus={(e) => {
-                scrollFieldToTop(e);
+                scrollFieldAboveKeyboard(e);
               }}
             />
           ) : null}
@@ -399,7 +400,7 @@ export function RegisterBelongingWizard({
               onSubmit={submit}
               errorMessage={error}
               onFieldFocus={(e) => {
-                scrollFieldToTop(e);
+                scrollFieldAboveKeyboard(e);
               }}
             />
           ) : null}

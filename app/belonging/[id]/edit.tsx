@@ -5,7 +5,7 @@ import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings, updateBelonging } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
 import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
-import { useScrollFieldToTop } from "@/hooks/useScrollFieldToTop";
+import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -31,10 +31,11 @@ export default function EditBelongingDetailsScreen() {
   const kb = useKeyboardBottomInset();
   const scrollRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
-  const scrollFieldToTop = useScrollFieldToTop({
+  const scrollFieldAboveKeyboard = useScrollFieldAboveKeyboard({
     scrollRef,
     getScrollY: () => scrollYRef.current,
-    getTopY: () => insets.top + 90,
+    keyboardHeight: kb,
+    gap: 18,
   });
 
   const [item, setItem] = useState<Belonging | null>(null);
@@ -201,7 +202,7 @@ export default function EditBelongingDetailsScreen() {
             submitLabel={busy ? t("vault.saving") : submitLabel}
             showHeader={false}
             onFieldFocus={(e) => {
-              scrollFieldToTop(e);
+              scrollFieldAboveKeyboard(e);
             }}
           />
         )}
