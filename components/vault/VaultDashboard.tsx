@@ -29,6 +29,7 @@ import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
+import { cacheBelonging, seedBelongingCache } from "@/src/state/belongingCache";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
 const CARD_BORDER = "rgba(255,255,255,0.10)";
@@ -53,11 +54,14 @@ export default function VaultDashboard() {
   const load = useCallback(async () => {
     const seq = ++loadSeq.current;
     try {
+      setLoading(true);
       setError("");
       setLoadTimedOut(false);
       const res = await listMyBelongings();
       if (seq !== loadSeq.current) return;
-      setItems(res.data.items || []);
+      const next = res.data.items || [];
+      setItems(next);
+      seedBelongingCache(next);
       setLastSyncAt(new Date());
     } catch (e: unknown) {
       if (seq !== loadSeq.current) return;
@@ -158,17 +162,6 @@ export default function VaultDashboard() {
 
   return (
     <Screen style={styles.screen}>
-      {loading || refreshing ? (
-        <View
-          pointerEvents="none"
-          style={[
-            styles.topSpinner,
-            { top: Math.max(16, insets.top + 16) },
-          ]}
-        >
-          <ActivityIndicator size="small" color={palette.accent} />
-        </View>
-      ) : null}
       <FlatList
         data={filtered}
         keyExtractor={(item) => item._id}
@@ -237,6 +230,16 @@ export default function VaultDashboard() {
                   </View>
                 </>
               ) : null}
+            </View>
+          ) : items.length === 0 && error ? (
+            <View style={styles.loadingBlock}>
+              <Text style={styles.emptyTitle}>{t("vault.loadFailedTitle")}</Text>
+              <Text dim style={styles.emptyBody}>
+                {t("vault.loadFailedBody")}
+              </Text>
+              <View style={styles.loadTimeoutActions}>
+                <Button title={t("vault.tryAgain")} onPress={retryLoad} />
+              </View>
             </View>
           ) : items.length === 0 ? (
             <VaultEmptyState
@@ -386,7 +389,11 @@ function VaultListRow({
   return (
     <Pressable
       style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.92 }]}
-      onPress={() => router.push((`/belonging/${item._id}` as unknown) as any)}
+      onPress={() => {
+        // Instant details paint: seed cache before navigating.
+        cacheBelonging(item);
+        router.push((`/belonging/${item._id}` as unknown) as any);
+      }}
     >
       <View style={styles.rowThumb}>
         {thumbUri ? (
@@ -438,13 +445,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     paddingHorizontal: 20,
-  },
-  topSpinner: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 50,
   },
   listContent: {
     paddingBottom: 120,

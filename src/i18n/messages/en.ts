@@ -80,6 +80,9 @@ export const en = {
     loadTakingLong:
       "This is taking longer than usual. Something might be wrong with loading your data.",
     tryAgain: "Try again",
+    loadFailedTitle: "Couldn’t load your vault",
+    loadFailedBody:
+      "We’re having trouble reaching the server right now. Please try again in a moment.",
     emptyTitle: "Your vault is empty",
     emptyBody: "Patch your first asset to get started.",
     registerFirstAsset: "Register your first asset",

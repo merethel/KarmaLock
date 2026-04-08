@@ -79,6 +79,9 @@ export const da: Dictionary = {
     loadTakingLong:
       "Det tager længere tid end sædvanligt. Noget kan være galt med at hente dine data.",
     tryAgain: "Prøv igen",
+    loadFailedTitle: "Kunne ikke indlæse dit vault",
+    loadFailedBody:
+      "Vi har problemer med at nå serveren lige nu. Prøv igen om et øjeblik.",
     emptyTitle: "Dit vault er tomt",
     emptyBody: "Registrér dit første aktiv for at komme i gang.",
     registerFirstAsset: "Registrér dit første aktiv",

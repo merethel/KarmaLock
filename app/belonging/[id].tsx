@@ -15,6 +15,7 @@ import {
   updateBelonging,
 } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
+import { getCachedBelonging } from "@/src/state/belongingCache";
 import { useFocusEffect } from "expo-router";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
@@ -65,27 +66,37 @@ export default function BelongingDetailsScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const didDismiss = useRef(false);
 
-  const [item, setItem] = useState<Belonging | null>(null);
-  const [loading, setLoading] = useState(true);
+  const idStr = typeof id === "string" ? id : "";
+  const cached = useMemo(() => (idStr ? getCachedBelonging(idStr) : null), [idStr]);
+  const [item, setItem] = useState<Belonging | null>(() => cached);
+  const [loading, setLoading] = useState(() => !cached);
   const [error, setError] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
 
+  // If the route param arrives after first render, paint from cache immediately.
+  useEffect(() => {
+    if (!cached) return;
+    setItem((prev) => prev ?? cached);
+    setLoading(false);
+  }, [cached]);
+
   const load = useCallback(async () => {
     try {
       setError("");
-      setLoading(true);
+      // If we already have something to render (from cache), refresh silently.
+      if (!item) setLoading(true);
       const res = await listMyBelongings();
-      const found = (res.data.items || []).find((x) => x._id === id) ?? null;
+      const found = (res.data.items || []).find((x) => x._id === idStr) ?? null;
       setItem(found);
       if (!found) setError(t("errors.failed"));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t("errors.failed"));
     } finally {
-      setLoading(false);
+      if (!item) setLoading(false);
     }
-  }, [id, t]);
+  }, [idStr, item, t]);
 
   useEffect(() => {
     void load();
@@ -204,13 +215,25 @@ export default function BelongingDetailsScreen() {
       ) : error ? (
         <View style={styles.center}>
           <Text style={styles.error}>{error}</Text>
-          <View style={{ marginTop: 14, width: 220 }}>
+          <View style={{ marginTop: 14, width: 220, gap: 10 }}>
             <Button title={t("vault.tryAgain")} onPress={load} />
+            <Button
+              title={t("registerFlow.back")}
+              variant="outline"
+              onPress={() => router.back()}
+            />
           </View>
         </View>
       ) : !item ? (
         <View style={styles.center}>
           <Text style={styles.error}>{t("errors.failed")}</Text>
+          <View style={{ marginTop: 14, width: 220 }}>
+            <Button
+              title={t("registerFlow.back")}
+              variant="outline"
+              onPress={() => router.back()}
+            />
+          </View>
         </View>
       ) : (
         <View style={{ flex: 1 }}>
