@@ -18,7 +18,6 @@ import { useI18n } from "@/src/i18n/context";
 import { getCachedBelonging } from "@/src/state/belongingCache";
 import { useFocusEffect } from "expo-router";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEdgeSwipeBack } from "@/hooks/useEdgeSwipeBack";
 import React, {
   useCallback,
   useEffect,
@@ -168,14 +167,6 @@ export default function BelongingDetailsScreen() {
     [scrollY],
   );
 
-  const swipeBackResponder = useEdgeSwipeBack({
-    onBack: () => {
-      didDismiss.current = true;
-      router.back();
-    },
-    canGoBack: () => !didDismiss.current,
-  });
-
   const sheetScale = useMemo(
     () =>
       scrollY.interpolate({
@@ -245,7 +236,7 @@ export default function BelongingDetailsScreen() {
           </View>
         </View>
       ) : (
-        <View style={{ flex: 1 }} {...swipeBackResponder.panHandlers}>
+        <View style={{ flex: 1 }}>
           <Animated.View
             pointerEvents="none"
             style={[

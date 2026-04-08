@@ -125,10 +125,10 @@ function RootLayoutNav() {
           <Stack.Screen
             name="belonging/[id]"
             options={{
-              // Full-screen so hero image can reach screen top.
-              presentation: Platform.OS === "ios" ? "fullScreenModal" : "card",
-              animation:
-                Platform.OS === "ios" ? "slide_from_bottom" : "default",
+              // Use a normal "card" push on iOS so the native interactive
+              // back-swipe gesture feels smooth and familiar.
+              presentation: "card",
+              animation: Platform.OS === "ios" ? "ios_from_right" : "default",
               gestureEnabled: true,
               contentStyle: { backgroundColor: "#000000" },
             }}
