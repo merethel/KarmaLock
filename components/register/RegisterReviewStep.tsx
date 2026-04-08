@@ -10,6 +10,7 @@ import { PHOTO_COUNT } from "./registerTypes";
 import { registerStyles as s } from "./registerStyles";
 
 import type { TranslationKey } from "@/src/i18n/types";
+import type { TextInputProps } from "react-native";
 
 type T = (key: TranslationKey) => string;
 
@@ -27,6 +28,7 @@ export function RegisterReviewStep({
   onMockScanChip,
   onSubmit,
   errorMessage,
+  onFieldFocus,
 }: {
   t: T;
   title: string;
@@ -41,6 +43,7 @@ export function RegisterReviewStep({
   onMockScanChip: () => void;
   onSubmit: () => void;
   errorMessage?: string;
+  onFieldFocus?: TextInputProps["onFocus"];
 }) {
   const canSubmit = Boolean(title.trim() && chipUid.trim());
 
@@ -97,6 +100,7 @@ export function RegisterReviewStep({
         value={chipUid}
         onChangeText={setChipUid}
         placeholder={t("addBelonging.chipPlaceholder")}
+        onFocus={onFieldFocus}
       />
       <Button
         title={t("registerFlow.scanChipMock")}

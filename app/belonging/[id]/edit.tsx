@@ -4,8 +4,10 @@ import { Text } from "@/components/common_components/Text";
 import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings, updateBelonging } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
+import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
+import { useScrollFieldToTop } from "@/hooks/useScrollFieldToTop";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +27,14 @@ export default function EditBelongingDetailsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const kb = useKeyboardBottomInset();
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
+  const scrollFieldToTop = useScrollFieldToTop({
+    scrollRef,
+    getScrollY: () => scrollYRef.current,
+    getTopY: () => insets.top + 90,
+  });
 
   const [item, setItem] = useState<Belonging | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,11 +141,19 @@ export default function EditBelongingDetailsScreen() {
         style={{ position: "absolute", left: 20, top: 60, zIndex: 10 }}
       />
       <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: 120 + Math.max(0, kb - insets.bottom) },
+        ]}
         keyboardShouldPersistTaps="handled"
         bounces
         alwaysBounceVertical
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          scrollYRef.current = e.nativeEvent.contentOffset.y;
+        }}
         onScrollEndDrag={(e) => {
           const y = e.nativeEvent.contentOffset.y;
           // Pull down past the top to dismiss (full-screen modal feel).
@@ -180,6 +198,7 @@ export default function EditBelongingDetailsScreen() {
             onSubmit={busy ? () => {} : onSubmit}
             submitLabel={busy ? t("vault.saving") : submitLabel}
             showHeader={false}
+            onFieldFocus={scrollFieldToTop}
           />
         )}
       </ScrollView>

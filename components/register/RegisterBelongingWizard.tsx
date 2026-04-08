@@ -10,6 +10,8 @@ import { createBelonging } from "@/src/api/belongings";
 import { uploadImage } from "@/src/api/uploads";
 import { useI18n } from "@/src/i18n/context";
 import { useEdgeSwipeBack } from "@/hooks/useEdgeSwipeBack";
+import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
+import { useScrollFieldToTop } from "@/hooks/useScrollFieldToTop";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -59,6 +61,13 @@ export function RegisterBelongingWizard({
   const [busyMessage, setBusyMessage] = useState("");
   const [error, setError] = useState("");
   const scrollRef = useRef<ScrollView>(null);
+  const kb = useKeyboardBottomInset();
+  const scrollYRef = useRef(0);
+  const scrollFieldToTop = useScrollFieldToTop({
+    scrollRef,
+    getScrollY: () => scrollYRef.current,
+    getTopY: () => insets.top + 90,
+  });
 
   const quality = keepQuality ? 1 : 0.72;
 
@@ -299,9 +308,16 @@ export function RegisterBelongingWizard({
         <ScrollView
           ref={scrollRef}
           style={s.scroll}
-          contentContainerStyle={s.scrollContent}
+          contentContainerStyle={[
+            s.scrollContent,
+            { paddingBottom: 120 + Math.max(0, kb - insets.bottom) },
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={(e) => {
+            scrollYRef.current = e.nativeEvent.contentOffset.y;
+          }}
         >
           {error && step !== "photos" && step !== "edit" ? (
             <RegisterInlineErrorBanner
@@ -360,6 +376,7 @@ export function RegisterBelongingWizard({
               onSubmit={continueFromEdit}
               submitLabel={t("registerFlow.continue")}
               showHeader
+              onFieldFocus={scrollFieldToTop}
             />
           ) : null}
 
@@ -378,6 +395,7 @@ export function RegisterBelongingWizard({
               onMockScanChip={mockScanChip}
               onSubmit={submit}
               errorMessage={error}
+              onFieldFocus={scrollFieldToTop}
             />
           ) : null}
         </ScrollView>

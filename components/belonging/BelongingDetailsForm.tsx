@@ -4,6 +4,7 @@ import { Text } from "@/components/common_components/Text";
 import { palette } from "@/constants/Colors";
 import type { TranslationKey } from "@/src/i18n/types";
 import React from "react";
+import type { TextInputProps } from "react-native";
 import { TextInput, View } from "react-native";
 
 import { RegisterInlineErrorBanner } from "../register/RegisterInlineErrorBanner";
@@ -35,6 +36,7 @@ export function BelongingDetailsForm({
   onSubmit,
   submitLabel,
   showHeader = true,
+  onFieldFocus,
 }: {
   t: T;
   errorMessage?: string;
@@ -59,6 +61,7 @@ export function BelongingDetailsForm({
   onSubmit: () => void;
   submitLabel: string;
   showHeader?: boolean;
+  onFieldFocus?: TextInputProps["onFocus"];
 }) {
   return (
     <>
@@ -78,30 +81,35 @@ export function BelongingDetailsForm({
           value={title}
           onChangeText={setTitle}
           placeholder={t("registerFlow.phAssetName")}
+          onFocus={onFieldFocus}
         />
         <LabeledTextField
           label={t("registerFlow.fieldBrand")}
           value={brand}
           onChangeText={setBrand}
           placeholder={t("registerFlow.phBrand")}
+          onFocus={onFieldFocus}
         />
         <LabeledTextField
           label={t("registerFlow.fieldModel")}
           value={model}
           onChangeText={setModel}
           placeholder={t("registerFlow.phModel")}
+          onFocus={onFieldFocus}
         />
         <LabeledTextField
           label={t("registerFlow.fieldColor")}
           value={color}
           onChangeText={setColor}
           placeholder={t("registerFlow.phColor")}
+          onFocus={onFieldFocus}
         />
         <LabeledTextField
           label={t("registerFlow.fieldType")}
           value={category}
           onChangeText={setCategory}
           placeholder={t("registerFlow.phType")}
+          onFocus={onFieldFocus}
         />
         <LabeledTextField
           label={t("registerFlow.fieldValue")}
@@ -109,18 +117,21 @@ export function BelongingDetailsForm({
           onChangeText={(v) => setEstimatedValue(v.replace(/[^\d]/g, ""))}
           placeholder="0"
           keyboardType="number-pad"
+          onFocus={onFieldFocus}
         />
         <LabeledTextField
           label={t("registerFlow.fieldSerial")}
           value={serialNumber}
           onChangeText={setSerialNumber}
           placeholder={t("registerFlow.phSerial")}
+          onFocus={onFieldFocus}
         />
         <LabeledTextField
           label={t("registerFlow.fieldPurchaseDate")}
           value={purchaseDate}
           onChangeText={setPurchaseDate}
           placeholder="YYYY-MM-DD"
+          onFocus={onFieldFocus}
         />
         <View style={{ gap: 10 }}>
           <Text mono style={s.notesLabel}>
@@ -134,6 +145,7 @@ export function BelongingDetailsForm({
             multiline
             selectionColor={palette.selection}
             style={s.notesInput}
+            onFocus={onFieldFocus}
           />
         </View>
       </View>

@@ -1,13 +1,20 @@
 import { useIsFocused } from "@react-navigation/native";
 import React, { useEffect } from "react";
-import { ViewProps } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  View,
+  ViewProps,
+} from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
@@ -57,7 +64,20 @@ export function Screen({ style, animate = true, children, ...rest }: Props) {
         style,
       ]}
     >
-      {children}
+      <TouchableWithoutFeedback
+        onPress={Keyboard.dismiss}
+        accessible={false}
+        touchSoundDisabled
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          // Keep this minimal; per-screen overrides can be added if needed.
+          keyboardVerticalOffset={0}
+        >
+          <View style={{ flex: 1 }}>{children}</View>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </Animated.View>
   );
 }
