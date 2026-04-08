@@ -444,11 +444,11 @@ function StatusPill({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   listContent: {
     paddingBottom: 120,
     flexGrow: 1,
+    paddingHorizontal: 20,
   },
   headerBlock: {
     marginTop: 6,
