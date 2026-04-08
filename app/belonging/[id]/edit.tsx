@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -148,6 +149,7 @@ export default function EditBelongingDetailsScreen() {
           { paddingBottom: 120 + Math.max(0, kb - insets.bottom) },
         ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         bounces
         alwaysBounceVertical
         scrollEventThrottle={16}
@@ -198,7 +200,9 @@ export default function EditBelongingDetailsScreen() {
             onSubmit={busy ? () => {} : onSubmit}
             submitLabel={busy ? t("vault.saving") : submitLabel}
             showHeader={false}
-            onFieldFocus={scrollFieldToTop}
+            onFieldFocus={(e) => {
+              scrollFieldToTop(e);
+            }}
           />
         )}
       </ScrollView>

@@ -14,7 +14,7 @@ import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
 import { useScrollFieldToTop } from "@/hooks/useScrollFieldToTop";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BelongingDetailsForm } from "@/components/belonging/BelongingDetailsForm";
@@ -313,6 +313,7 @@ export function RegisterBelongingWizard({
             { paddingBottom: 120 + Math.max(0, kb - insets.bottom) },
           ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={(e) => {
@@ -376,7 +377,9 @@ export function RegisterBelongingWizard({
               onSubmit={continueFromEdit}
               submitLabel={t("registerFlow.continue")}
               showHeader
-              onFieldFocus={scrollFieldToTop}
+              onFieldFocus={(e) => {
+                scrollFieldToTop(e);
+              }}
             />
           ) : null}
 
@@ -395,7 +398,9 @@ export function RegisterBelongingWizard({
               onMockScanChip={mockScanChip}
               onSubmit={submit}
               errorMessage={error}
-              onFieldFocus={scrollFieldToTop}
+              onFieldFocus={(e) => {
+                scrollFieldToTop(e);
+              }}
             />
           ) : null}
         </ScrollView>
