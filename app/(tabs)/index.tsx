@@ -7,9 +7,9 @@ import { palette } from "@/constants/Colors";
 import { listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { Alert, Modal, Pressable, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
   const { t } = useI18n();
@@ -18,7 +18,44 @@ export default function HomeScreen() {
   const [mode, setMode] = useState<"idle" | "scanning">("idle");
   const [unregisteredOpen, setUnregisteredOpen] = useState(false);
   const [pendingChipUid, setPendingChipUid] = useState<string>("");
+  const [assetsCount, setAssetsCount] = useState<number | null>(null);
+  const [online, setOnline] = useState<boolean | null>(null);
+  const [offlineReason, setOfflineReason] = useState<string>("");
+  const [statusOpen, setStatusOpen] = useState(false);
   const router = useRouter();
+
+  const refreshStatus = useCallback(async () => {
+    const timeoutMs = 8000;
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), timeoutMs),
+    );
+
+    try {
+      const res = await Promise.race([listMyBelongings(), timeout]);
+      const items = res.data.items ?? [];
+      setAssetsCount(items.length);
+      setOnline(true);
+      setOfflineReason("");
+    } catch (e: unknown) {
+      // If we can’t reach the server to fetch belongings, treat system as offline.
+      setOnline(false);
+      setOfflineReason(
+        e instanceof Error && e.message === "timeout"
+          ? t("home.statusOfflineTimeout")
+          : e instanceof Error
+            ? e.message
+            : t("home.statusOfflineGeneric"),
+      );
+      // Keep last known assets count if we have one; otherwise show placeholder.
+      setAssetsCount((prev) => prev);
+    }
+  }, [t]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshStatus();
+    }, [refreshStatus]),
+  );
 
   async function onScan() {
     try {
@@ -39,6 +76,8 @@ export default function HomeScreen() {
       // If it’s already registered, open details. Otherwise, ask to register.
       const res = await listMyBelongings();
       const items = res.data.items ?? [];
+      setAssetsCount(items.length);
+      setOnline(true);
       const found = items.find((it) => it.chipUid === chipUid);
       if (found?._id) {
         router.push({ pathname: "/belonging/[id]", params: { id: found._id } });
@@ -47,6 +86,7 @@ export default function HomeScreen() {
         setUnregisteredOpen(true);
       }
     } catch (e: unknown) {
+      setOnline(false);
       Alert.alert(
         t("errors.failed"),
         e instanceof Error ? e.message : t("errors.failed"),
@@ -79,6 +119,44 @@ export default function HomeScreen() {
         confirmLabel={t("scan.chipNotRegisteredConfirm")}
       />
 
+      <Modal
+        visible={statusOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStatusOpen(false)}
+      >
+        <Pressable
+          style={styles.statusBackdrop}
+          onPress={() => setStatusOpen(false)}
+        >
+          <Pressable
+            style={styles.statusSheet}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={styles.statusTitle}>
+              {online === false
+                ? t("home.statusOfflineTitle")
+                : t("home.statusOnlineTitle")}
+            </Text>
+            <Text dim style={styles.statusBody}>
+              {online === false
+                ? offlineReason || t("home.statusOfflineGeneric")
+                : t("home.statusOnlineBody")}
+            </Text>
+
+            <Pressable
+              onPress={() => setStatusOpen(false)}
+              style={({ pressed }) => [
+                styles.statusOkBtn,
+                pressed && { opacity: 0.92 },
+              ]}
+            >
+              <Text style={styles.statusOkText}>{t("home.statusOk")}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.brand}>
@@ -100,17 +178,33 @@ export default function HomeScreen() {
           <Text muted mono style={styles.footerLabel}>
             {t("home.assets")}
           </Text>
-          <Text style={styles.footerValue}>2</Text>
+          <Text style={styles.footerValue}>
+            {assetsCount == null ? "—" : String(assetsCount)}
+          </Text>
         </View>
 
         <View style={styles.footerBlockRight}>
           <Text muted mono style={styles.footerLabel}>
             {t("home.system")}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <View style={[styles.dot, { backgroundColor: "#39D98A" }]} />
-            <Text style={styles.footerValue}>{t("home.online")}</Text>
-          </View>
+          <Pressable
+            onPress={() => setStatusOpen(true)}
+            hitSlop={10}
+            style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+          >
+            <View
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    online === false ? "rgba(255,90,90,0.95)" : "#39D98A",
+                },
+              ]}
+            />
+            <Text style={styles.footerValue}>
+              {online === false ? t("home.offline") : t("home.online")}
+            </Text>
+          </Pressable>
         </View>
       </View>
     </Screen>
@@ -140,4 +234,40 @@ const styles = StyleSheet.create({
   footerLabel: { letterSpacing: 2, fontSize: 12 },
   footerValue: { fontSize: 26, fontWeight: "900" },
   dot: { width: 10, height: 10, borderRadius: 999 },
+
+  statusBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.72)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  statusSheet: {
+    backgroundColor: "#141414",
+    borderRadius: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+  statusTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 10,
+  },
+  statusBody: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 18,
+  },
+  statusOkBtn: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: palette.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statusOkText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
 });

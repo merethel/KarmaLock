@@ -63,6 +63,15 @@ export const da: Dictionary = {
     assets: "AKTIVER",
     system: "SYSTEM",
     online: "ONLINE",
+    offline: "OFFLINE",
+    statusOnlineTitle: "Systemstatus: online",
+    statusOnlineBody:
+      "Forbindelsen til serveren ser god ud. Du kan scanne chips og åbne dit vault.",
+    statusOfflineTitle: "Systemstatus: offline",
+    statusOfflineGeneric:
+      "Vi kunne ikke nå serveren lige nu. Tjek din forbindelse og prøv igen.",
+    statusOfflineTimeout: "Serveren svarede ikke i tide (timeout).",
+    statusOk: "OK",
     locking: "Låser…",
     verifyingNfc: "VERIFICERER NFC-SIGNATUR",
   },
