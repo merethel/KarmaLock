@@ -230,7 +230,8 @@ export const da: Dictionary = {
     sumPhotos: "BILLEDER",
     photosAttached: "{{count}} vedhæftet",
     chipUid: "Patch / chip-ID",
-    scanChipMock: "Mock-scan chip",
+    scanChip: "Scan chip",
+    scanningChip: "Scanner chip…",
     noPatchHint:
       "Indtast eller scan dit patch-ID før du bekræfter. NFC kan kobles på senere.",
     confirmRegister: "Bekræft og registrér",

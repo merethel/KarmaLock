@@ -12,6 +12,7 @@ import { useI18n } from "@/src/i18n/context";
 import { useEdgeSwipeBack } from "@/hooks/useEdgeSwipeBack";
 import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
 import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard";
+import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform, ScrollView, View } from "react-native";
@@ -249,9 +250,23 @@ export function RegisterBelongingWizard({
     }
   }
 
-  function mockScanChip() {
-    setChipUid(`KL-${Math.floor(Math.random() * 9000 + 1000)}-X`);
-  }
+  const onScanChip = useCallback(async () => {
+    try {
+      setError("");
+      setBusy(true);
+      setBusyMessage(t("registerFlow.scanningChip"));
+      const uid = await scanChipUid();
+      setChipUid(uid);
+    } catch (e: unknown) {
+      Alert.alert(
+        t("errors.failed"),
+        e instanceof Error ? e.message : t("errors.failed"),
+      );
+    } finally {
+      setBusy(false);
+      setBusyMessage("");
+    }
+  }, [t]);
 
   function continueFromEdit() {
     setError("");
@@ -396,7 +411,7 @@ export function RegisterBelongingWizard({
               serialNumber={serialNumber}
               chipUid={chipUid}
               setChipUid={setChipUid}
-              onMockScanChip={mockScanChip}
+              onScanChip={onScanChip}
               onSubmit={submit}
               errorMessage={error}
               onFieldFocus={(e) => {

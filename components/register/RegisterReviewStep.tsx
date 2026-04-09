@@ -25,7 +25,7 @@ export function RegisterReviewStep({
   serialNumber,
   chipUid,
   setChipUid,
-  onMockScanChip,
+  onScanChip,
   onSubmit,
   errorMessage,
   onFieldFocus,
@@ -40,7 +40,7 @@ export function RegisterReviewStep({
   serialNumber: string;
   chipUid: string;
   setChipUid: (v: string) => void;
-  onMockScanChip: () => void;
+  onScanChip: () => void;
   onSubmit: () => void;
   errorMessage?: string;
   onFieldFocus?: TextInputProps["onFocus"];
@@ -103,9 +103,9 @@ export function RegisterReviewStep({
         onFocus={onFieldFocus}
       />
       <Button
-        title={t("registerFlow.scanChipMock")}
+        title={t("registerFlow.scanChip")}
         variant="outline"
-        onPress={onMockScanChip}
+        onPress={onScanChip}
       />
 
       {!chipUid.trim() ? (

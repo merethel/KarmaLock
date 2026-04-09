@@ -231,7 +231,8 @@ export const en = {
     sumPhotos: "PHOTOS",
     photosAttached: "{{count}} attached",
     chipUid: "Patch / chip ID",
-    scanChipMock: "Mock scan chip",
+    scanChip: "Scan chip",
+    scanningChip: "Scanning chip…",
     noPatchHint:
       "Enter or scan your patch ID before confirming. NFC scan can plug in here later.",
     confirmRegister: "Confirm & register",
