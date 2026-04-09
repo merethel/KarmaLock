@@ -1,3 +1,4 @@
+import { ConfirmModal } from "@/components/common_components/ConfirmModal";
 import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
@@ -6,8 +7,9 @@ import {
   pickPhotoFromLibrary,
   takePhoto,
 } from "@/src/api/ai";
-import { createBelonging } from "@/src/api/belongings";
+import { createBelonging, listMyBelongings } from "@/src/api/belongings";
 import { uploadImage } from "@/src/api/uploads";
+import { ApiError } from "@/src/api/client";
 import { useI18n } from "@/src/i18n/context";
 import { useEdgeSwipeBack } from "@/hooks/useEdgeSwipeBack";
 import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
@@ -47,6 +49,8 @@ export function RegisterBelongingWizard({
   const [activeSlot, setActiveSlot] = useState(0);
   const [keepQuality, setKeepQuality] = useState(false);
   const [chipUid, setChipUid] = useState(initialChipUid);
+  const [chipExistsOpen, setChipExistsOpen] = useState(false);
+  const [chipExistsBelongingId, setChipExistsBelongingId] = useState<string>("");
 
   const [title, setTitle] = useState("");
   const [brand, setBrand] = useState("");
@@ -213,6 +217,21 @@ export function RegisterBelongingWizard({
         setError(t("registerFlow.errorChip"));
         return;
       }
+
+      // Guard: chip must not already exist in the user’s vault.
+      try {
+        const res = await listMyBelongings();
+        const items = res.data.items ?? [];
+        const found = items.find((it) => it.chipUid === chipUid.trim());
+        if (found?._id) {
+          setChipExistsBelongingId(found._id);
+          setChipExistsOpen(true);
+          return;
+        }
+      } catch {
+        // If we can’t verify (offline/server), allow submit and rely on backend validation.
+      }
+
       setBusy(true);
       setBusyMessage(t("addBelonging.processing"));
 
@@ -241,6 +260,21 @@ export function RegisterBelongingWizard({
       });
       router.back();
     } catch (e: unknown) {
+      // Backend uniqueness: chip already registered (possibly other user).
+      if (e instanceof ApiError && e.status === 409) {
+        try {
+          const res = await listMyBelongings();
+          const items = res.data.items ?? [];
+          const found = items.find((it) => it.chipUid === chipUid.trim());
+          if (found?._id) {
+            setChipExistsBelongingId(found._id);
+            setChipExistsOpen(true);
+            return;
+          }
+        } catch {
+          // fall through
+        }
+      }
       setError(
         e instanceof Error ? e.message : t("errors.createBelongingFailed"),
       );
@@ -257,6 +291,18 @@ export function RegisterBelongingWizard({
       setBusyMessage(t("registerFlow.scanningChip"));
       const uid = await scanChipUid();
       setChipUid(uid);
+
+      try {
+        const res = await listMyBelongings();
+        const items = res.data.items ?? [];
+        const found = items.find((it) => it.chipUid === uid.trim());
+        if (found?._id) {
+          setChipExistsBelongingId(found._id);
+          setChipExistsOpen(true);
+        }
+      } catch {
+        // ignore verification errors here; submit will still validate.
+      }
     } catch (e: unknown) {
       Alert.alert(
         t("errors.failed"),
@@ -302,6 +348,26 @@ export function RegisterBelongingWizard({
         },
       ]}
     >
+      <ConfirmModal
+        visible={chipExistsOpen}
+        onClose={() => {
+          setChipExistsOpen(false);
+          setChipExistsBelongingId("");
+          setChipUid("");
+        }}
+        onConfirm={() => {
+          setChipExistsOpen(false);
+          const id = chipExistsBelongingId;
+          setChipExistsBelongingId("");
+          if (!id) return;
+          router.push({ pathname: "/belonging/[id]", params: { id } });
+        }}
+        title={t("registerFlow.chipExistsTitle")}
+        body={t("registerFlow.chipExistsBody")}
+        cancelLabel={t("registerFlow.chipExistsUseAnother")}
+        confirmLabel={t("registerFlow.chipExistsGoToBelonging")}
+      />
+
       <LoadingOverlay
         visible={busy}
         title={busyMessage || t("addBelonging.processing")}

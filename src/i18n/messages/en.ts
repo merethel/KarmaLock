@@ -240,6 +240,12 @@ export const en = {
     errorNeedThreePhotos: "Please capture all three photos first.",
     errorTitle: "Add an asset name.",
     errorChip: "Add a patch or chip ID.",
+
+    chipExistsTitle: "Chip already registered",
+    chipExistsBody:
+      "This chip is already registered to a belonging in your vault. Remove that belonging from your vault (delete it) or use another chip.",
+    chipExistsUseAnother: "Use another chip",
+    chipExistsGoToBelonging: "Go to belonging",
   },
 
   tabs: {

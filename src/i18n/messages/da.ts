@@ -239,6 +239,12 @@ export const da: Dictionary = {
     errorNeedThreePhotos: "Tag alle tre billeder først.",
     errorTitle: "Tilføj et navn til aktivet.",
     errorChip: "Tilføj patch- eller chip-ID.",
+
+    chipExistsTitle: "Chip er allerede registreret",
+    chipExistsBody:
+      "Denne chip er allerede registreret til en ejendel i dit vault. Fjern ejendelen fra dit vault (slet den) eller brug en anden chip.",
+    chipExistsUseAnother: "Brug en anden chip",
+    chipExistsGoToBelonging: "Gå til ejendel",
   },
 
   tabs: {
