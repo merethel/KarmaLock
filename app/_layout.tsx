@@ -95,7 +95,6 @@ function RootLayoutNav() {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: "#000000" },
-            fullScreenGestureEnabled: true,
             gestureEnabled: true,
             animationMatchesGesture: true,
             ...(Platform.OS === "ios"
