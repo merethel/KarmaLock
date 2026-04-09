@@ -67,7 +67,12 @@ export default function RegisterScreen() {
     name.trim().length > 1 && email.trim().length > 3 && password.length >= 6;
 
   return (
-    <Screen style={{ paddingHorizontal: 20 }}>
+    <Screen
+      withTabBarInset={false}
+      dismissKeyboardOnPress={false}
+      keyboardAvoiding={false}
+      style={{ paddingHorizontal: 20 }}
+    >
       {/* Header */}
       <View style={{ gap: 8, marginTop: 10 }}>
         <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>

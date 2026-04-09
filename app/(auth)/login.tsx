@@ -79,7 +79,12 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen style={{ paddingHorizontal: 20 }}>
+    <Screen
+      withTabBarInset={false}
+      dismissKeyboardOnPress={false}
+      keyboardAvoiding={false}
+      style={{ paddingHorizontal: 20 }}
+    >
       {/* Header */}
       <View style={{ gap: 8, marginTop: 10 }}>
         <Text muted mono style={{ letterSpacing: 2, fontSize: 12 }}>
@@ -104,9 +109,10 @@ export default function LoginScreen() {
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
+          autoCorrect={false}
           keyboardType="email-address"
           textContentType="emailAddress"
-          autoComplete="email"
+          autoComplete="off"
           placeholder={t("login.placeholderEmail")}
         />
 

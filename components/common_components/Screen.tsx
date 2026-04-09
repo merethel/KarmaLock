@@ -21,9 +21,23 @@ import Colors from "@/constants/Colors";
 
 type Props = ViewProps & {
   animate?: boolean;
+  /** Reserve space for bottom tab bar on tab screens. */
+  withTabBarInset?: boolean;
+  /** If false, don't wrap in touch-to-dismiss. */
+  dismissKeyboardOnPress?: boolean;
+  /** If false, don't use KeyboardAvoidingView. */
+  keyboardAvoiding?: boolean;
 };
 
-export function Screen({ style, animate = true, children, ...rest }: Props) {
+export function Screen({
+  style,
+  animate = true,
+  withTabBarInset = true,
+  dismissKeyboardOnPress = true,
+  keyboardAvoiding = true,
+  children,
+  ...rest
+}: Props) {
   const scheme = useColorScheme() ?? "dark";
   const theme = Colors[scheme];
   const insets = useSafeAreaInsets();
@@ -57,27 +71,45 @@ export function Screen({ style, animate = true, children, ...rest }: Props) {
         {
           flex: 1,
           backgroundColor: theme.background,
-          marginBottom: 90,
+          paddingBottom: withTabBarInset ? 90 : 0,
           paddingTop: insets.top + 12,
         },
         animate && animStyle,
         style,
       ]}
     >
-      <TouchableWithoutFeedback
-        onPress={Keyboard.dismiss}
-        accessible={false}
-        touchSoundDisabled
-      >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          // Keep this minimal; per-screen overrides can be added if needed.
-          keyboardVerticalOffset={0}
+      {dismissKeyboardOnPress ? (
+        <TouchableWithoutFeedback
+          onPress={Keyboard.dismiss}
+          accessible={false}
+          touchSoundDisabled
         >
+          {keyboardAvoiding ? (
+            <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              // Keep this minimal; per-screen overrides can be added if needed.
+              keyboardVerticalOffset={0}
+            >
+              <View style={{ flex: 1 }}>{children}</View>
+            </KeyboardAvoidingView>
+          ) : (
+            <View style={{ flex: 1 }}>{children}</View>
+          )}
+        </TouchableWithoutFeedback>
+      ) : (
+        keyboardAvoiding ? (
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={0}
+          >
+            <View style={{ flex: 1 }}>{children}</View>
+          </KeyboardAvoidingView>
+        ) : (
           <View style={{ flex: 1 }}>{children}</View>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+        )
+      )}
     </Animated.View>
   );
 }
