@@ -242,7 +242,7 @@ export const da: Dictionary = {
 
     chipExistsTitle: "Chip er allerede registreret",
     chipExistsBody:
-      "Denne chip er allerede registreret til en ejendel i dit vault. Fjern ejendelen fra dit vault (slet den) eller brug en anden chip.",
+      "Denne chip er allerede registreret. Den kan være registreret til en anden ejendel i dit vault, eller den kan tilhøre en anden bruger. Du kan fjerne den fra dit vault (slette ejendelen), anmode om en overførsel fra den anden bruger, eller bruge en anden chip.",
     chipExistsUseAnother: "Brug en anden chip",
     chipExistsGoToBelonging: "Gå til ejendel",
   },

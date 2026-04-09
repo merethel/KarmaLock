@@ -243,7 +243,7 @@ export const en = {
 
     chipExistsTitle: "Chip already registered",
     chipExistsBody:
-      "This chip is already registered to a belonging in your vault. Remove that belonging from your vault (delete it) or use another chip.",
+      "This chip is already registered. It may be registered to another belonging in your vault, or it may belong to another user. You can remove it from your vault (delete it), request a transfer from the other user, or use another chip.",
     chipExistsUseAnother: "Use another chip",
     chipExistsGoToBelonging: "Go to belonging",
   },
