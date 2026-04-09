@@ -210,7 +210,8 @@ export default function VaultDashboard() {
               </View>
             ) : null}
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {/* Intentionally no inline error banner here.
+                Empty-state handles load errors with a dedicated message + retry. */}
           </>
         }
         ListEmptyComponent={
