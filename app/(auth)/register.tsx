@@ -69,8 +69,8 @@ export default function RegisterScreen() {
   return (
     <Screen
       withTabBarInset={false}
-      dismissKeyboardOnPress={false}
-      keyboardAvoiding={false}
+      dismissKeyboardOnPress
+      keyboardAvoiding
       style={{ paddingHorizontal: 20 }}
     >
       {/* Header */}
@@ -122,9 +122,7 @@ export default function RegisterScreen() {
           placeholder={t("register.placeholderPasswordHint")}
         />
 
-        {error ? (
-          <Text style={{ color: "tomato", marginTop: 6 }}>{error}</Text>
-        ) : null}
+        {error ? <Text style={{ color: "tomato", marginTop: 6 }}>{error}</Text> : null}
 
         <View style={{ marginTop: 8, gap: 10 }}>
           <Button
