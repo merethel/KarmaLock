@@ -13,16 +13,25 @@ type NfcModule = {
   NfcTech: any;
 };
 
-function loadNfcModule(): NfcModule {
+export type ScanChipUidStrings = {
+  /** iOS NFC session prompt (shown by the OS). */
+  iosAlertMessage: string;
+  /** When native module isn't available (Expo Go / missing rebuild). */
+  nfcUnavailable: string;
+  /** Device doesn't support NFC. */
+  nfcNotSupported: string;
+  /** Tag scanned but we couldn't derive an ID. */
+  noChipIdFound: string;
+};
+
+function loadNfcModule(strings: ScanChipUidStrings): NfcModule {
   // Avoid crashing at import time in runtimes without the native module
   // (e.g. Expo Go). If missing, throw a friendly error.
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     return require("react-native-nfc-manager") as NfcModule;
   } catch {
-    throw new Error(
-      "NFC scanning isn’t available in this build. Rebuild the app with NFC support (development build / prebuild).",
-    );
+    throw new Error(strings.nfcUnavailable);
   }
 }
 
@@ -56,19 +65,19 @@ function parseId(tag: any): string {
  * Scans an NFC tag and returns a chipUid.
  * Prefers NDEF Text payload if present, otherwise falls back to tag.id.
  */
-export async function scanChipUid(): Promise<string> {
-  const mod = loadNfcModule();
+export async function scanChipUid(strings: ScanChipUidStrings): Promise<string> {
+  const mod = loadNfcModule(strings);
   const NfcManager = mod.default;
   const { Ndef, NfcTech } = mod;
 
   const supported = await NfcManager.isSupported();
-  if (!supported) throw new Error("NFC not supported on this device");
+  if (!supported) throw new Error(strings.nfcNotSupported);
 
   await NfcManager.start();
 
   try {
     await NfcManager.requestTechnology(NfcTech.Ndef, {
-      alertMessage: "Hold your iPhone near the chip.",
+      alertMessage: strings.iosAlertMessage,
     });
     const tag = await NfcManager.getTag();
 
@@ -76,7 +85,7 @@ export async function scanChipUid(): Promise<string> {
     const fromId = parseId(tag);
     const raw = fromText || fromId;
 
-    if (!raw) throw new Error("No chip ID found on tag");
+    if (!raw) throw new Error(strings.noChipIdFound);
     return raw;
   } finally {
     // Always stop the NFC session.

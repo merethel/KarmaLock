@@ -28,7 +28,12 @@ export default function HomeScreen() {
       setPendingChipUid("");
       setUnregisteredOpen(false);
 
-      const chipUid = await scanChipUid();
+      const chipUid = await scanChipUid({
+        iosAlertMessage: t("scan.iosAlertMessage"),
+        nfcUnavailable: t("scan.nfcUnavailable"),
+        nfcNotSupported: t("scan.nfcNotSupported"),
+        noChipIdFound: t("scan.noChipIdFound"),
+      });
       setLastChip(chipUid);
 
       // If it’s already registered, open details. Otherwise, ask to register.
@@ -56,8 +61,8 @@ export default function HomeScreen() {
     <Screen style={styles.screen}>
       <LoadingOverlay
         visible={loading}
-        title={t("home.locking")}
-        subtitle={t("home.verifyingNfc")}
+        title={t("scan.scanningTitle")}
+        subtitle={t("scan.scanningSubtitle")}
       />
 
       <ConfirmModal

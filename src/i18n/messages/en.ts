@@ -371,6 +371,13 @@ export const en = {
   scan: {
     scan: "SCAN",
     initiateNfc: "INITIATE // NFC",
+    scanningTitle: "Scanning…",
+    scanningSubtitle: "Hold your phone near the chip",
+    iosAlertMessage: "Hold your phone near the chip.",
+    nfcUnavailable:
+      "NFC scanning isn’t available in this build. Rebuild the app with NFC support.",
+    nfcNotSupported: "NFC is not supported on this device.",
+    noChipIdFound: "No chip ID found on tag.",
     chipNotRegisteredTitle: "Chip not registered",
     chipNotRegisteredBody:
       "This chip isn’t registered to any belonging in your vault. Would you like to register it now?",

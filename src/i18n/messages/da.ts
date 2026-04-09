@@ -370,6 +370,13 @@ export const da: Dictionary = {
   scan: {
     scan: "SCAN",
     initiateNfc: "START // NFC",
+    scanningTitle: "Scanner…",
+    scanningSubtitle: "Hold din telefon tæt på chippen",
+    iosAlertMessage: "Hold din telefon tæt på chippen.",
+    nfcUnavailable:
+      "NFC-scanning er ikke tilgængelig i denne build. Genbyg appen med NFC-understøttelse.",
+    nfcNotSupported: "NFC understøttes ikke på denne enhed.",
+    noChipIdFound: "Kunne ikke finde et chip-ID på tagget.",
     chipNotRegisteredTitle: "Chip er ikke registreret",
     chipNotRegisteredBody:
       "Denne chip er ikke registreret til nogen ejendel i dit vault. Vil du registrere den nu?",

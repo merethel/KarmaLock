@@ -94,7 +94,12 @@ export default function AddBelongingReviewScreen() {
       setError("");
       setBusy(true);
       setBusyMessage(t("registerFlow.scanningChip"));
-      const uid = await scanChipUid();
+      const uid = await scanChipUid({
+        iosAlertMessage: t("scan.iosAlertMessage"),
+        nfcUnavailable: t("scan.nfcUnavailable"),
+        nfcNotSupported: t("scan.nfcNotSupported"),
+        noChipIdFound: t("scan.noChipIdFound"),
+      });
       setChipUid(uid);
       try {
         await verifyChipNotInVault(uid);
