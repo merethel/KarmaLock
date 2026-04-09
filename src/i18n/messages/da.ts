@@ -364,6 +364,11 @@ export const da: Dictionary = {
   scan: {
     scan: "SCAN",
     initiateNfc: "START // NFC",
+    chipNotRegisteredTitle: "Chip er ikke registreret",
+    chipNotRegisteredBody:
+      "Denne chip er ikke registreret til nogen ejendel i dit vault. Vil du registrere den nu?",
+    chipNotRegisteredCancel: "Annuller",
+    chipNotRegisteredConfirm: "Registrér chip",
   },
 
   notFound: {

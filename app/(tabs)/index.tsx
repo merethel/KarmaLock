@@ -1,35 +1,55 @@
 import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
+import { ConfirmModal } from "@/components/common_components/ConfirmModal";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { ScanButton } from "@/components/ScanButton";
 import { palette } from "@/constants/Colors";
+import { listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
+import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
   const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [lastChip, setLastChip] = useState<string>("");
   const [mode, setMode] = useState<"idle" | "scanning">("idle");
+  const [unregisteredOpen, setUnregisteredOpen] = useState(false);
+  const [pendingChipUid, setPendingChipUid] = useState<string>("");
   const router = useRouter();
 
-  async function mockScan() {
-    setLoading(true);
-    setMode("scanning");
-    setLastChip("");
+  async function onScan() {
+    try {
+      setLoading(true);
+      setMode("scanning");
+      setLastChip("");
+      setPendingChipUid("");
+      setUnregisteredOpen(false);
 
-    // simulate NFC scan delay
-    await new Promise((r) => setTimeout(r, 1200));
+      const chipUid = await scanChipUid();
+      setLastChip(chipUid);
 
-    // fake chip uid
-    const chipUid = `KL-${Math.floor(Math.random() * 9000 + 1000)}-X`;
-    setLastChip(chipUid);
-
-    setLoading(false);
-    setMode("idle");
-    router.push({ pathname: "/add-belonging", params: { chipUid } });
+      // If it’s already registered, open details. Otherwise, ask to register.
+      const res = await listMyBelongings();
+      const items = res.data.items ?? [];
+      const found = items.find((it) => it.chipUid === chipUid);
+      if (found?._id) {
+        router.push({ pathname: "/belonging/[id]", params: { id: found._id } });
+      } else {
+        setPendingChipUid(chipUid);
+        setUnregisteredOpen(true);
+      }
+    } catch (e: unknown) {
+      Alert.alert(
+        t("errors.failed"),
+        e instanceof Error ? e.message : t("errors.failed"),
+      );
+    } finally {
+      setLoading(false);
+      setMode("idle");
+    }
   }
 
   return (
@@ -38,6 +58,20 @@ export default function HomeScreen() {
         visible={loading}
         title={t("home.locking")}
         subtitle={t("home.verifyingNfc")}
+      />
+
+      <ConfirmModal
+        visible={unregisteredOpen}
+        onClose={() => setUnregisteredOpen(false)}
+        onConfirm={() => {
+          setUnregisteredOpen(false);
+          if (!pendingChipUid) return;
+          router.push({ pathname: "/add-belonging", params: { chipUid: pendingChipUid } });
+        }}
+        title={t("scan.chipNotRegisteredTitle")}
+        body={t("scan.chipNotRegisteredBody")}
+        cancelLabel={t("scan.chipNotRegisteredCancel")}
+        confirmLabel={t("scan.chipNotRegisteredConfirm")}
       />
 
       {/* Header */}
@@ -52,7 +86,7 @@ export default function HomeScreen() {
 
       {/* Center scan button */}
       <View style={styles.center}>
-        <ScanButton mode={mode} onPress={mockScan} />
+        <ScanButton mode={mode} onPress={onScan} />
       </View>
 
       {/* Footer status */}

@@ -365,6 +365,11 @@ export const en = {
   scan: {
     scan: "SCAN",
     initiateNfc: "INITIATE // NFC",
+    chipNotRegisteredTitle: "Chip not registered",
+    chipNotRegisteredBody:
+      "This chip isn’t registered to any belonging in your vault. Would you like to register it now?",
+    chipNotRegisteredCancel: "Cancel",
+    chipNotRegisteredConfirm: "Register chip",
   },
 
   notFound: {
