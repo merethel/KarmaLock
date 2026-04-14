@@ -109,19 +109,6 @@ function RootLayoutNav() {
           <Stack.Screen name="unlock" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen
-            name="add-belonging"
-            options={{
-              // Use a normal card push so iOS edge-swipe back feels native.
-              presentation: "card",
-              contentStyle: {
-                flex: 1,
-                backgroundColor: "#000000",
-                justifyContent: "flex-start",
-                alignItems: "stretch",
-              },
-            }}
-          />
-          <Stack.Screen
             name="belonging/[id]"
             options={{
               // Use a normal "card" push on iOS so the native interactive
