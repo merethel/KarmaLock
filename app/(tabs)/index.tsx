@@ -5,10 +5,13 @@ import { Text } from "@/components/common_components/Text";
 import { ScanButton } from "@/components/ScanButton";
 import { palette } from "@/constants/Colors";
 import { listMyBelongings } from "@/src/api/belongings";
+import { scanChip } from "@/src/api/endpoints";
+import { ApiError } from "@/src/api/client";
+import { getUser } from "@/src/auth/session";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, Pressable, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
@@ -22,7 +25,15 @@ export default function HomeScreen() {
   const [online, setOnline] = useState<boolean | null>(null);
   const [offlineReason, setOfflineReason] = useState<string>("");
   const [statusOpen, setStatusOpen] = useState(false);
+  const [userId, setUserId] = useState<string>("");
   const router = useRouter();
+
+  useEffect(() => {
+    void (async () => {
+      const u = await getUser();
+      setUserId(u?.id ? String(u.id) : "");
+    })();
+  }, []);
 
   const refreshStatus = useCallback(async () => {
     const timeoutMs = 8000;
@@ -73,17 +84,31 @@ export default function HomeScreen() {
       });
       setLastChip(chipUid);
 
-      // If it’s already registered, open details. Otherwise, ask to register.
-      const res = await listMyBelongings();
-      const items = res.data.items ?? [];
-      setAssetsCount(items.length);
-      setOnline(true);
-      const found = items.find((it) => it.chipUid === chipUid);
-      if (found?._id) {
-        router.push({ pathname: "/belonging/[id]", params: { id: found._id } });
-      } else {
-        setPendingChipUid(chipUid);
-        setUnregisteredOpen(true);
+      // Global check: is this chip already registered (any user)?
+      try {
+        const res = await scanChip(chipUid);
+        setOnline(true);
+        const item = (res.data as any)?.item as any;
+        const owner = item?.owner ? String(item.owner) : "";
+        const id = item?._id ? String(item._id) : "";
+
+        // If it's ours, open details. Otherwise, show scanned details + owner.
+        if (id && owner && userId && owner === userId) {
+          router.push({ pathname: "/belonging/[id]", params: { id } });
+        } else {
+          router.push({
+            pathname: "/scan/[chipUid]",
+            params: { chipUid },
+          });
+        }
+        return;
+      } catch (e: unknown) {
+        if (e instanceof ApiError && e.status === 404) {
+          setPendingChipUid(chipUid);
+          setUnregisteredOpen(true);
+          return;
+        }
+        throw e;
       }
     } catch (e: unknown) {
       setOnline(false);

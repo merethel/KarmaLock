@@ -29,18 +29,26 @@ export default function AddBelongingPhotosScreen() {
   const kb = useKeyboardBottomInset();
   const theme = Colors[useColorScheme() ?? "dark"];
 
-  const { photos, setPhotos, setTitle, setBrand, setModel, setColor, setCategory, setSerialNumber, setEstimatedValue, setDescription } =
-    useRegisterDraft();
+  const {
+    photos,
+    setPhotos,
+    setTitle,
+    setBrand,
+    setModel,
+    setColor,
+    setCategory,
+    setSerialNumber,
+    setEstimatedValue,
+    setDescription,
+  } = useRegisterDraft();
 
   const [busy, setBusy] = useState(false);
   const [busyMessage, setBusyMessage] = useState("");
   const [error, setError] = useState("");
   const [activeSlot, setActiveSlot] = useState(0);
-  const [keepQuality, setKeepQuality] = useState(true);
+  const quality = 1;
 
   const scrollRef = useRef<ScrollView | null>(null);
-
-  const quality = keepQuality ? 1 : 0.7;
 
   const allPhotosDone = useMemo(
     () => photos.every((p) => typeof p === "string" && p.length > 0),
@@ -169,7 +177,9 @@ export default function AddBelongingPhotosScreen() {
         visible={busy}
         title={busyMessage || t("addBelonging.processing")}
         subtitle={
-          busyMessage ? t("registerFlow.analyzingSubtitle") : t("addBelonging.analyzing")
+          busyMessage
+            ? t("registerFlow.analyzingSubtitle")
+            : t("addBelonging.analyzing")
         }
       />
 
@@ -190,7 +200,9 @@ export default function AddBelongingPhotosScreen() {
             { paddingBottom: 120 + Math.max(0, kb - insets.bottom) },
           ]}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
           showsVerticalScrollIndicator={false}
         >
           <RegisterPhotosStep
@@ -203,8 +215,6 @@ export default function AddBelongingPhotosScreen() {
             slotTitles={slotTitles}
             slotHints={slotHints}
             captureSlot={(i, fromLib) => void captureSlot(i, fromLib)}
-            keepQuality={keepQuality}
-            setKeepQuality={setKeepQuality}
             allPhotosDone={allPhotosDone}
             onAnalyze={() => void runAi()}
             onSkipAi={skipAi}
@@ -215,4 +225,3 @@ export default function AddBelongingPhotosScreen() {
     </View>
   );
 }
-

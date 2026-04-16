@@ -3,12 +3,7 @@ import { Text } from "@/components/common_components/Text";
 import { palette } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import {
-  Image,
-  Pressable,
-  Switch,
-  View,
-} from "react-native";
+import { Image, Pressable, View } from "react-native";
 
 import { RegisterInlineErrorBanner } from "./RegisterInlineErrorBanner";
 import { registerStyles as s } from "./registerStyles";
@@ -46,8 +41,8 @@ export function RegisterPhotosStep({
   slotTitles,
   slotHints,
   captureSlot,
-  keepQuality,
-  setKeepQuality,
+  //keepQuality,
+  //setKeepQuality,
   allPhotosDone,
   onAnalyze,
   onSkipAi,
@@ -62,8 +57,8 @@ export function RegisterPhotosStep({
   slotTitles: string[];
   slotHints: string[];
   captureSlot: (index: number, fromLibrary: boolean) => void;
-  keepQuality: boolean;
-  setKeepQuality: (v: boolean) => void;
+  //keepQuality: boolean;
+  //setKeepQuality: (v: boolean) => void;
   allPhotosDone: boolean;
   onAnalyze: () => void;
   onSkipAi: () => void;
@@ -153,18 +148,7 @@ export function RegisterPhotosStep({
         ))}
       </View>
 
-      <View style={s.qualityRow}>
-        <Text style={s.qualityLabel}>{t("registerFlow.keepQuality")}</Text>
-        <Switch
-          value={keepQuality}
-          onValueChange={setKeepQuality}
-          trackColor={{
-            false: "#333",
-            true: palette.accentTrack,
-          }}
-          thumbColor={keepQuality ? palette.accent : "#888"}
-        />
-      </View>
+      {/* “Keep quality” toggle disabled for now. */}
 
       <RegisterInlineErrorBanner
         title={t("registerFlow.analyzeFailedTitle")}

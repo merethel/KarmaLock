@@ -254,6 +254,10 @@ export const da: Dictionary = {
       "Denne chip er allerede registreret. Den kan være registreret til en anden ejendel i dit vault, eller den kan tilhøre en anden bruger. Du kan fjerne den fra dit vault (slette ejendelen), anmode om en overførsel fra den anden bruger, eller bruge en anden chip.",
     chipExistsUseAnother: "Brug en anden chip",
     chipExistsGoToBelonging: "Gå til ejendel",
+
+    chipInUseTitle: "Chip er i brug",
+    chipInUseBody:
+      "Denne chip er allerede registreret til en anden bruger. Brug en anden chip, eller anmod om en overførsel.",
   },
 
   tabs: {
@@ -384,13 +388,25 @@ export const da: Dictionary = {
     iosAlertMessage: "Hold din telefon tæt på chippen.",
     nfcUnavailable:
       "NFC-scanning er ikke tilgængelig i denne build. Genbyg appen med NFC-understøttelse.",
-    nfcNotSupported: "NFC understøttes ikke på denne enhed.",
+    nfcNotSupported: "Denne telefon kan ikke scanne NFC-tags.",
     noChipIdFound: "Kunne ikke finde et chip-ID på tagget.",
     chipNotRegisteredTitle: "Chip er ikke registreret",
     chipNotRegisteredBody:
       "Denne chip er ikke registreret til nogen ejendel i dit vault. Vil du registrere den nu?",
     chipNotRegisteredCancel: "Annuller",
     chipNotRegisteredConfirm: "Registrér chip",
+    chipInUseTitle: "Chip er i brug",
+    chipInUseBody:
+      "Denne chip er allerede registreret til en anden bruger. Brug en anden chip, eller anmod om en overførsel.",
+
+    scannedTitle: "Scannet genstand",
+    scannedChipUid: "CHIP-UID",
+    scannedItemTitle: "TITEL",
+    scannedItemDesc: "BESKRIVELSE",
+    scannedStatus: "STATUS",
+    scannedOwner: "EJER",
+    scannedOwnerUnknown: "Ukendt",
+    belongsTo: "Denne genstand tilhører {{name}}",
   },
 
   notFound: {

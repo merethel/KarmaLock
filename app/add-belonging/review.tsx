@@ -7,14 +7,16 @@ import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard
 import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { useI18n } from "@/src/i18n/context";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform, ScrollView, View } from "react-native";
 import type { ScrollView as RNScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { uploadImage } from "@/src/api/uploads";
-import { createBelonging, listMyBelongings } from "@/src/api/belongings";
+import { createBelonging } from "@/src/api/belongings";
 import { ApiError } from "@/src/api/client";
+import { scanChip } from "@/src/api/endpoints";
+import { getUser } from "@/src/auth/session";
 
 import { RegisterReviewStep } from "@/components/register/RegisterReviewStep";
 import { useRegisterDraft } from "@/components/register/RegisterDraftContext";
@@ -50,6 +52,14 @@ export default function AddBelongingReviewScreen() {
 
   const [chipExistsOpen, setChipExistsOpen] = useState(false);
   const [chipExistsBelongingId, setChipExistsBelongingId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+
+  useEffect(() => {
+    void (async () => {
+      const u = await getUser();
+      setUserId(u?.id ? String(u.id) : "");
+    })();
+  }, []);
 
   const scrollRef = useRef<RNScrollView | null>(null);
   const scrollYRef = useRef(0);
@@ -74,19 +84,31 @@ export default function AddBelongingReviewScreen() {
     ]);
   }
 
-  const verifyChipNotInVault = useCallback(
+  const verifyChipAvailable = useCallback(
     async (uid: string): Promise<boolean> => {
-      const res = await listMyBelongings();
-      const items = res.data.items ?? [];
-      const found = items.find((it) => it.chipUid === uid.trim());
-      if (found?._id) {
-        setChipExistsBelongingId(found._id);
-        setChipExistsOpen(true);
+      try {
+        const res = await scanChip(uid.trim());
+        const item = (res.data as any)?.item as any;
+        const owner = item?.owner ? String(item.owner) : "";
+        const id = item?._id ? String(item._id) : "";
+
+        if (id && owner && userId && owner === userId) {
+          setChipExistsBelongingId(id);
+          setChipExistsOpen(true);
+        } else {
+          Alert.alert(
+            t("registerFlow.chipInUseTitle"),
+            t("registerFlow.chipInUseBody"),
+          );
+        }
         return false;
+      } catch (e: unknown) {
+        if (e instanceof ApiError && e.status === 404) return true;
+        // If we can’t verify (offline/server), allow submit and rely on backend validation.
+        return true;
       }
-      return true;
     },
-    [],
+    [t, userId],
   );
 
   const onScanChip = useCallback(async () => {
@@ -102,7 +124,7 @@ export default function AddBelongingReviewScreen() {
       });
       setChipUid(uid);
       try {
-        await verifyChipNotInVault(uid);
+        await verifyChipAvailable(uid);
       } catch {
         // ignore lookup failures here
       }
@@ -115,7 +137,7 @@ export default function AddBelongingReviewScreen() {
       setBusy(false);
       setBusyMessage("");
     }
-  }, [setChipUid, t, verifyChipNotInVault]);
+  }, [setChipUid, t, verifyChipAvailable]);
 
   const onSubmit = useCallback(async () => {
     try {
@@ -129,12 +151,8 @@ export default function AddBelongingReviewScreen() {
         return;
       }
 
-      try {
-        const ok = await verifyChipNotInVault(chipUid);
-        if (!ok) return;
-      } catch {
-        // allow submit; backend will validate uniqueness
-      }
+      const ok = await verifyChipAvailable(chipUid);
+      if (!ok) return;
 
       setBusy(true);
       setBusyMessage(t("addBelonging.processing"));
@@ -166,12 +184,8 @@ export default function AddBelongingReviewScreen() {
       router.replace("/(tabs)/vault");
     } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 409) {
-        try {
-          const ok = await verifyChipNotInVault(chipUid);
-          if (!ok) return;
-        } catch {
-          // fall through
-        }
+        const ok = await verifyChipAvailable(chipUid);
+        if (!ok) return;
       }
 
       setError(
@@ -196,7 +210,7 @@ export default function AddBelongingReviewScreen() {
     serialNumber,
     t,
     title,
-    verifyChipNotInVault,
+    verifyChipAvailable,
   ]);
 
   return (

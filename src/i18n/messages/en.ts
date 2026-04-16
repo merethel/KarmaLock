@@ -254,6 +254,10 @@ export const en = {
       "This chip is already registered. It may be registered to another belonging in your vault, or it may belong to another user. You can remove it from your vault (delete it), request a transfer from the other user, or use another chip.",
     chipExistsUseAnother: "Use another chip",
     chipExistsGoToBelonging: "Go to belonging",
+
+    chipInUseTitle: "Chip is in use",
+    chipInUseBody:
+      "This chip is already registered to another user. Use another chip, or request a transfer.",
   },
 
   tabs: {
@@ -384,13 +388,25 @@ export const en = {
     iosAlertMessage: "Hold your phone near the chip.",
     nfcUnavailable:
       "NFC scanning isn’t available in this build. Rebuild the app with NFC support.",
-    nfcNotSupported: "NFC is not supported on this device.",
+    nfcNotSupported: "This phone can’t scan NFC tags.",
     noChipIdFound: "No chip ID found on tag.",
     chipNotRegisteredTitle: "Chip not registered",
     chipNotRegisteredBody:
       "This chip isn’t registered to any belonging in your vault. Would you like to register it now?",
     chipNotRegisteredCancel: "Cancel",
     chipNotRegisteredConfirm: "Register chip",
+    chipInUseTitle: "Chip is in use",
+    chipInUseBody:
+      "This chip is already registered to another user. Use another chip, or request a transfer.",
+
+    scannedTitle: "Scanned item",
+    scannedChipUid: "CHIP UID",
+    scannedItemTitle: "TITLE",
+    scannedItemDesc: "DESCRIPTION",
+    scannedStatus: "STATUS",
+    scannedOwner: "OWNER",
+    scannedOwnerUnknown: "Unknown",
+    belongsTo: "This item belongs to {{name}}",
   },
 
   notFound: {
