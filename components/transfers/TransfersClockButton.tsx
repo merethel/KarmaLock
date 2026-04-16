@@ -17,7 +17,7 @@ export function TransfersClockButton({
       hitSlop={10}
       style={({ pressed }) => [styles.btn, pressed && { opacity: 0.85 }]}
       accessibilityRole="button"
-      accessibilityLabel="Transfers"
+      accessibilityLabel="Notifications"
     >
       <Ionicons
         name="notifications-outline"

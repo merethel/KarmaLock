@@ -20,7 +20,6 @@ import {
   getCachedBelonging,
   setBelongingTransferStatus,
 } from "@/src/state/belongingCache";
-import { setPendingToast } from "@/src/state/pendingToast";
 import { useFocusEffect } from "expo-router";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
@@ -459,7 +458,6 @@ export default function BelongingDetailsScreen() {
                     });
                     setTransferOpen(false);
                     setBelongingTransferStatus(item._id, "transferring");
-                    setPendingToast({ type: "transferSent", createdAt: Date.now() });
                     router.replace("/vault");
                   } catch (e: unknown) {
                     Alert.alert(

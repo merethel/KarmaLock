@@ -92,7 +92,7 @@ export default function SettingsScreen() {
             : t("settings.biometricUnavailableHint")}
         </Text>
 
-        <SectionTitle label={t("transfers.title")} />
+        <SectionTitle label={t("settings.notifications")} />
 
         <SettingsCard>
           <SettingsRow

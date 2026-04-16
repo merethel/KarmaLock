@@ -7,12 +7,23 @@ import {
   acceptTransfer,
   declineTransfer,
   listIncomingTransfers,
+  listOutgoingTransfers,
 } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import {
+  hasSeenTransferUpdate,
+  markSeenTransferUpdate,
+} from "@/src/state/seenTransferUpdates";
 
 export default function TransfersInboxScreen() {
   const { t } = useI18n();
@@ -21,6 +32,7 @@ export default function TransfersInboxScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [requests, setRequests] = useState<TransferRequest[]>([]);
+  const [outgoing, setOutgoing] = useState<TransferRequest[]>([]);
   const [busyId, setBusyId] = useState<string>("");
 
   const pending = useMemo(
@@ -28,12 +40,23 @@ export default function TransfersInboxScreen() {
     [requests],
   );
 
+  const outgoingUpdates = useMemo(() => {
+    return (outgoing ?? []).filter((r) => {
+      const status = (r.status ?? "pending") as string;
+      return status === "accepted" || status === "declined";
+    });
+  }, [outgoing]);
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const res = await listIncomingTransfers();
-      setRequests(res.data.requests ?? []);
+      const [inc, out] = await Promise.all([
+        listIncomingTransfers(),
+        listOutgoingTransfers(),
+      ]);
+      setRequests(inc.data.requests ?? []);
+      setOutgoing(out.data.requests ?? []);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t("errors.failed"));
     } finally {
@@ -44,6 +67,22 @@ export default function TransfersInboxScreen() {
   useFocusEffect(
     useCallback(() => {
       void load();
+      // Mark all sender-side updates as seen when opening notifications.
+      // This makes the bell badge clear naturally.
+      // (In-memory only; resets on app reload.)
+      void (async () => {
+        try {
+          const out = await listOutgoingTransfers();
+          const list = out.data.requests ?? [];
+          for (const r of list) {
+            const status = (r.status ?? "pending") as string;
+            if (status !== "accepted" && status !== "declined") continue;
+            markSeenTransferUpdate(r._id, status);
+          }
+        } catch {
+          // ignore
+        }
+      })();
     }, [load]),
   );
 
@@ -96,7 +135,7 @@ export default function TransfersInboxScreen() {
             {t("vault.loading")}
           </Text>
         </View>
-      ) : pending.length === 0 ? (
+      ) : pending.length === 0 && outgoingUpdates.length === 0 ? (
         <View style={styles.center}>
           <Ionicons
             name="notifications-outline"
@@ -111,9 +150,54 @@ export default function TransfersInboxScreen() {
           </Text>
         </View>
       ) : (
-        <View style={{ gap: 12, paddingTop: 12 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ gap: 12, paddingTop: 12, paddingBottom: 24 }}
+        >
           {error ? (
             <Text style={{ color: "tomato", marginBottom: 8 }}>{error}</Text>
+          ) : null}
+
+          {outgoingUpdates.length > 0 ? (
+            <>
+              <Text muted mono style={styles.sectionLabel}>
+                {t("transfers.updatesTitle")}
+              </Text>
+              {outgoingUpdates.map((r) => {
+                const status = (r.status ?? "pending") as string;
+                const label =
+                  status === "accepted"
+                    ? t("transfers.updateAccepted")
+                        .replace("{{name}}", r.toUser?.name || r.toUser?.email || "—")
+                        .replace("{{title}}", r.title || "item")
+                    : t("transfers.updateDeclined")
+                        .replace("{{name}}", r.toUser?.name || r.toUser?.email || "—")
+                        .replace("{{title}}", r.title || "item");
+
+                const seen = hasSeenTransferUpdate(r._id, status);
+
+                return (
+                  <View key={`${r._id}:${status}`} style={styles.card}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Ionicons
+                        name={status === "accepted" ? "checkmark-circle" : "close-circle"}
+                        size={18}
+                        color={status === "accepted" ? "#39D98A" : "rgba(255,120,120,0.95)"}
+                      />
+                      <Text style={styles.cardTitle}>
+                        {status === "accepted"
+                          ? t("transfers.acceptedToastTitle")
+                          : t("transfers.declinedTitle")}
+                      </Text>
+                      {!seen ? <View style={styles.unreadDot} /> : null}
+                    </View>
+                    <Text dim style={styles.cardBody}>
+                      {label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </>
           ) : null}
 
           {pending.map((r) => (
@@ -128,7 +212,7 @@ export default function TransfersInboxScreen() {
               <Text dim style={styles.cardBody}>
                 {t("transfers.requestBody")
                   .replace("{{from}}", r.fromUser?.name || r.fromUser?.email || "—")
-                  .replace("{{chipUid}}", r.chipUid || "—")}
+                }
               </Text>
 
               <View style={{ gap: 10, marginTop: 10 }}>
@@ -146,7 +230,7 @@ export default function TransfersInboxScreen() {
               </View>
             </View>
           ))}
-        </View>
+        </ScrollView>
       )}
     </Screen>
   );
@@ -170,6 +254,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  sectionLabel: { letterSpacing: 2.6, fontSize: 11, marginTop: 6, marginBottom: 2 },
   card: {
     backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 16,
@@ -180,5 +265,12 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 16, fontWeight: "900", flex: 1 },
   cardBody: { lineHeight: 20 },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: palette.accent,
+    opacity: 0.95,
+  },
 });
 

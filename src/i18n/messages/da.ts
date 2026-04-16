@@ -302,8 +302,8 @@ export const da: Dictionary = {
     supportEmail: "support@karmalock.com",
     faq: "FAQ",
     faqSubtitle: "karmalock.com/faq",
-    transfersInbox: "Overførsler",
-    transfersInboxSubtitle: "Se om nogen prøver at overføre til dig.",
+    transfersInbox: "Notifikationer",
+    transfersInboxSubtitle: "Overførsler og opdateringer.",
     deleteAccount: "Slet konto",
     deleteSubtitle: "Fjern din konto permanent fra denne enhed og serveren.",
     deleteModalTitle: "Slet konto?",
@@ -341,13 +341,17 @@ export const da: Dictionary = {
   },
 
   transfers: {
-    title: "OVERFØRSLER",
+    title: "NOTIFIKATIONER",
     emptyTitle: "Ingen overførsler lige nu",
     emptyBody: "Der er ingen, der prøver at overføre en genstand til dig lige nu.",
     requestTitleFallback: "Overførselsanmodning",
-    requestBody: "{{from}} vil overføre chip {{chipUid}} til dig.",
+    requestBody: "{{from}} vil overføre en genstand til dig.",
     accept: "Acceptér overførsel",
     decline: "Afvis",
+    updatesTitle: "OPDATERINGER",
+    updateAccepted: "{{name}} accepterede din overførselsanmodning.",
+    declinedTitle: "Overførsel afvist",
+    updateDeclined: "{{name}} afviste din overførselsanmodning.",
 
     requestTitle: "Overfør genstand",
     requestHint:
@@ -361,6 +365,8 @@ export const da: Dictionary = {
       "Vi har sendt en overførselsanmodning. Genstanden overføres, når modtageren accepterer.",
     sentToastTitle: "Overførselsanmodning sendt",
     sentToastBody: "Afventer modtagers bekræftelse…",
+    acceptedToastTitle: "Overførsel accepteret",
+    acceptedToastBody: "{{name}} accepterede din overførselsanmodning.",
   },
 
   aboutKarmalock: {

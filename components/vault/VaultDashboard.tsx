@@ -15,7 +15,6 @@ import React, {
 } from "react";
 import {
   ActivityIndicator,
-  Animated,
   FlatList,
   Image,
   Pressable,
@@ -35,9 +34,11 @@ import {
   getBelongingTransferStatus,
   seedBelongingCache,
 } from "@/src/state/belongingCache";
-import { consumePendingToast } from "@/src/state/pendingToast";
-import { listIncomingTransfers } from "@/src/api/transfers";
+import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
+import {
+  hasSeenTransferUpdate,
+} from "@/src/state/seenTransferUpdates";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
 const CARD_BORDER = "rgba(255,255,255,0.10)";
@@ -59,40 +60,6 @@ export default function VaultDashboard() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const loadSeq = useRef(0);
   const [transferCount, setTransferCount] = useState(0);
-  const [toastOpen, setToastOpen] = useState(false);
-  const toastAnim = useRef(new Animated.Value(0)).current;
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-    };
-  }, []);
-
-  const showTransferSentToast = useCallback(() => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastAnim.stopAnimation();
-    toastAnim.setValue(0);
-    setToastOpen(true);
-
-    Animated.timing(toastAnim, {
-      toValue: 1,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-
-    // Keep it visible longer.
-    toastTimer.current = setTimeout(() => {
-      Animated.timing(toastAnim, {
-        toValue: 0,
-        duration: 220,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (!finished) return;
-        setToastOpen(false);
-      });
-    }, 2200);
-  }, [toastAnim]);
 
   const load = useCallback(async () => {
     const seq = ++loadSeq.current;
@@ -138,22 +105,35 @@ export default function VaultDashboard() {
     useCallback(() => {
       setLoading(true);
       void load();
-      const pending = consumePendingToast();
-      if (pending?.type === "transferSent") {
-        showTransferSentToast();
-      }
       void (async () => {
         try {
           const res = await listIncomingTransfers();
           const reqs = res.data.requests ?? [];
-          setTransferCount(
-            reqs.filter((r) => (r.status ?? "pending") === "pending").length,
-          );
+          const incomingPending = reqs.filter(
+            (r) => (r.status ?? "pending") === "pending",
+          ).length;
+
+          // Sender-side unread updates: accepted/declined outgoing.
+          let outgoingUnread = 0;
+          try {
+            const out = await listOutgoingTransfers();
+            const outgoing = out.data.requests ?? [];
+            for (const r of outgoing) {
+              const status = (r.status ?? "pending") as string;
+              if (status !== "accepted" && status !== "declined") continue;
+              if (hasSeenTransferUpdate(r._id, status)) continue;
+              outgoingUnread += 1;
+            }
+          } catch {
+            // ignore
+          }
+
+          setTransferCount(incomingPending + outgoingUnread);
         } catch {
           // ignore
         }
       })();
-    }, [load, showTransferSentToast]),
+    }, [load]),
   );
 
   async function onRefresh() {
@@ -324,38 +304,6 @@ export default function VaultDashboard() {
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
       />
 
-      {toastOpen ? (
-        <View pointerEvents="none" style={toastStyles.wrap}>
-          <Animated.View
-            style={[
-              toastStyles.toast,
-              {
-                opacity: toastAnim,
-                transform: [
-                  {
-                    scale: toastAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.96, 1],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <Ionicons
-              name="checkmark-circle"
-              size={34}
-              color="rgba(120,255,185,0.95)"
-            />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={toastStyles.title}>{t("transfers.sentToastTitle")}</Text>
-              <Text dim style={toastStyles.body}>
-                {t("transfers.sentToastBody")}
-              </Text>
-            </View>
-          </Animated.View>
-        </View>
-      ) : null}
     </Screen>
   );
 }
@@ -751,36 +699,5 @@ const styles = StyleSheet.create({
   },
   pillTextTransferring: {
     color: "rgba(255,235,200,0.95)",
-  },
-});
-
-const toastStyles = StyleSheet.create({
-  wrap: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
-  toast: {
-    width: "100%",
-    maxWidth: 340,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 18,
-    backgroundColor: "rgba(20,20,20,0.92)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  body: {
-    marginTop: 3,
-    fontSize: 13,
-    lineHeight: 18,
   },
 });

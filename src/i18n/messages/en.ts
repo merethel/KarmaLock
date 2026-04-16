@@ -302,8 +302,8 @@ export const en = {
     supportEmail: "support@karmalock.com",
     faq: "FAQ",
     faqSubtitle: "karmalock.com/faq",
-    transfersInbox: "Transfers",
-    transfersInboxSubtitle: "See if anyone is trying to transfer to you.",
+    transfersInbox: "Notifications",
+    transfersInboxSubtitle: "Transfers and updates.",
     deleteAccount: "Delete account",
     deleteSubtitle: "Permanently remove your account from this device and server.",
     deleteModalTitle: "Delete account?",
@@ -341,13 +341,17 @@ export const en = {
   },
 
   transfers: {
-    title: "TRANSFERS",
+    title: "NOTIFICATIONS",
     emptyTitle: "No transfers right now",
     emptyBody: "No one is trying to transfer an item to you right now.",
     requestTitleFallback: "Transfer request",
-    requestBody: "{{from}} wants to transfer chip {{chipUid}} to you.",
+    requestBody: "{{from}} wants to transfer an item to you.",
     accept: "Accept transfer",
     decline: "Decline",
+    updatesTitle: "UPDATES",
+    updateAccepted: "{{name}} accepted your transfer request.",
+    declinedTitle: "Transfer declined",
+    updateDeclined: "{{name}} declined your transfer request.",
 
     requestTitle: "Transfer item",
     requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",
@@ -359,6 +363,8 @@ export const en = {
     sentBody: "We sent a transfer request. The item will transfer when they accept.",
     sentToastTitle: "Transfer request sent",
     sentToastBody: "Awaiting recipient confirmation…",
+    acceptedToastTitle: "Transfer accepted",
+    acceptedToastBody: "{{name}} accepted your transfer request.",
   },
 
   aboutKarmalock: {
