@@ -42,6 +42,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 function normalizePhotoUri(photoUrl?: string): string {
   const v = (photoUrl ?? "").trim();
@@ -79,6 +80,7 @@ export default function BelongingDetailsScreen() {
   const [item, setItem] = useState<Belonging | null>(() => cached);
   const [loading, setLoading] = useState(() => !cached);
   const [error, setError] = useState("");
+  const [transferredAway, setTransferredAway] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
@@ -96,12 +98,13 @@ export default function BelongingDetailsScreen() {
   const load = useCallback(async () => {
     try {
       setError("");
+      setTransferredAway(false);
       // If we already have something to render (from cache), refresh silently.
       if (!item) setLoading(true);
       const res = await listMyBelongings();
       const found = (res.data.items || []).find((x) => x._id === idStr) ?? null;
       setItem(found);
-      if (!found) setError(t("errors.failed"));
+      if (!found) setTransferredAway(true);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t("errors.failed"));
     } finally {
@@ -226,6 +229,28 @@ export default function BelongingDetailsScreen() {
             {t("vault.loading")}
           </Text>
         </View>
+      ) : transferredAway ? (
+        <View style={styles.center}>
+          <View style={styles.transferredCard}>
+            <Ionicons
+              name="swap-horizontal"
+              size={28}
+              color="rgba(255,255,255,0.65)"
+            />
+            <Text style={styles.transferredTitle}>
+              {t("vault.transferredAwayTitle")}
+            </Text>
+            <Text dim style={styles.transferredBody}>
+              {t("vault.transferredAwayBody")}
+            </Text>
+            <View style={{ marginTop: 14, width: 220 }}>
+              <Button
+                title={t("vault.goBackToVault")}
+                onPress={() => router.replace("/vault")}
+              />
+            </View>
+          </View>
+        </View>
       ) : error ? (
         <View style={styles.center}>
           <Text style={styles.error}>{error}</Text>
@@ -234,18 +259,19 @@ export default function BelongingDetailsScreen() {
             <Button
               title={t("registerFlow.back")}
               variant="outline"
-              onPress={() => router.back()}
+              onPress={() => router.replace("/vault")}
             />
           </View>
         </View>
       ) : !item ? (
         <View style={styles.center}>
           <Text style={styles.error}>{t("errors.failed")}</Text>
-          <View style={{ marginTop: 14, width: 220 }}>
+          <View style={{ marginTop: 14, width: 220, gap: 10 }}>
+            <Button title={t("vault.tryAgain")} onPress={load} />
             <Button
               title={t("registerFlow.back")}
               variant="outline"
-              onPress={() => router.back()}
+              onPress={() => router.replace("/vault")}
             />
           </View>
         </View>
@@ -502,6 +528,30 @@ const styles = StyleSheet.create({
   error: { color: "tomato", textAlign: "center" },
 
   body: { paddingHorizontal: 20, paddingTop: 18, gap: 14 },
+
+  transferredCard: {
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    padding: 18,
+    alignItems: "center",
+  },
+  transferredTitle: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: "900",
+    color: "rgba(255,255,255,0.92)",
+    textAlign: "center",
+  },
+  transferredBody: {
+    marginTop: 8,
+    textAlign: "center",
+    lineHeight: 22,
+    fontSize: 15,
+  },
 
 });
 

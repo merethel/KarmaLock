@@ -113,6 +113,11 @@ export const da: Dictionary = {
     statusOk: "OK",
     statusStolen: "STJÅLET",
     statusTransferring: "OVERFØRES",
+    belongingTransferredAway: "Denne ejendel er blevet overført.",
+    transferredAwayTitle: "Ejendel overført",
+    transferredAwayBody:
+      "Denne ejendel er ikke længere i dit vault. Den kan være blevet overført til en anden bruger.",
+    goBackToVault: "Gå tilbage til Vault",
 
     deleteBelonging: "Slet ejendel",
     deleteBelongingSubtitle: "Fjern denne ejendel permanent fra dit vault.",

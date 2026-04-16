@@ -113,6 +113,11 @@ export const en = {
     statusOk: "OK",
     statusStolen: "STOLEN",
     statusTransferring: "TRANSFERRING",
+    belongingTransferredAway: "This belonging has been transferred.",
+    transferredAwayTitle: "Belonging transferred",
+    transferredAwayBody:
+      "This belonging is no longer in your vault. It may have been transferred to another user.",
+    goBackToVault: "Go back to Vault",
 
     deleteBelonging: "Delete belonging",
     deleteBelongingSubtitle: "Permanently remove this belonging from your vault.",
