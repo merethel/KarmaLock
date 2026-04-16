@@ -344,6 +344,7 @@ export default function TransfersInboxScreen() {
                 status === "accepted"
                   ? t("transfers.badgeYouAccepted")
                   : t("transfers.badgeYouDeclined");
+              const acceptGreen = "#39D98A"; // You accepted (incoming)
               const body =
                 status === "accepted"
                   ? t("transfers.incomingAcceptedBody")
@@ -373,7 +374,7 @@ export default function TransfersInboxScreen() {
                         size={18}
                         color={
                           status === "accepted"
-                            ? "#39D98A"
+                            ? acceptGreen
                             : "rgba(255,120,120,0.95)"
                         }
                       />
@@ -425,6 +426,7 @@ export default function TransfersInboxScreen() {
               const titleLine = r.title || t("transfers.requestTitleFallback");
               const thumbUri = normalizePhotoUri(r.photoUrl);
               const badge = t("transfers.badgeOutgoing");
+              const acceptGreen = "#7CFFB9"; // They accepted (outgoing)
               const label =
                 status === "accepted"
                   ? t("transfers.updateAccepted").replace(
@@ -453,7 +455,7 @@ export default function TransfersInboxScreen() {
                         size={18}
                         color={
                           status === "accepted"
-                            ? "#39D98A"
+                            ? acceptGreen
                             : "rgba(255,120,120,0.95)"
                         }
                       />
@@ -599,7 +601,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(120,255,185,0.03)",
   },
   cardOutgoingAccepted: {
-    borderColor: "rgba(120,255,185,0.18)",
+    borderColor: "rgba(80, 190, 255, 0.22)", // distinct green-ish/teal accent vs incoming
     backgroundColor: "rgba(255,255,255,0.05)",
   },
   cardOutgoingDeclined: {
