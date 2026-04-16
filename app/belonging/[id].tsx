@@ -15,6 +15,8 @@ import {
   updateBelonging,
 } from "@/src/api/belongings";
 import { requestTransfer } from "@/src/api/transfers";
+import type { UserSuggestion } from "@/src/api/users";
+import { suggestUsersByEmail } from "@/src/api/users";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
 import {
@@ -91,6 +93,13 @@ export default function BelongingDetailsScreen() {
   const [transferEmail, setTransferEmail] = useState("");
   const [transferNote, setTransferNote] = useState("");
   const [transferBusy, setTransferBusy] = useState(false);
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [emailSuggestions, setEmailSuggestions] = useState<UserSuggestion[]>([]);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [emailLocked, setEmailLocked] = useState(false);
+  const [lockedEmail, setLockedEmail] = useState("");
+  const emailReqSeq = useRef(0);
 
   // If the route param arrives after first render, paint from cache immediately.
   useEffect(() => {
@@ -136,6 +145,12 @@ export default function BelongingDetailsScreen() {
   const onTransfer = () => {
     setTransferEmail("");
     setTransferNote("");
+    setEmailBusy(false);
+    setEmailError("");
+    setEmailSuggestions([]);
+    setEmailTouched(false);
+    setEmailLocked(false);
+    setLockedEmail("");
     setTransferOpen(true);
   };
   const onGrant = () => Alert.alert("Grant", "Not implemented yet.");
@@ -160,6 +175,45 @@ export default function BelongingDetailsScreen() {
     setStolenOpen(true);
   }, [item?._id, item?.isStolen, t]);
   const onAddDoc = () => Alert.alert("Add doc", "Not implemented yet.");
+
+  useEffect(() => {
+    if (!transferOpen) return;
+    if (emailLocked) return;
+    const q = transferEmail.trim();
+    setEmailError("");
+
+    // Avoid spamming backend for short inputs.
+    if (q.length < 3) {
+      setEmailSuggestions([]);
+      setEmailBusy(false);
+      return;
+    }
+
+    const handle = setTimeout(() => {
+      void (async () => {
+        const seq = ++emailReqSeq.current;
+        try {
+          setEmailBusy(true);
+          const res = await suggestUsersByEmail(q);
+          const users = res.data.users ?? [];
+          if (seq !== emailReqSeq.current) return;
+          setEmailSuggestions(users);
+          if (q.includes("@") && users.length === 0) {
+            setEmailError(t("transfers.emailNotFound"));
+          }
+        } catch {
+          // If suggestions fail, don't block transfer; backend will validate on send.
+          if (seq !== emailReqSeq.current) return;
+          setEmailSuggestions([]);
+        } finally {
+          if (seq !== emailReqSeq.current) return;
+          setEmailBusy(false);
+        }
+      })();
+    }, 300);
+
+    return () => clearTimeout(handle);
+  }, [emailLocked, transferEmail, transferOpen, t]);
 
   const onDelete = useCallback(async () => {
     if (!item?._id) return;
@@ -502,7 +556,19 @@ export default function BelongingDetailsScreen() {
 
             <TextInput
               value={transferEmail}
-              onChangeText={setTransferEmail}
+              onChangeText={(v) => {
+                const next = v;
+                const prevLocked = emailLocked;
+                setTransferEmail(v);
+                setEmailTouched(true);
+                if (prevLocked) {
+                  const a = lockedEmail.trim().toLowerCase();
+                  const b = next.trim().toLowerCase();
+                  if (a && b && a === b) return;
+                  // User edited after selecting a suggestion → unlock and allow suggestions again.
+                  setEmailLocked(false);
+                }
+              }}
               placeholder={t("transfers.emailPlaceholder")}
               placeholderTextColor="rgba(255,255,255,0.45)"
               autoCapitalize="none"
@@ -513,6 +579,54 @@ export default function BelongingDetailsScreen() {
               autoFocus
               returnKeyType="next"
             />
+
+            {emailBusy && !emailLocked ? (
+              <Text dim style={{ marginTop: 10 }}>
+                {t("transfers.searchingEmail")}
+              </Text>
+            ) : null}
+
+            {!emailLocked && emailSuggestions.length > 0 ? (
+              <View style={{ marginTop: 10, gap: 8 }}>
+                {emailSuggestions.slice(0, 5).map((u) => (
+                  <Pressable
+                    key={u.id}
+                    disabled={transferBusy}
+                    onPress={() => {
+                      setTransferEmail(u.email);
+                      setEmailSuggestions([]);
+                      setEmailError("");
+                      setEmailLocked(true);
+                      setLockedEmail(u.email);
+                    }}
+                    style={({ pressed }) => [
+                      modalStyles.suggestionRow,
+                      pressed && { opacity: 0.88 },
+                    ]}
+                  >
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={18}
+                      color="rgba(255,255,255,0.65)"
+                    />
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={modalStyles.suggestionPrimary} numberOfLines={1}>
+                        {u.name || u.email}
+                      </Text>
+                      {u.name ? (
+                        <Text dim style={modalStyles.suggestionSecondary} numberOfLines={1}>
+                          {u.email}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+
+            {!emailLocked && !emailBusy && emailTouched && emailError ? (
+              <Text style={{ marginTop: 10, color: "tomato" }}>{emailError}</Text>
+            ) : null}
 
             <Text muted mono style={[modalStyles.label, { marginTop: 10 }]}>
               {t("transfers.noteLabel")}
@@ -708,4 +822,21 @@ const modalStyles = StyleSheet.create({
     textAlignVertical: "top",
   },
   actionsCol: { gap: 12, marginTop: 16 },
+  suggestionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+  suggestionPrimary: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "rgba(255,255,255,0.92)",
+  },
+  suggestionSecondary: { fontSize: 12, lineHeight: 16 },
 });

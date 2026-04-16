@@ -389,6 +389,8 @@ export const da: Dictionary = {
       "Indtast modtagerens email. Overførslen sker først, når modtageren accepterer.",
     emailLabel: "MODTAGER EMAIL",
     emailPlaceholder: "modtager@email.com",
+    searchingEmail: "Søger…",
+    emailNotFound: "Ingen bruger fundet med den email.",
     noteLabel: "BEMÆRKNING",
     notePlaceholder: "Tilføj en bemærkning (valgfrit)",
     cancel: "Annuller",

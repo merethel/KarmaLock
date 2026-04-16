@@ -387,6 +387,8 @@ export const en = {
     requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",
     emailLabel: "RECIPIENT EMAIL",
     emailPlaceholder: "recipient@email.com",
+    searchingEmail: "Searching…",
+    emailNotFound: "No user found with that email.",
     noteLabel: "NOTE",
     notePlaceholder: "Add a note (optional)",
     cancel: "Cancel",
