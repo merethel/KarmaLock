@@ -33,6 +33,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Keyboard,
   Modal,
   Pressable,
   StatusBar,
@@ -415,11 +416,21 @@ export default function BelongingDetailsScreen() {
       >
         <Pressable
           style={modalStyles.backdrop}
-          onPress={transferBusy ? undefined : () => setTransferOpen(false)}
+          onPress={
+            transferBusy
+              ? undefined
+              : () => {
+                  // Tap outside input: dismiss keyboard (keep modal open).
+                  Keyboard.dismiss();
+                }
+          }
         >
           <Pressable
-            style={modalStyles.sheet}
-            onPress={(e) => e.stopPropagation()}
+            style={[modalStyles.sheet, modalStyles.sheetOffset]}
+            onPress={(e) => {
+              e.stopPropagation();
+              Keyboard.dismiss();
+            }}
           >
             <Text style={modalStyles.title}>{t("transfers.requestTitle")}</Text>
             <Text dim style={modalStyles.body}>
@@ -507,6 +518,9 @@ const modalStyles = StyleSheet.create({
     padding: 22,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.10)",
+  },
+  sheetOffset: {
+    transform: [{ translateY: -40 }],
   },
   title: {
     fontSize: 20,
