@@ -53,6 +53,13 @@ export async function declineTransfer(id: string) {
   );
 }
 
+export async function cancelTransfer(id: string) {
+  return apiFetch<{ request: TransferRequest }>(
+    `/transfers/${encodeURIComponent(id)}/cancel`,
+    { method: "POST" },
+  );
+}
+
 export async function markOutgoingTransfersSeen(ids: string[]) {
   return apiFetch<{ ok: true }>("/transfers/outgoing/seen", {
     method: "POST",

@@ -142,6 +142,7 @@ export const da: Dictionary = {
     markNotStolenModalConfirm: "Ja, markér som ikke stjålet",
 
     actionTransfer: "OVERFØR",
+    actionCancelTransfer: "ANNULLÉR OVERFØRSEL",
     actionGrant: "GIV ADGANG",
     actionReportStolen: "ANMELD STJÅLET",
     actionMarkNotStolen: "MARKÉR IKKE STJÅLET",
@@ -400,6 +401,10 @@ export const da: Dictionary = {
     chipMismatchTitle: "Forkert chip scannet",
     chipMismatchBody:
       "Denne chip matcher ikke genstanden, du prøver at overføre. Scan chippen på den rigtige fysiske genstand og prøv igen.",
+    cancelRequestTitle: "Annullér overførselsanmodning?",
+    cancelRequestBody:
+      "Dette annullerer den afventende overførselsanmodning. Modtageren kan ikke længere acceptere den.",
+    cancelRequestConfirm: "Annullér anmodning",
     sentTitle: "Overførsel anmodet",
     sentBody:
       "Vi har sendt en overførselsanmodning. Genstanden overføres, når modtageren accepterer.",

@@ -144,6 +144,7 @@ export const en = {
     markNotStolenModalConfirm: "Yes, mark as not stolen",
 
     actionTransfer: "TRANSFER",
+    actionCancelTransfer: "CANCEL TRANSFER",
     actionGrant: "GRANT",
     actionReportStolen: "REPORT STOLEN",
     actionMarkNotStolen: "MARK NOT STOLEN",
@@ -402,6 +403,10 @@ export const en = {
     chipMismatchTitle: "Wrong chip scanned",
     chipMismatchBody:
       "This chip doesn’t match the item you’re trying to transfer. Scan the chip on the correct physical item and try again.",
+    cancelRequestTitle: "Cancel transfer request?",
+    cancelRequestBody:
+      "This will cancel the pending transfer request. The recipient will no longer be able to accept it.",
+    cancelRequestConfirm: "Cancel request",
     sentTitle: "Transfer requested",
     sentBody:
       "We sent a transfer request. The item will transfer when they accept.",

@@ -15,9 +15,11 @@ import {
   listMyBelongings,
   updateBelonging,
 } from "@/src/api/belongings";
+import { cancelTransfer, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import {
   getCachedBelonging,
+  setBelongingTransferStatus,
 } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -82,6 +84,8 @@ export default function BelongingDetailsScreen() {
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [pendingOutgoingId, setPendingOutgoingId] = useState<string>("");
 
   // If the route param arrives after first render, paint from cache immediately.
   useEffect(() => {
@@ -115,6 +119,22 @@ export default function BelongingDetailsScreen() {
     useCallback(() => {
       // Returning from the edit screen should show updated values immediately.
       void load();
+      void (async () => {
+        if (!idStr) return;
+        try {
+          const out = await listOutgoingTransfers();
+          const reqs = out.data.requests ?? [];
+          const pending =
+            reqs.find(
+              (r) =>
+                r.belongingId === idStr && (r.status ?? "pending") === "pending",
+            ) ?? null;
+          setPendingOutgoingId(pending?._id ?? "");
+          setBelongingTransferStatus(idStr, pending ? "transferring" : null);
+        } catch {
+          // ignore (don't block item details)
+        }
+      })();
     }, [load]),
   );
 
@@ -127,6 +147,33 @@ export default function BelongingDetailsScreen() {
   const onTransfer = () => {
     setTransferOpen(true);
   };
+  const onCancelTransfer = useCallback(() => {
+    if (!pendingOutgoingId || !idStr) return;
+    Alert.alert(t("transfers.cancelRequestTitle"), t("transfers.cancelRequestBody"), [
+      { text: t("transfers.cancel"), style: "cancel" },
+      {
+        text: t("transfers.cancelRequestConfirm"),
+        style: "destructive",
+        onPress: () => {
+          void (async () => {
+            try {
+              setCancelBusy(true);
+              await cancelTransfer(pendingOutgoingId);
+              setPendingOutgoingId("");
+              setBelongingTransferStatus(idStr, null);
+            } catch (e: unknown) {
+              Alert.alert(
+                t("errors.failed"),
+                e instanceof Error ? e.message : t("errors.failed"),
+              );
+            } finally {
+              setCancelBusy(false);
+            }
+          })();
+        },
+      },
+    ]);
+  }, [idStr, pendingOutgoingId, t]);
   const onGrant = () => Alert.alert("Grant", "Not implemented yet.");
   const onReportStolen = useCallback(async () => {
     if (!item?._id) return;
@@ -328,8 +375,11 @@ export default function BelongingDetailsScreen() {
                 <BelongingPrimaryActions
                   t={t}
                   onTransfer={onTransfer}
+                  onCancelTransfer={onCancelTransfer}
                   onGrant={onGrant}
                   onReportStolen={onReportStolen}
+                  transferPending={Boolean(pendingOutgoingId)}
+                  transferBusy={cancelBusy}
                   stolen={Boolean(item?.isStolen)}
                   reportBusy={markBusy}
                 />
