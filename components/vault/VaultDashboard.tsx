@@ -198,8 +198,6 @@ export default function VaultDashboard() {
               t={t}
             />
 
-            <VaultSearch value={search} onChangeText={setSearch} t={t} />
-
             {items.length > 0 ? (
               <View style={styles.addWrap}>
                 <Button
@@ -209,6 +207,7 @@ export default function VaultDashboard() {
                 />
               </View>
             ) : null}
+            <VaultSearch value={search} onChangeText={setSearch} t={t} />
 
             {/* Intentionally no inline error banner here.
                 Empty-state handles load errors with a dedicated message + retry. */}
@@ -234,7 +233,9 @@ export default function VaultDashboard() {
             </View>
           ) : items.length === 0 && error ? (
             <View style={styles.loadingBlock}>
-              <Text style={styles.emptyTitle}>{t("vault.loadFailedTitle")}</Text>
+              <Text style={styles.emptyTitle}>
+                {t("vault.loadFailedTitle")}
+              </Text>
               <Text dim style={styles.emptyBody}>
                 {t("vault.loadFailedBody")}
               </Text>
@@ -393,7 +394,7 @@ function VaultListRow({
       onPress={() => {
         // Instant details paint: seed cache before navigating.
         cacheBelonging(item);
-        router.push((`/belonging/${item._id}` as unknown) as any);
+        router.push(`/belonging/${item._id}` as unknown as any);
       }}
     >
       <View style={styles.rowThumb}>
