@@ -351,6 +351,9 @@ export default function BelongingDetailsScreen() {
                 />
                 <BelongingLogActions
                   t={t}
+                  onShowHistory={() =>
+                    router.push((`/belonging/${item._id}/history` as unknown) as any)
+                  }
                   onTestAlert={onTestAlert}
                   onGetReport={onGetReport}
                   onAddDoc={onAddDoc}

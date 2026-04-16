@@ -5,17 +5,22 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 export function BelongingLogActions({
   t,
+  onShowHistory,
   onTestAlert,
   onGetReport,
   onAddDoc,
 }: {
   t: (k: TranslationKey) => string;
+  onShowHistory: () => void;
   onTestAlert: () => void;
   onGetReport: () => void;
   onAddDoc: () => void;
 }) {
   return (
     <View style={styles.stack}>
+      <Pressable onPress={onShowHistory} style={styles.actionBtn}>
+        <Text style={styles.actionBtnText}>{t("vault.showEditHistory")}</Text>
+      </Pressable>
       <Pressable onPress={onTestAlert} style={styles.actionBtn}>
         <Text style={styles.actionBtnText}>{t("vault.testAlertSystem")}</Text>
       </Pressable>
