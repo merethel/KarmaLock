@@ -371,6 +371,11 @@ export const en = {
     updateAccepted: "{{name}} accepted your transfer request.",
     declinedTitle: "Transfer declined",
     updateDeclined: "{{name}} declined your transfer request.",
+    incomingAcceptedTitle: "Accepted",
+    incomingAcceptedBody: "You accepted this transfer. Tap to view the belonging.",
+    incomingDeclinedTitle: "Declined",
+    incomingDeclinedBody: "You declined this transfer.",
+    viewBelonging: "VIEW BELONGING",
 
     requestTitle: "Transfer item",
     requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",

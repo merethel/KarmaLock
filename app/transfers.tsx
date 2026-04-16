@@ -69,6 +69,13 @@ export default function TransfersInboxScreen() {
     [requests],
   );
 
+  const incomingUpdates = useMemo(() => {
+    return (requests ?? []).filter((r) => {
+      const status = (r.status ?? "pending") as string;
+      return status === "accepted" || status === "declined";
+    });
+  }, [requests]);
+
   const outgoingUpdates = useMemo(() => {
     return (outgoing ?? []).filter((r) => {
       const status = (r.status ?? "pending") as string;
@@ -82,6 +89,13 @@ export default function TransfersInboxScreen() {
           kind: "incoming";
           _id: string;
           createdAt: Date | null;
+          req: TransferRequest;
+        }
+      | {
+          kind: "incomingUpdate";
+          _id: string;
+          createdAt: Date | null;
+          status: "accepted" | "declined";
           req: TransferRequest;
         }
       | {
@@ -99,6 +113,18 @@ export default function TransfersInboxScreen() {
         kind: "incoming",
         _id: r._id,
         createdAt: bestDateForTransfer(r),
+        req: r,
+      });
+    }
+
+    for (const r of incomingUpdates) {
+      const status = (r.status ?? "pending") as "accepted" | "declined" | string;
+      if (status !== "accepted" && status !== "declined") continue;
+      items.push({
+        kind: "incomingUpdate",
+        _id: r._id,
+        createdAt: bestDateForTransfer(r),
+        status,
         req: r,
       });
     }
@@ -122,7 +148,7 @@ export default function TransfersInboxScreen() {
     });
 
     return items;
-  }, [outgoingUpdates, pending]);
+  }, [incomingUpdates, outgoingUpdates, pending]);
 
   const load = useCallback(async () => {
     try {
@@ -236,7 +262,9 @@ export default function TransfersInboxScreen() {
             {t("vault.loading")}
           </Text>
         </View>
-      ) : pending.length === 0 && outgoingUpdates.length === 0 ? (
+      ) : pending.length === 0 &&
+        outgoingUpdates.length === 0 &&
+        incomingUpdates.length === 0 ? (
         <View style={styles.center}>
           <Ionicons
             name="notifications-outline"
@@ -260,6 +288,60 @@ export default function TransfersInboxScreen() {
           ) : null}
 
           {feed.map((it) => {
+            if (it.kind === "incomingUpdate") {
+              const r = it.req;
+              const status = it.status;
+              const body =
+                status === "accepted"
+                  ? t("transfers.incomingAcceptedBody")
+                  : t("transfers.incomingDeclinedBody");
+              const canOpen = status === "accepted" && Boolean(r.belongingId);
+              const Container = canOpen ? Pressable : View;
+              const containerProps = canOpen
+                ? {
+                    onPress: () =>
+                      router.push(
+                        (`/belonging/${encodeURIComponent(r.belongingId)}` as unknown) as any,
+                      ),
+                    style: ({ pressed }: { pressed: boolean }) => [
+                      styles.card,
+                      pressed && { opacity: 0.92 },
+                    ],
+                  }
+                : { style: styles.card };
+
+              return (
+                <Container key={`iu:${r._id}:${status}`} {...(containerProps as any)}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name={status === "accepted" ? "checkmark-circle" : "close-circle"}
+                        size={18}
+                        color={
+                          status === "accepted"
+                            ? "#39D98A"
+                            : "rgba(255,120,120,0.95)"
+                        }
+                      />
+                      <Text style={styles.cardTitle}>
+                        {status === "accepted"
+                          ? t("transfers.incomingAcceptedTitle")
+                          : t("transfers.incomingDeclinedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(it.createdAt, t)}
+                    </Text>
+                  </View>
+                  <Text dim style={styles.cardBody}>
+                    {body}
+                  </Text>
+                  {canOpen ? (
+                    <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
+                  ) : null}
+                </Container>
+              );
+            }
             if (it.kind === "update") {
               const r = it.req;
               const status = it.status;
@@ -381,6 +463,13 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: "900", flex: 1 },
   cardBody: { lineHeight: 20 },
   cardTime: { fontSize: 10, letterSpacing: 1.6, opacity: 0.65, marginLeft: 12 },
+  linkText: {
+    marginTop: 10,
+    color: "rgba(255,255,255,0.80)",
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    fontSize: 12,
+  },
   unreadDot: {
     width: 8,
     height: 8,

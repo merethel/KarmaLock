@@ -371,6 +371,12 @@ export const da: Dictionary = {
     updateAccepted: "{{name}} accepterede din overførselsanmodning.",
     declinedTitle: "Overførsel afvist",
     updateDeclined: "{{name}} afviste din overførselsanmodning.",
+    incomingAcceptedTitle: "Accepteret",
+    incomingAcceptedBody:
+      "Du accepterede denne overførsel. Tryk for at se ejendelen.",
+    incomingDeclinedTitle: "Afvist",
+    incomingDeclinedBody: "Du afviste denne overførsel.",
+    viewBelonging: "SE EJENDEL",
 
     requestTitle: "Overfør genstand",
     requestHint:
