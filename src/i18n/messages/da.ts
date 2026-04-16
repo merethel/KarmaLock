@@ -377,6 +377,7 @@ export const da: Dictionary = {
     incomingDeclinedTitle: "Afvist",
     incomingDeclinedBody: "Du afviste denne overførsel.",
     viewBelonging: "SE EJENDEL",
+    someone: "Nogen",
 
     requestTitle: "Overfør genstand",
     requestHint:

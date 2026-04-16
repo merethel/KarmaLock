@@ -54,6 +54,45 @@ function formatTimestamp(
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function cleanLabel(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  if (!s) return null;
+  if (s === "-" || s === "—") return null;
+  return s;
+}
+
+function readString(obj: unknown, key: string): string | null {
+  if (!obj || typeof obj !== "object") return null;
+  const rec = obj as Record<string, unknown>;
+  return cleanLabel(rec[key]);
+}
+
+function senderLabel(req: TransferRequest): string | null {
+  const fromUser = req.fromUser;
+  // Normal shape
+  const viaFromUser = cleanLabel(fromUser?.name) || cleanLabel(fromUser?.email);
+  if (viaFromUser) return viaFromUser;
+
+  // Fallback shapes (backend variations / snapshots)
+  const o = req as unknown;
+  return (
+    readString(o, "fromUserName") ||
+    readString(o, "fromName") ||
+    readString(o, "fromEmail") ||
+    readString(o, "senderName") ||
+    readString(o, "senderEmail") ||
+    // Some APIs might include a `from` object
+    readString(readFromObj(o, "from"), "name") ||
+    readString(readFromObj(o, "from"), "email")
+  );
+}
+
+function readFromObj(obj: unknown, key: string): unknown {
+  if (!obj || typeof obj !== "object") return null;
+  return (obj as Record<string, unknown>)[key];
+}
+
 export default function TransfersInboxScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -406,7 +445,7 @@ export default function TransfersInboxScreen() {
                 <Text dim style={styles.cardBody}>
                   {t("transfers.requestBody").replace(
                     "{{from}}",
-                    r.fromUser?.name || r.fromUser?.email || "—",
+                    senderLabel(r) || t("transfers.someone"),
                   )}
                 </Text>
 

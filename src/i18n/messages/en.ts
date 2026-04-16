@@ -376,6 +376,7 @@ export const en = {
     incomingDeclinedTitle: "Declined",
     incomingDeclinedBody: "You declined this transfer.",
     viewBelonging: "VIEW BELONGING",
+    someone: "Someone",
 
     requestTitle: "Transfer item",
     requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",
