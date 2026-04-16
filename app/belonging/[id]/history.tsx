@@ -87,6 +87,22 @@ function safeOwnerLine(meta: unknown): { from?: string; to?: string } | null {
   return { from: fromName, to: toName };
 }
 
+function safeNote(meta: unknown): string | null {
+  if (!meta || typeof meta !== "object") return null;
+  const m = meta as Record<string, unknown>;
+  const raw =
+    m.note ??
+    m.message ??
+    m.comment ??
+    m.transferNote ??
+    (m.metadata && typeof m.metadata === "object"
+      ? (m.metadata as Record<string, unknown>).note
+      : undefined);
+  if (typeof raw !== "string") return null;
+  const s = raw.trim();
+  return s ? s : null;
+}
+
 function formatValue(v: unknown): string {
   if (v == null) return "—";
   if (typeof v === "string") return v || "—";
@@ -211,6 +227,7 @@ export default function BelongingHistoryScreen() {
             const ownerLine = item.type.includes("transfer")
               ? safeOwnerLine(item.metadata)
               : null;
+            const note = safeNote(item.metadata);
 
             const title =
               item.type === "belonging.created"
@@ -238,6 +255,12 @@ export default function BelongingHistoryScreen() {
                     {t("vault.historyOwnership")
                       .replace("{{from}}", ownerLine.from ?? "—")
                       .replace("{{to}}", ownerLine.to ?? "—")}
+                  </Text>
+                ) : null}
+
+                {note ? (
+                  <Text dim style={[styles.cardMeta, { marginTop: 6 }]}>
+                    {t("vault.historyNote").replace("{{note}}", note)}
                   </Text>
                 ) : null}
 

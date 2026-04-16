@@ -160,6 +160,7 @@ export const en = {
     historyTransfer: "Transfer",
     historyBy: "By {{name}}",
     historyOwnership: "Ownership: {{from}} → {{to}}",
+    historyNote: "Note: {{note}}",
     historyNoDetails: "No details available for this event.",
     historyMoreChanges: "+{{count}} more changes",
     loadMore: "Load more",
@@ -384,7 +385,10 @@ export const en = {
 
     requestTitle: "Transfer item",
     requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",
+    emailLabel: "RECIPIENT EMAIL",
     emailPlaceholder: "recipient@email.com",
+    noteLabel: "NOTE",
+    notePlaceholder: "Add a note (optional)",
     cancel: "Cancel",
     send: "Send transfer request",
     sending: "Sending…",

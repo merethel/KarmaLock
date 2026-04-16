@@ -88,6 +88,7 @@ export default function BelongingDetailsScreen() {
   const [markBusy, setMarkBusy] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferEmail, setTransferEmail] = useState("");
+  const [transferNote, setTransferNote] = useState("");
   const [transferBusy, setTransferBusy] = useState(false);
 
   // If the route param arrives after first render, paint from cache immediately.
@@ -133,6 +134,7 @@ export default function BelongingDetailsScreen() {
 
   const onTransfer = () => {
     setTransferEmail("");
+    setTransferNote("");
     setTransferOpen(true);
   };
   const onGrant = () => Alert.alert("Grant", "Not implemented yet.");
@@ -461,9 +463,36 @@ export default function BelongingDetailsScreen() {
               Keyboard.dismiss();
             }}
           >
-            <Text style={modalStyles.title}>{t("transfers.requestTitle")}</Text>
-            <Text dim style={modalStyles.body}>
-              {t("transfers.requestHint")}
+            <View style={modalStyles.topRow}>
+              <View style={modalStyles.topLeft}>
+                <Ionicons
+                  name="swap-horizontal"
+                  size={18}
+                  color="rgba(255,255,255,0.70)"
+                />
+                <Text style={modalStyles.title}>{t("transfers.requestTitle")}</Text>
+              </View>
+              <Pressable
+                hitSlop={10}
+                disabled={transferBusy}
+                onPress={() => setTransferOpen(false)}
+                style={({ pressed }) => [
+                  modalStyles.closeBtn,
+                  pressed && { opacity: 0.85 },
+                ]}
+              >
+                <Ionicons
+                  name="close"
+                  size={18}
+                  color="rgba(255,255,255,0.75)"
+                />
+              </Pressable>
+            </View>
+
+            <Text dim style={modalStyles.body}>{t("transfers.requestHint")}</Text>
+
+            <Text muted mono style={modalStyles.label}>
+              {t("transfers.emailLabel")}
             </Text>
 
             <TextInput
@@ -476,14 +505,31 @@ export default function BelongingDetailsScreen() {
               keyboardType="email-address"
               style={modalStyles.input}
               editable={!transferBusy}
+              autoFocus
+              returnKeyType="next"
             />
 
-            <View style={{ gap: 12, marginTop: 14 }}>
+            <Text muted mono style={[modalStyles.label, { marginTop: 10 }]}>
+              {t("transfers.noteLabel")}
+            </Text>
+            <TextInput
+              value={transferNote}
+              onChangeText={setTransferNote}
+              placeholder={t("transfers.notePlaceholder")}
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              autoCapitalize="sentences"
+              autoCorrect
+              multiline
+              style={[modalStyles.input, modalStyles.noteInput]}
+              editable={!transferBusy}
+              maxLength={280}
+            />
+
+            <View style={modalStyles.actionsCol}>
               <Button
-                title={
-                  transferBusy ? t("transfers.sending") : t("transfers.send")
-                }
+                title={transferBusy ? t("transfers.sending") : t("transfers.send")}
                 disabled={transferBusy || !transferEmail.trim() || !item?._id}
+                style={{ height: 52 }}
                 onPress={async () => {
                   if (!item?._id) return;
                   try {
@@ -491,6 +537,7 @@ export default function BelongingDetailsScreen() {
                     await requestTransfer({
                       belongingId: item._id,
                       toEmail: transferEmail.trim(),
+                      note: transferNote.trim() ? transferNote.trim() : undefined,
                     });
                     setTransferOpen(false);
                     setBelongingTransferStatus(item._id, "transferring");
@@ -509,6 +556,7 @@ export default function BelongingDetailsScreen() {
                 title={t("transfers.cancel")}
                 variant="outline"
                 disabled={transferBusy}
+                style={{ height: 52 }}
                 onPress={() => setTransferOpen(false)}
               />
             </View>
@@ -576,15 +624,43 @@ const modalStyles = StyleSheet.create({
   sheetOffset: {
     transform: [{ translateY: -40 }],
   },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 6,
+  },
+  topLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+    minWidth: 0,
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "900",
-    marginBottom: 10,
   },
   body: {
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 14,
+  },
+  label: {
+    letterSpacing: 2.4,
+    fontSize: 11,
+    marginBottom: 8,
   },
   input: {
     height: 52,
@@ -596,4 +672,11 @@ const modalStyles = StyleSheet.create({
     color: "rgba(255,255,255,0.92)",
     fontSize: 16,
   },
+  noteInput: {
+    height: 92,
+    paddingTop: 12,
+    paddingBottom: 12,
+    textAlignVertical: "top",
+  },
+  actionsCol: { gap: 12, marginTop: 16 },
 });

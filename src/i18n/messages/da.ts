@@ -160,6 +160,7 @@ export const da: Dictionary = {
     historyTransfer: "Overførsel",
     historyBy: "Af {{name}}",
     historyOwnership: "Ejerskab: {{from}} → {{to}}",
+    historyNote: "Bemærkning: {{note}}",
     historyNoDetails: "Ingen detaljer tilgængelige for denne hændelse.",
     historyMoreChanges: "+{{count}} flere ændringer",
     loadMore: "Indlæs flere",
@@ -386,7 +387,10 @@ export const da: Dictionary = {
     requestTitle: "Overfør genstand",
     requestHint:
       "Indtast modtagerens email. Overførslen sker først, når modtageren accepterer.",
+    emailLabel: "MODTAGER EMAIL",
     emailPlaceholder: "modtager@email.com",
+    noteLabel: "BEMÆRKNING",
+    notePlaceholder: "Tilføj en bemærkning (valgfrit)",
     cancel: "Annuller",
     send: "Send overførselsanmodning",
     sending: "Sender…",

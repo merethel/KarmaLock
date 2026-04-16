@@ -29,6 +29,7 @@ export async function listOutgoingTransfers() {
 export async function requestTransfer(payload: {
   belongingId: string;
   toEmail: string;
+  note?: string;
 }) {
   return apiFetch<{ request: TransferRequest }>("/transfers", {
     method: "POST",
