@@ -377,6 +377,10 @@ export const en = {
     incomingDeclinedBody: "You declined this transfer.",
     viewBelonging: "VIEW BELONGING",
     someone: "Someone",
+    badgeIncoming: "INCOMING",
+    badgeOutgoing: "OUTGOING",
+    badgeYouAccepted: "YOU ACCEPTED",
+    badgeYouDeclined: "YOU DECLINED",
 
     requestTitle: "Transfer item",
     requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",

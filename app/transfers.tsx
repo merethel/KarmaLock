@@ -341,6 +341,10 @@ export default function TransfersInboxScreen() {
               const status = it.status;
               const titleLine = r.title || t("transfers.requestTitleFallback");
               const thumbUri = normalizePhotoUri(r.photoUrl);
+              const badge =
+                status === "accepted"
+                  ? t("transfers.badgeYouAccepted")
+                  : t("transfers.badgeYouDeclined");
               const body =
                 status === "accepted"
                   ? t("transfers.incomingAcceptedBody")
@@ -355,10 +359,11 @@ export default function TransfersInboxScreen() {
                       ),
                     style: ({ pressed }: { pressed: boolean }) => [
                       styles.card,
+                      styles.cardIncomingAccepted,
                       pressed && { opacity: 0.92 },
                     ],
                   }
-                : { style: styles.card };
+                : { style: [styles.card, styles.cardIncomingAccepted] };
 
               return (
                 <Container key={`iu:${r._id}:${status}`} {...(containerProps as any)}>
@@ -397,6 +402,9 @@ export default function TransfersInboxScreen() {
                       )}
                     </View>
                     <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {badge}
+                      </Text>
                       <Text style={styles.itemTitle} numberOfLines={1}>
                         {titleLine}
                       </Text>
@@ -417,6 +425,7 @@ export default function TransfersInboxScreen() {
               const status = it.status;
               const titleLine = r.title || t("transfers.requestTitleFallback");
               const thumbUri = normalizePhotoUri(r.photoUrl);
+              const badge = t("transfers.badgeOutgoing");
               const label =
                 status === "accepted"
                   ? t("transfers.updateAccepted").replace(
@@ -429,7 +438,15 @@ export default function TransfersInboxScreen() {
                     );
               const seen = Boolean(r.seenBySenderAt);
               return (
-                <View key={`u:${r._id}:${status}`} style={styles.card}>
+                <View
+                  key={`u:${r._id}:${status}`}
+                  style={[
+                    styles.card,
+                    status === "accepted"
+                      ? styles.cardOutgoingAccepted
+                      : styles.cardOutgoingDeclined,
+                  ]}
+                >
                   <View style={styles.cardTopRow}>
                     <View style={styles.cardTitleRow}>
                       <Ionicons
@@ -466,6 +483,9 @@ export default function TransfersInboxScreen() {
                       )}
                     </View>
                     <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {badge}
+                      </Text>
                       <Text style={styles.itemTitle} numberOfLines={1}>
                         {titleLine}
                       </Text>
@@ -482,8 +502,9 @@ export default function TransfersInboxScreen() {
             const r = it.req;
             const titleLine = r.title || t("transfers.requestTitleFallback");
             const thumbUri = normalizePhotoUri(r.photoUrl);
+            const badge = t("transfers.badgeIncoming");
             return (
-              <View key={`i:${r._id}`} style={styles.card}>
+              <View key={`i:${r._id}`} style={[styles.card, styles.cardIncomingPending]}>
                 <View style={styles.cardTopRow}>
                   <View style={styles.cardTitleRow}>
                     <Ionicons name="swap-horizontal" size={18} color={palette.accent} />
@@ -509,6 +530,9 @@ export default function TransfersInboxScreen() {
                     )}
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text muted mono style={styles.badgeText}>
+                      {badge}
+                    </Text>
                     <Text style={styles.itemTitle} numberOfLines={1}>
                       {titleLine}
                     </Text>
@@ -569,6 +593,22 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
   },
+  cardIncomingPending: {
+    borderColor: "rgba(120,255,185,0.20)",
+    backgroundColor: "rgba(120,255,185,0.05)",
+  },
+  cardIncomingAccepted: {
+    borderColor: "rgba(120,255,185,0.25)",
+    backgroundColor: "rgba(120,255,185,0.03)",
+  },
+  cardOutgoingAccepted: {
+    borderColor: "rgba(120,255,185,0.18)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  cardOutgoingDeclined: {
+    borderColor: "rgba(255,120,120,0.18)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
   previewRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 6 },
   thumb: {
     width: 42,
@@ -586,6 +626,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "900",
     color: "rgba(255,255,255,0.94)",
+  },
+  badgeText: {
+    fontSize: 10,
+    letterSpacing: 2.4,
+    fontWeight: "900",
+    color: "rgba(255,255,255,0.55)",
+    marginBottom: 3,
   },
   cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   cardTitleRow: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1, minWidth: 0 },

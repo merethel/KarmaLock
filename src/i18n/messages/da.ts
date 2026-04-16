@@ -378,6 +378,10 @@ export const da: Dictionary = {
     incomingDeclinedBody: "Du afviste denne overførsel.",
     viewBelonging: "SE EJENDEL",
     someone: "Nogen",
+    badgeIncoming: "INDKOMMENDE",
+    badgeOutgoing: "UDGÅENDE",
+    badgeYouAccepted: "DU ACCEPTEREDE",
+    badgeYouDeclined: "DU AFVISTE",
 
     requestTitle: "Overfør genstand",
     requestHint:
