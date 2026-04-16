@@ -188,7 +188,10 @@ export default function TransfersInboxScreen() {
     async (id: string) => {
       try {
         setBusyId(id);
-        await acceptTransfer(id);
+        const res = await acceptTransfer(id);
+        // Recipient accepted → the item is now owned by this user, so it must not
+        // remain in a local “transferring” state.
+        setBelongingTransferStatus(res.data.request.belongingId, null);
         await load();
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : t("errors.failed"));
