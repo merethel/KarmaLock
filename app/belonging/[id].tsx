@@ -209,7 +209,10 @@ export default function BelongingDetailsScreen() {
       // Unmark should be instant (no modal).
       try {
         setMarkBusy(true);
-        const res = await updateBelonging(item._id, { isStolen: false });
+        const res = await updateBelonging(item._id, {
+          version: item.version,
+          isStolen: false,
+        });
         setItem(res.data.item);
       } catch (e: unknown) {
         Alert.alert(
@@ -511,6 +514,7 @@ export default function BelongingDetailsScreen() {
           try {
             if (!item?._id) return;
             const res = await updateBelonging(item._id, {
+              version: item.version,
               isStolen: !item.isStolen,
             });
             setItem(res.data.item);

@@ -3,6 +3,11 @@ import { apiFetch } from "./client";
 
 export type Belonging = {
   _id: string;
+  /**
+   * Optimistic concurrency version from backend.
+   * Required by PATCH endpoints (send as `body.version` or `If-Match`).
+   */
+  version?: string | number;
   chipUid: string;
   title: string;
   description?: string;
@@ -62,6 +67,7 @@ export async function deleteBelonging(id: string) {
 export async function updateBelonging(
   id: string,
   payload: Partial<{
+    version: string | number;
     title: string;
     description: string;
     category: string;

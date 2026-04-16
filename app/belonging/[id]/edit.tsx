@@ -93,6 +93,7 @@ export default function EditBelongingDetailsScreen() {
     setErrorMessage("");
     try {
       await updateBelonging(String(id), {
+        version: item?.version,
         title: title.trim(),
         description,
         brand,
