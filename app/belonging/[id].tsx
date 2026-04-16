@@ -3,6 +3,7 @@ import { BelongingHeroCard } from "@/components/belonging/BelongingHeroCard";
 import { BelongingHeroHeader } from "@/components/belonging/BelongingHeroHeader";
 import { BelongingLogActions } from "@/components/belonging/BelongingLogActions";
 import { BelongingPrimaryActions } from "@/components/belonging/BelongingPrimaryActions";
+import { TransferRequestModal } from "@/components/belonging/TransferRequestModal";
 import { Button } from "@/components/common_components/Button";
 import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
 import { DangerRow } from "@/components/common_components/DangerRow";
@@ -14,14 +15,9 @@ import {
   listMyBelongings,
   updateBelonging,
 } from "@/src/api/belongings";
-import { requestTransfer } from "@/src/api/transfers";
-import type { UserSuggestion } from "@/src/api/users";
-import { suggestUsersByEmail } from "@/src/api/users";
 import { useI18n } from "@/src/i18n/context";
-import { scanChipUid } from "@/src/nfc/scanChipUid";
 import {
   getCachedBelonging,
-  setBelongingTransferStatus,
 } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -36,15 +32,8 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
   StatusBar,
   StyleSheet,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -93,16 +82,6 @@ export default function BelongingDetailsScreen() {
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
-  const [transferEmail, setTransferEmail] = useState("");
-  const [transferNote, setTransferNote] = useState("");
-  const [transferBusy, setTransferBusy] = useState(false);
-  const [emailBusy, setEmailBusy] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [emailSuggestions, setEmailSuggestions] = useState<UserSuggestion[]>([]);
-  const [emailTouched, setEmailTouched] = useState(false);
-  const [emailLocked, setEmailLocked] = useState(false);
-  const [lockedEmail, setLockedEmail] = useState("");
-  const emailReqSeq = useRef(0);
 
   // If the route param arrives after first render, paint from cache immediately.
   useEffect(() => {
@@ -146,14 +125,6 @@ export default function BelongingDetailsScreen() {
   );
 
   const onTransfer = () => {
-    setTransferEmail("");
-    setTransferNote("");
-    setEmailBusy(false);
-    setEmailError("");
-    setEmailSuggestions([]);
-    setEmailTouched(false);
-    setEmailLocked(false);
-    setLockedEmail("");
     setTransferOpen(true);
   };
   const onGrant = () => Alert.alert("Grant", "Not implemented yet.");
@@ -178,45 +149,6 @@ export default function BelongingDetailsScreen() {
     setStolenOpen(true);
   }, [item?._id, item?.isStolen, t]);
   const onAddDoc = () => Alert.alert("Add doc", "Not implemented yet.");
-
-  useEffect(() => {
-    if (!transferOpen) return;
-    if (emailLocked) return;
-    const q = transferEmail.trim();
-    setEmailError("");
-
-    // Avoid spamming backend for short inputs.
-    if (q.length < 3) {
-      setEmailSuggestions([]);
-      setEmailBusy(false);
-      return;
-    }
-
-    const handle = setTimeout(() => {
-      void (async () => {
-        const seq = ++emailReqSeq.current;
-        try {
-          setEmailBusy(true);
-          const res = await suggestUsersByEmail(q);
-          const users = res.data.users ?? [];
-          if (seq !== emailReqSeq.current) return;
-          setEmailSuggestions(users);
-          if (q.includes("@") && users.length === 0) {
-            setEmailError(t("transfers.emailNotFound"));
-          }
-        } catch {
-          // If suggestions fail, don't block transfer; backend will validate on send.
-          if (seq !== emailReqSeq.current) return;
-          setEmailSuggestions([]);
-        } finally {
-          if (seq !== emailReqSeq.current) return;
-          setEmailBusy(false);
-        }
-      })();
-    }, 300);
-
-    return () => clearTimeout(handle);
-  }, [emailLocked, transferEmail, transferOpen, t]);
 
   const onDelete = useCallback(async () => {
     if (!item?._id) return;
@@ -497,246 +429,16 @@ export default function BelongingDetailsScreen() {
         countdownSeconds={0}
       />
 
-      <Modal
+      <TransferRequestModal
         visible={transferOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={transferBusy ? undefined : () => setTransferOpen(false)}
-      >
-        <Pressable
-          style={modalStyles.backdrop}
-          onPress={
-            transferBusy
-              ? undefined
-              : () => {
-                  // Tap outside input: dismiss keyboard (keep modal open).
-                  Keyboard.dismiss();
-                }
-          }
-        >
-          <KeyboardAvoidingView
-            style={modalStyles.kav}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-          >
-            <Pressable
-              style={modalStyles.sheet}
-              onPress={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <View style={modalStyles.topRow}>
-                <View style={modalStyles.topLeft}>
-                  <Ionicons
-                    name="swap-horizontal"
-                    size={18}
-                    color="rgba(255,255,255,0.70)"
-                  />
-                  <Text style={modalStyles.title}>
-                    {t("transfers.requestTitle")}
-                  </Text>
-                </View>
-                <Pressable
-                  hitSlop={10}
-                  disabled={transferBusy}
-                  onPress={() => setTransferOpen(false)}
-                  style={({ pressed }) => [
-                    modalStyles.closeBtn,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                >
-                  <Ionicons
-                    name="close"
-                    size={18}
-                    color="rgba(255,255,255,0.75)"
-                  />
-                </Pressable>
-              </View>
-
-              <ScrollView
-                style={modalStyles.formScroll}
-                contentContainerStyle={modalStyles.formScrollContent}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="interactive"
-              >
-                <Text dim style={modalStyles.hint}>
-                  {t("transfers.requestHint")}
-                </Text>
-
-                <Text muted mono style={modalStyles.label}>
-                  {t("transfers.emailLabel")}
-                </Text>
-
-                <TextInput
-                  value={transferEmail}
-                  onChangeText={(v) => {
-                    const next = v;
-                    const prevLocked = emailLocked;
-                    setTransferEmail(v);
-                    setEmailTouched(true);
-                    if (prevLocked) {
-                      const a = lockedEmail.trim().toLowerCase();
-                      const b = next.trim().toLowerCase();
-                      if (a && b && a === b) return;
-                      setEmailLocked(false);
-                    }
-                  }}
-                  placeholder={t("transfers.emailPlaceholder")}
-                  placeholderTextColor="rgba(255,255,255,0.45)"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  style={modalStyles.input}
-                  editable={!transferBusy}
-                  autoFocus
-                  returnKeyType="next"
-                />
-
-                {emailBusy && !emailLocked ? (
-                  <Text dim style={modalStyles.helperText}>
-                    {t("transfers.searchingEmail")}
-                  </Text>
-                ) : null}
-
-                {!emailLocked && emailSuggestions.length > 0 ? (
-                  <View style={modalStyles.suggestionsBox}>
-                    <View style={modalStyles.suggestionsContent}>
-                      {emailSuggestions.slice(0, 3).map((u) => (
-                        <Pressable
-                          key={u.id}
-                          disabled={transferBusy}
-                          onPress={() => {
-                            setTransferEmail(u.email);
-                            setEmailSuggestions([]);
-                            setEmailError("");
-                            setEmailLocked(true);
-                            setLockedEmail(u.email);
-                            Keyboard.dismiss();
-                          }}
-                          style={({ pressed }) => [
-                            modalStyles.suggestionRow,
-                            pressed && { opacity: 0.88 },
-                          ]}
-                        >
-                          <Ionicons
-                            name="person-circle-outline"
-                            size={18}
-                            color="rgba(255,255,255,0.65)"
-                          />
-                          <View style={{ flex: 1, minWidth: 0 }}>
-                            <Text
-                              style={modalStyles.suggestionPrimary}
-                              numberOfLines={1}
-                            >
-                              {u.name || u.email}
-                            </Text>
-                            {u.name ? (
-                              <Text
-                                dim
-                                style={modalStyles.suggestionSecondary}
-                                numberOfLines={1}
-                              >
-                                {u.email}
-                              </Text>
-                            ) : null}
-                          </View>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-                ) : null}
-
-                {!emailLocked && !emailBusy && emailTouched && emailError ? (
-                  <Text style={modalStyles.errorText}>{emailError}</Text>
-                ) : null}
-
-                <Text muted mono style={[modalStyles.label, { marginTop: 10 }]}>
-                  {t("transfers.noteLabel")}
-                </Text>
-                <TextInput
-                  value={transferNote}
-                  onChangeText={setTransferNote}
-                  placeholder={t("transfers.notePlaceholder")}
-                  placeholderTextColor="rgba(255,255,255,0.45)"
-                  autoCapitalize="sentences"
-                  autoCorrect
-                  multiline
-                  style={[modalStyles.input, modalStyles.noteInput]}
-                  editable={!transferBusy}
-                  maxLength={280}
-                />
-              </ScrollView>
-
-              <View style={modalStyles.actionsRow}>
-                <Button
-                  title={transferBusy ? t("transfers.scanning") : t("transfers.send")}
-                  disabled={transferBusy || !transferEmail.trim() || !item?._id}
-                  style={{ height: 44, flex: 1 }}
-                  textStyle={{ fontSize: 14 }}
-                  onPress={async () => {
-                    if (!item?._id) return;
-                    try {
-                      setTransferBusy(true);
-                      const normalizeChipUid = (v: string) =>
-                        v.trim().toLowerCase();
-                      const expected = normalizeChipUid(item.chipUid || "");
-
-                      const scanned = await scanChipUid({
-                        iosAlertMessage: t("scan.iosAlertMessage"),
-                        nfcUnavailable: t("scan.nfcUnavailable"),
-                        nfcNotSupported: t("scan.nfcNotSupported"),
-                        noChipIdFound: t("scan.noChipIdFound"),
-                      });
-
-                      const got = normalizeChipUid(scanned);
-                      if (!expected || !got || expected !== got) {
-                        Alert.alert(
-                          t("transfers.chipMismatchTitle"),
-                          t("transfers.chipMismatchBody"),
-                        );
-                        return;
-                      }
-
-                      await requestTransfer({
-                        belongingId: item._id,
-                        toEmail: transferEmail.trim(),
-                        note: transferNote.trim()
-                          ? transferNote.trim()
-                          : undefined,
-                        chipUid: scanned,
-                      });
-                      setTransferOpen(false);
-                      setBelongingTransferStatus(item._id, "transferring");
-                      router.replace("/vault");
-                    } catch (e: unknown) {
-                      Alert.alert(
-                        t("errors.failed"),
-                        e instanceof Error ? e.message : t("errors.failed"),
-                      );
-                    } finally {
-                      setTransferBusy(false);
-                    }
-                  }}
-                />
-                <Button
-                  title={t("transfers.cancel")}
-                  variant="outline"
-                  disabled={transferBusy}
-                  style={{ height: 44, width: 120 }}
-                  textStyle={{ fontSize: 14 }}
-                  onPress={() => setTransferOpen(false)}
-                />
-              </View>
-            </Pressable>
-          </KeyboardAvoidingView>
-        </Pressable>
-      </Modal>
+        item={item}
+        onClose={() => setTransferOpen(false)}
+      />
     </View>
   );
 }
 
 const HERO_H = 360;
-const CARD_BG = "rgba(255,255,255,0.06)";
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#000" },
@@ -773,119 +475,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontSize: 15,
   },
-});
-
-const modalStyles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.72)",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  kav: { flex: 1, justifyContent: "center" },
-  sheet: {
-    width: "100%",
-    maxWidth: 420,
-    alignSelf: "center",
-    backgroundColor: "#141414",
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    overflow: "hidden",
-    maxHeight: "84%",
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.08)",
-  },
-  topLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flex: 1,
-    minWidth: 0,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "900",
-  },
-  formScroll: { flexGrow: 0 },
-  formScrollContent: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 16 },
-  hint: { fontSize: 14, lineHeight: 20, marginBottom: 14 },
-  helperText: { marginTop: 10 },
-  errorText: { marginTop: 10, color: "tomato" },
-  label: {
-    letterSpacing: 2.4,
-    fontSize: 11,
-    marginBottom: 8,
-  },
-  input: {
-    height: 52,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    paddingHorizontal: 14,
-    color: "rgba(255,255,255,0.92)",
-    fontSize: 16,
-  },
-  noteInput: {
-    height: 92,
-    paddingTop: 12,
-    paddingBottom: 12,
-    textAlignVertical: "top",
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-    paddingBottom: 12,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
-  suggestionsBox: {
-    marginTop: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    overflow: "hidden",
-  },
-  suggestionsContent: { padding: 8, gap: 8 },
-  suggestionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    backgroundColor: "rgba(0,0,0,0.22)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-  },
-  suggestionPrimary: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: "rgba(255,255,255,0.92)",
-  },
-  suggestionSecondary: { fontSize: 12, lineHeight: 16 },
 });
