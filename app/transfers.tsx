@@ -4,6 +4,7 @@ import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { palette } from "@/constants/Colors";
 import type { TransferRequest } from "@/src/api/transfers";
+import type { Grant } from "@/src/api/grants";
 import {
   acceptTransfer,
   declineTransfer,
@@ -11,6 +12,7 @@ import {
   listOutgoingTransfers,
   markOutgoingTransfersSeen,
 } from "@/src/api/transfers";
+import { acceptGrant, listIncomingGrants } from "@/src/api/grants";
 import { useI18n } from "@/src/i18n/context";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
@@ -111,6 +113,7 @@ export default function TransfersInboxScreen() {
   const [error, setError] = useState("");
   const [requests, setRequests] = useState<TransferRequest[]>([]);
   const [outgoing, setOutgoing] = useState<TransferRequest[]>([]);
+  const [grantRequests, setGrantRequests] = useState<Grant[]>([]);
   const [busyId, setBusyId] = useState<string>("");
 
   const pending = useMemo(
@@ -203,14 +206,16 @@ export default function TransfersInboxScreen() {
     try {
       setLoading(true);
       setError("");
-      const [inc, out] = await Promise.all([
+      const [inc, out, grants] = await Promise.all([
         listIncomingTransfers(),
         listOutgoingTransfers(),
+        listIncomingGrants(),
       ]);
       const incReqs = inc.data.requests ?? [];
       const outReqs = out.data.requests ?? [];
       setRequests(incReqs);
       setOutgoing(outReqs);
+      setGrantRequests(grants.data.grants ?? []);
 
       // When an outgoing transfer has been responded to, it is no longer “transferring”.
       for (const r of outReqs) {
@@ -292,6 +297,26 @@ export default function TransfersInboxScreen() {
     [load, t],
   );
 
+  const onAcceptGrant = useCallback(
+    async (id: string) => {
+      try {
+        setBusyId(id);
+        await acceptGrant(id);
+        await load();
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : t("errors.failed"));
+      } finally {
+        setBusyId("");
+      }
+    },
+    [load, t],
+  );
+
+  const pendingGrants = useMemo(
+    () => (grantRequests ?? []).filter((g) => (g.status ?? "pending") === "pending"),
+    [grantRequests],
+  );
+
   return (
     <Screen
       style={styles.screen}
@@ -316,7 +341,8 @@ export default function TransfersInboxScreen() {
         </View>
       ) : pending.length === 0 &&
         outgoingUpdates.length === 0 &&
-        incomingUpdates.length === 0 ? (
+        incomingUpdates.length === 0 &&
+        pendingGrants.length === 0 ? (
         <View style={styles.center}>
           <Ionicons
             name="notifications-outline"
@@ -339,6 +365,38 @@ export default function TransfersInboxScreen() {
         >
           {error ? (
             <Text style={{ color: "tomato", marginBottom: 8 }}>{error}</Text>
+          ) : null}
+
+          {pendingGrants.length > 0 ? (
+            <View style={{ gap: 12 }}>
+              <Text mono style={{ fontSize: 12, letterSpacing: 3, opacity: 0.9 }}>
+                {t("grants.inboxTitle")}
+              </Text>
+              {pendingGrants.slice(0, 10).map((g) => {
+                const from = g.fromUser?.name || g.fromUser?.email || t("transfers.someone");
+                const body = t("grants.requestBody").replace("{{from}}", from);
+                return (
+                  <View key={`g:${g._id}`} style={[styles.card, styles.cardIncomingPending]}>
+                    <View style={styles.cardTopRow}>
+                      <View style={styles.cardTitleRow}>
+                        <Ionicons name="person-add" size={18} color={palette.accent} />
+                        <Text style={styles.cardTitle}>{t("grants.title")}</Text>
+                      </View>
+                    </View>
+                    <Text dim style={styles.cardBody}>
+                      {body}
+                    </Text>
+                    <View style={{ gap: 10, marginTop: 10 }}>
+                      <Button
+                        title={t("grants.accept")}
+                        onPress={() => void onAcceptGrant(g._id)}
+                        disabled={busyId === g._id}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
           ) : null}
 
           {feed.map((it) => {

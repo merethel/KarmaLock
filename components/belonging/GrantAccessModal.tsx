@@ -6,6 +6,7 @@ import type { Belonging } from "@/src/api/belongings";
 import { createGrant } from "@/src/api/grants";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
+import { setBelongingGrantStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
@@ -76,6 +77,7 @@ export function GrantAccessModal({
                     chipUid: scanned,
                   });
 
+                  setBelongingGrantStatus(item._id, "granting");
                   onClose();
                 } catch (e: unknown) {
                   Alert.alert(

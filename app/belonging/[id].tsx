@@ -16,10 +16,12 @@ import {
   listMyBelongings,
   updateBelonging,
 } from "@/src/api/belongings";
+import { listOutgoingGrants, revokeGrant } from "@/src/api/grants";
 import { cancelTransfer, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import {
   getCachedBelonging,
+  setBelongingGrantStatus,
   setBelongingTransferStatus,
 } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
@@ -88,6 +90,7 @@ export default function BelongingDetailsScreen() {
   const [grantOpen, setGrantOpen] = useState(false);
   const [cancelBusy, setCancelBusy] = useState(false);
   const [pendingOutgoingId, setPendingOutgoingId] = useState<string>("");
+  const [grantBusy, setGrantBusy] = useState(false);
 
   // If the route param arrives after first render, paint from cache immediately.
   useEffect(() => {
@@ -137,6 +140,21 @@ export default function BelongingDetailsScreen() {
           // ignore (don't block item details)
         }
       })();
+      void (async () => {
+        if (!idStr) return;
+        try {
+          const out = await listOutgoingGrants();
+          const reqs = out.data.grants ?? [];
+          const pending =
+            reqs.find(
+              (g) =>
+                g.belongingId === idStr && (g.status ?? "pending") === "pending",
+            ) ?? null;
+          setBelongingGrantStatus(idStr, pending ? "granting" : null);
+        } catch {
+          // ignore
+        }
+      })();
     }, [load]),
   );
 
@@ -177,6 +195,34 @@ export default function BelongingDetailsScreen() {
     ]);
   }, [idStr, pendingOutgoingId, t]);
   const onGrant = () => setGrantOpen(true);
+
+  const onUnsubscribe = useCallback(() => {
+    if (!item?.grantId) return;
+    Alert.alert(t("grants.unsubscribeTitle"), t("grants.unsubscribeBody"), [
+      { text: t("transfers.cancel"), style: "cancel" },
+      {
+        text: t("grants.unsubscribeConfirm"),
+        style: "destructive",
+        onPress: () => {
+          void (async () => {
+            try {
+              setGrantBusy(true);
+              await revokeGrant(item.grantId!);
+              // After revoke, belonging should disappear from their list.
+              router.replace("/vault");
+            } catch (e: unknown) {
+              Alert.alert(
+                t("errors.failed"),
+                e instanceof Error ? e.message : t("errors.failed"),
+              );
+            } finally {
+              setGrantBusy(false);
+            }
+          })();
+        },
+      },
+    ]);
+  }, [item?.grantId, router, t]);
   const onReportStolen = useCallback(async () => {
     if (!item?._id) return;
     if (item.isStolen) {
@@ -409,6 +455,15 @@ export default function BelongingDetailsScreen() {
                   onPress={() => setDeleteOpen(true)}
                   marginTop={22}
                 />
+
+                {item?.accessRole === "granted" && item?.grantId ? (
+                  <DangerRow
+                    title={t("grants.unsubscribeTitle")}
+                    subtitle={t("grants.unsubscribeBody")}
+                    onPress={grantBusy ? () => {} : onUnsubscribe}
+                    marginTop={12}
+                  />
+                ) : null}
               </View>
             </Animated.ScrollView>
           </Animated.View>

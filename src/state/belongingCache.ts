@@ -7,6 +7,9 @@ const byId = new Map<string, Belonging>();
 type LocalTransferStatus = "transferring";
 const transferStatusByBelongingId = new Map<string, LocalTransferStatus>();
 
+type LocalGrantStatus = "granting";
+const grantStatusByBelongingId = new Map<string, LocalGrantStatus>();
+
 export function seedBelongingCache(items: Belonging[]): void {
   for (const it of items) byId.set(it._id, it);
 }
@@ -32,5 +35,20 @@ export function getBelongingTransferStatus(
   belongingId: string,
 ): LocalTransferStatus | null {
   return transferStatusByBelongingId.get(belongingId) ?? null;
+}
+
+export function setBelongingGrantStatus(
+  belongingId: string,
+  status: LocalGrantStatus | null,
+): void {
+  if (!belongingId) return;
+  if (status == null) grantStatusByBelongingId.delete(belongingId);
+  else grantStatusByBelongingId.set(belongingId, status);
+}
+
+export function getBelongingGrantStatus(
+  belongingId: string,
+): LocalGrantStatus | null {
+  return grantStatusByBelongingId.get(belongingId) ?? null;
 }
 

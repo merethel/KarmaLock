@@ -114,6 +114,7 @@ export const en = {
     statusOk: "OK",
     statusStolen: "STOLEN",
     statusTransferring: "TRANSFERRING",
+    statusGranting: "GRANTING",
     belongingTransferredAway: "This belonging has been transferred.",
     transferredAwayTitle: "Belonging transferred",
     transferredAwayBody:
@@ -429,6 +430,16 @@ export const en = {
     chipMismatchTitle: "Wrong chip scanned",
     chipMismatchBody:
       "This chip doesn’t match the item you’re trying to share. Scan the chip on the correct physical item and try again.",
+    unsubscribeTitle: "Unsubscribe",
+    unsubscribeBody: "Remove this belonging from your app.",
+    unsubscribeConfirm: "Unsubscribe",
+
+    inboxTitle: "GRANT REQUESTS",
+    inboxEmpty: "No access requests right now",
+    requestBody: "{{from}} wants to share a belonging with you.",
+    accept: "Accept access",
+    acceptedTitle: "Access granted",
+    acceptedBody: "You can now view the belonging in your vault.",
   },
 
   aboutKarmalock: {

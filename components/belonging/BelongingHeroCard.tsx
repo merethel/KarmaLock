@@ -1,7 +1,10 @@
 import { Text } from "@/components/common_components/Text";
 import type { Belonging } from "@/src/api/belongings";
 import type { TranslationKey } from "@/src/i18n/types";
-import { getBelongingTransferStatus } from "@/src/state/belongingCache";
+import {
+  getBelongingGrantStatus,
+  getBelongingTransferStatus,
+} from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -35,11 +38,14 @@ export function BelongingHeroCard({
   valueLabel: string;
 }) {
   const isTransferring = getBelongingTransferStatus(item._id) === "transferring";
+  const isGranting = getBelongingGrantStatus(item._id) === "granting";
   const statusLabel = isTransferring
     ? t("vault.statusTransferring")
-    : item.isStolen
-      ? t("vault.statusStolen")
-      : t("vault.statusOk");
+    : isGranting
+      ? t("vault.statusGranting")
+      : item.isStolen
+        ? t("vault.statusStolen")
+        : t("vault.statusOk");
 
   return (
     <View style={styles.heroCard}>

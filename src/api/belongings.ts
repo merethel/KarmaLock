@@ -21,6 +21,14 @@ export type Belonging = {
   stolenLocation?: string;
   createdAt?: string;
   updatedAt?: string;
+  /**
+   * Provided by backend when listing accessible belongings.
+   * - owner: the signed-in user owns the belonging
+   * - granted: the signed-in user has access via a grant
+   */
+  accessRole?: "owner" | "granted";
+  /** Provided for granted items so the recipient can revoke/unsubscribe. */
+  grantId?: string;
 };
 
 export async function listMyBelongings() {

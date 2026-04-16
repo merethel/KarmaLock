@@ -113,6 +113,7 @@ export const da: Dictionary = {
     statusOk: "OK",
     statusStolen: "STJÅLET",
     statusTransferring: "OVERFØRES",
+    statusGranting: "GIVER ADGANG",
     belongingTransferredAway: "Denne ejendel er blevet overført.",
     transferredAwayTitle: "Ejendel overført",
     transferredAwayBody:
@@ -427,6 +428,16 @@ export const da: Dictionary = {
     chipMismatchTitle: "Forkert chip scannet",
     chipMismatchBody:
       "Denne chip matcher ikke genstanden, du prøver at dele. Scan chippen på den rigtige fysiske genstand og prøv igen.",
+    unsubscribeTitle: "Afmeld",
+    unsubscribeBody: "Fjern denne ejendel fra din app.",
+    unsubscribeConfirm: "Afmeld",
+
+    inboxTitle: "ADGANGSANMODNINGER",
+    inboxEmpty: "Ingen adgangsanmodninger lige nu",
+    requestBody: "{{from}} vil dele en ejendel med dig.",
+    accept: "Acceptér adgang",
+    acceptedTitle: "Adgang givet",
+    acceptedBody: "Du kan nu se ejendelen i dit vault.",
   },
 
   aboutKarmalock: {
