@@ -25,6 +25,30 @@ import {
   markSeenTransferUpdate,
 } from "@/src/state/seenTransferUpdates";
 
+function parseIsoDate(value: unknown): Date | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function formatTimestamp(
+  d: Date | null,
+  t: (k: import("@/src/i18n/types").TranslationKey) => string,
+): string {
+  if (!d) return "";
+  const now = Date.now();
+  const diffMs = now - d.getTime();
+  const min = Math.round(diffMs / 60_000);
+  if (min < 1) return t("vault.syncedJustNow");
+  if (min < 60) return t("vault.syncedMinutesAgo").replace("{{count}}", String(min));
+  const h = Math.round(min / 60);
+  if (h < 24) return t("vault.syncedHoursAgo").replace("{{count}}", String(h));
+  const days = Math.round(h / 24);
+  if (days < 14) return t("vault.syncedDaysAgo").replace("{{count}}", String(days));
+  // Fallback: short date.
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function TransfersInboxScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -46,6 +70,54 @@ export default function TransfersInboxScreen() {
       return status === "accepted" || status === "declined";
     });
   }, [outgoing]);
+
+  const feed = useMemo(() => {
+    type FeedItem =
+      | {
+          kind: "incoming";
+          _id: string;
+          createdAt: Date | null;
+          req: TransferRequest;
+        }
+      | {
+          kind: "update";
+          _id: string;
+          createdAt: Date | null;
+          status: "accepted" | "declined";
+          req: TransferRequest;
+        };
+
+    const items: FeedItem[] = [];
+
+    for (const r of pending) {
+      items.push({
+        kind: "incoming",
+        _id: r._id,
+        createdAt: parseIsoDate(r.createdAt),
+        req: r,
+      });
+    }
+
+    for (const r of outgoingUpdates) {
+      const status = (r.status ?? "pending") as "accepted" | "declined" | string;
+      if (status !== "accepted" && status !== "declined") continue;
+      items.push({
+        kind: "update",
+        _id: r._id,
+        createdAt: parseIsoDate(r.createdAt),
+        status,
+        req: r,
+      });
+    }
+
+    items.sort((a, b) => {
+      const ta = a.createdAt?.getTime() ?? 0;
+      const tb = b.createdAt?.getTime() ?? 0;
+      return tb - ta;
+    });
+
+    return items;
+  }, [outgoingUpdates, pending]);
 
   const load = useCallback(async () => {
     try {
@@ -158,31 +230,33 @@ export default function TransfersInboxScreen() {
             <Text style={{ color: "tomato", marginBottom: 8 }}>{error}</Text>
           ) : null}
 
-          {outgoingUpdates.length > 0 ? (
-            <>
-              <Text muted mono style={styles.sectionLabel}>
-                {t("transfers.updatesTitle")}
-              </Text>
-              {outgoingUpdates.map((r) => {
-                const status = (r.status ?? "pending") as string;
-                const label =
-                  status === "accepted"
-                    ? t("transfers.updateAccepted")
-                        .replace("{{name}}", r.toUser?.name || r.toUser?.email || "—")
-                        .replace("{{title}}", r.title || "item")
-                    : t("transfers.updateDeclined")
-                        .replace("{{name}}", r.toUser?.name || r.toUser?.email || "—")
-                        .replace("{{title}}", r.title || "item");
-
-                const seen = hasSeenTransferUpdate(r._id, status);
-
-                return (
-                  <View key={`${r._id}:${status}`} style={styles.card}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          {feed.map((it) => {
+            if (it.kind === "update") {
+              const r = it.req;
+              const status = it.status;
+              const label =
+                status === "accepted"
+                  ? t("transfers.updateAccepted").replace(
+                      "{{name}}",
+                      r.toUser?.name || r.toUser?.email || "—",
+                    )
+                  : t("transfers.updateDeclined").replace(
+                      "{{name}}",
+                      r.toUser?.name || r.toUser?.email || "—",
+                    );
+              const seen = hasSeenTransferUpdate(r._id, status);
+              return (
+                <View key={`u:${r._id}:${status}`} style={styles.card}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
                       <Ionicons
                         name={status === "accepted" ? "checkmark-circle" : "close-circle"}
                         size={18}
-                        color={status === "accepted" ? "#39D98A" : "rgba(255,120,120,0.95)"}
+                        color={
+                          status === "accepted"
+                            ? "#39D98A"
+                            : "rgba(255,120,120,0.95)"
+                        }
                       />
                       <Text style={styles.cardTitle}>
                         {status === "accepted"
@@ -191,45 +265,56 @@ export default function TransfersInboxScreen() {
                       </Text>
                       {!seen ? <View style={styles.unreadDot} /> : null}
                     </View>
-                    <Text dim style={styles.cardBody}>
-                      {label}
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(it.createdAt, t)}
                     </Text>
                   </View>
-                );
-              })}
-            </>
-          ) : null}
+                  <Text dim style={styles.cardBody}>
+                    {label}
+                  </Text>
+                </View>
+              );
+            }
 
-          {pending.map((r) => (
-            <View key={r._id} style={styles.card}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Ionicons name="swap-horizontal" size={18} color={palette.accent} />
-                <Text style={styles.cardTitle}>
-                  {r.title || t("transfers.requestTitleFallback")}
+            // incoming request
+            const r = it.req;
+            return (
+              <View key={`i:${r._id}`} style={styles.card}>
+                <View style={styles.cardTopRow}>
+                  <View style={styles.cardTitleRow}>
+                    <Ionicons name="swap-horizontal" size={18} color={palette.accent} />
+                    <Text style={styles.cardTitle}>
+                      {r.title || t("transfers.requestTitleFallback")}
+                    </Text>
+                  </View>
+                  <Text muted mono style={styles.cardTime}>
+                    {formatTimestamp(it.createdAt, t)}
+                  </Text>
+                </View>
+
+                <Text dim style={styles.cardBody}>
+                  {t("transfers.requestBody").replace(
+                    "{{from}}",
+                    r.fromUser?.name || r.fromUser?.email || "—",
+                  )}
                 </Text>
-              </View>
 
-              <Text dim style={styles.cardBody}>
-                {t("transfers.requestBody")
-                  .replace("{{from}}", r.fromUser?.name || r.fromUser?.email || "—")
-                }
-              </Text>
-
-              <View style={{ gap: 10, marginTop: 10 }}>
-                <Button
-                  title={t("transfers.accept")}
-                  onPress={() => void onAccept(r._id)}
-                  disabled={busyId === r._id}
-                />
-                <Button
-                  title={t("transfers.decline")}
-                  variant="outline"
-                  onPress={() => void onDecline(r._id)}
-                  disabled={busyId === r._id}
-                />
+                <View style={{ gap: 10, marginTop: 10 }}>
+                  <Button
+                    title={t("transfers.accept")}
+                    onPress={() => void onAccept(r._id)}
+                    disabled={busyId === r._id}
+                  />
+                  <Button
+                    title={t("transfers.decline")}
+                    variant="outline"
+                    onPress={() => void onDecline(r._id)}
+                    disabled={busyId === r._id}
+                  />
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
       )}
     </Screen>
@@ -254,7 +339,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
-  sectionLabel: { letterSpacing: 2.6, fontSize: 11, marginTop: 6, marginBottom: 2 },
   card: {
     backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 16,
@@ -263,8 +347,11 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
   },
+  cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardTitleRow: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1, minWidth: 0 },
   cardTitle: { fontSize: 16, fontWeight: "900", flex: 1 },
   cardBody: { lineHeight: 20 },
+  cardTime: { fontSize: 10, letterSpacing: 1.6, opacity: 0.65, marginLeft: 12 },
   unreadDot: {
     width: 8,
     height: 8,
