@@ -12,7 +12,7 @@ import {
   listOutgoingTransfers,
   markOutgoingTransfersSeen,
 } from "@/src/api/transfers";
-import { acceptGrant, listIncomingGrants } from "@/src/api/grants";
+import { acceptGrant, declineGrant, listIncomingGrants } from "@/src/api/grants";
 import { useI18n } from "@/src/i18n/context";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
@@ -312,6 +312,21 @@ export default function TransfersInboxScreen() {
     [load, t],
   );
 
+  const onDeclineGrant = useCallback(
+    async (id: string) => {
+      try {
+        setBusyId(id);
+        await declineGrant(id);
+        await load();
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : t("errors.failed"));
+      } finally {
+        setBusyId("");
+      }
+    },
+    [load, t],
+  );
+
   const pendingGrants = useMemo(
     () => (grantRequests ?? []).filter((g) => (g.status ?? "pending") === "pending"),
     [grantRequests],
@@ -390,6 +405,12 @@ export default function TransfersInboxScreen() {
                       <Button
                         title={t("grants.accept")}
                         onPress={() => void onAcceptGrant(g._id)}
+                        disabled={busyId === g._id}
+                      />
+                      <Button
+                        title={t("grants.decline")}
+                        variant="outline"
+                        onPress={() => void onDeclineGrant(g._id)}
                         disabled={busyId === g._id}
                       />
                     </View>

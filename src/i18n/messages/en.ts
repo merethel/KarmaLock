@@ -438,6 +438,7 @@ export const en = {
     inboxEmpty: "No access requests right now",
     requestBody: "{{from}} wants to share a belonging with you.",
     accept: "Accept access",
+    decline: "Decline",
     acceptedTitle: "Access granted",
     acceptedBody: "You can now view the belonging in your vault.",
   },

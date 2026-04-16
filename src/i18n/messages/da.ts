@@ -436,6 +436,7 @@ export const da: Dictionary = {
     inboxEmpty: "Ingen adgangsanmodninger lige nu",
     requestBody: "{{from}} vil dele en ejendel med dig.",
     accept: "Acceptér adgang",
+    decline: "Afslå",
     acceptedTitle: "Adgang givet",
     acceptedBody: "Du kan nu se ejendelen i dit vault.",
   },
