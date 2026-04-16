@@ -36,6 +36,7 @@ import {
 } from "@/src/state/belongingCache";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
+import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
 const CARD_BORDER = "rgba(255,255,255,0.10)";
@@ -118,6 +119,8 @@ export default function VaultDashboard() {
             for (const r of outgoing) {
               const status = (r.status ?? "pending") as string;
               if (status !== "accepted" && status !== "declined") continue;
+              // Transfer completed/declined → clear local “transferring”.
+              setBelongingTransferStatus(r.belongingId, null);
               if (r.seenBySenderAt) continue;
               outgoingUnread += 1;
             }

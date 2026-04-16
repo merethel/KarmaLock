@@ -11,6 +11,7 @@ import {
   markOutgoingTransfersSeen,
 } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
+import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
@@ -131,8 +132,18 @@ export default function TransfersInboxScreen() {
         listIncomingTransfers(),
         listOutgoingTransfers(),
       ]);
-      setRequests(inc.data.requests ?? []);
-      setOutgoing(out.data.requests ?? []);
+      const incReqs = inc.data.requests ?? [];
+      const outReqs = out.data.requests ?? [];
+      setRequests(incReqs);
+      setOutgoing(outReqs);
+
+      // When an outgoing transfer has been responded to, it is no longer “transferring”.
+      for (const r of outReqs) {
+        const status = (r.status ?? "pending") as string;
+        if (status === "accepted" || status === "declined") {
+          setBelongingTransferStatus(r.belongingId, null);
+        }
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t("errors.failed"));
     } finally {

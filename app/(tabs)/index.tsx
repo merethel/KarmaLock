@@ -12,6 +12,7 @@ import { getUser } from "@/src/auth/session";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
+import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, Pressable, StyleSheet, View } from "react-native";
@@ -83,6 +84,8 @@ export default function HomeScreen() {
             for (const r of outgoing) {
               const status = (r.status ?? "pending") as string;
               if (status !== "accepted" && status !== "declined") continue;
+              // Transfer completed/declined → clear local “transferring”.
+              setBelongingTransferStatus(r.belongingId, null);
               if (r.seenBySenderAt) continue;
               outgoingUnread += 1;
             }

@@ -1,6 +1,7 @@
 import { Text } from "@/components/common_components/Text";
 import type { Belonging } from "@/src/api/belongings";
 import type { TranslationKey } from "@/src/i18n/types";
+import { getBelongingTransferStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -33,6 +34,13 @@ export function BelongingHeroCard({
   item: Belonging;
   valueLabel: string;
 }) {
+  const isTransferring = getBelongingTransferStatus(item._id) === "transferring";
+  const statusLabel = isTransferring
+    ? t("vault.statusTransferring")
+    : item.isStolen
+      ? t("vault.statusStolen")
+      : t("vault.statusOk");
+
   return (
     <View style={styles.heroCard}>
       <Text mono style={styles.idLine}>
@@ -43,9 +51,7 @@ export function BelongingHeroCard({
       </Text>
 
       <View style={styles.heroPills}>
-        <Pill
-          label={item.isStolen ? t("vault.statusStolen") : t("vault.statusOk")}
-        />
+        <Pill label={statusLabel} />
         <Pill label={valueLabel} icon="cash-outline" />
       </View>
     </View>
