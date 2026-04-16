@@ -66,7 +66,8 @@ export const en = {
     online: "ONLINE",
     offline: "OFFLINE",
     statusOnlineTitle: "System status: online",
-    statusOnlineBody: "Server connection looks good. You can scan chips and open your vault.",
+    statusOnlineBody:
+      "Server connection looks good. You can scan chips and open your vault.",
     statusOfflineTitle: "System status: offline",
     statusOfflineGeneric:
       "We couldn’t reach the server right now. Check your connection and try again.",
@@ -120,7 +121,8 @@ export const en = {
     goBackToVault: "Go back to Vault",
 
     deleteBelonging: "Delete belonging",
-    deleteBelongingSubtitle: "Permanently remove this belonging from your vault.",
+    deleteBelongingSubtitle:
+      "Permanently remove this belonging from your vault.",
     deleteBelongingModalTitle: "Delete belonging?",
     deleteBelongingModalBody:
       "Are you sure you want to delete this belonging? This action cannot be undone.",
@@ -307,8 +309,7 @@ export const en = {
     permissionNotRequested: "Not requested.",
     biometricTitle: "Biometric Lock",
     biometricSubtitle: "Use Face ID with passcode fallback.",
-    biometricDeviceHint:
-      "This device supports Face ID with passcode fallback.",
+    biometricDeviceHint: "This device supports Face ID with passcode fallback.",
     biometricUnavailableHint: "Biometrics are not available on this device.",
     aboutApp: "About KarmaLock",
     aboutAppSubtitle: "Product and features",
@@ -325,7 +326,8 @@ export const en = {
     transfersInbox: "Notifications",
     transfersInboxSubtitle: "Transfers and updates.",
     deleteAccount: "Delete account",
-    deleteSubtitle: "Permanently remove your account from this device and server.",
+    deleteSubtitle:
+      "Permanently remove your account from this device and server.",
     deleteModalTitle: "Delete account?",
     deleteModalBody:
       "Are you sure you want to do this? This may remove your account and data from our servers when supported, and will always sign you out on this device.",
@@ -373,7 +375,8 @@ export const en = {
     declinedTitle: "Transfer declined",
     updateDeclined: "{{name}} declined your transfer request.",
     incomingAcceptedTitle: "Accepted",
-    incomingAcceptedBody: "You accepted this transfer. Tap to view the belonging.",
+    incomingAcceptedBody:
+      "You accepted this transfer. Tap to view the belonging.",
     incomingDeclinedTitle: "Declined",
     incomingDeclinedBody: "You declined this transfer.",
     viewBelonging: "VIEW BELONGING",
@@ -384,7 +387,8 @@ export const en = {
     badgeYouDeclined: "YOU DECLINED",
 
     requestTitle: "Transfer item",
-    requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",
+    requestHint:
+      "Enter the recipient’s email. The transfer completes only when they accept.",
     emailLabel: "RECIPIENT EMAIL",
     emailPlaceholder: "recipient@email.com",
     searchingEmail: "Searching…",
@@ -392,14 +396,15 @@ export const en = {
     noteLabel: "NOTE",
     notePlaceholder: "Add a note (optional)",
     cancel: "Cancel",
-    send: "Send transfer request",
+    send: "Transfer",
     sending: "Sending…",
     scanning: "Scan chip…",
     chipMismatchTitle: "Wrong chip scanned",
     chipMismatchBody:
       "This chip doesn’t match the item you’re trying to transfer. Scan the chip on the correct physical item and try again.",
     sentTitle: "Transfer requested",
-    sentBody: "We sent a transfer request. The item will transfer when they accept.",
+    sentBody:
+      "We sent a transfer request. The item will transfer when they accept.",
     sentToastTitle: "Transfer request sent",
     sentToastBody: "Awaiting recipient confirmation…",
     acceptedToastTitle: "Transfer accepted",

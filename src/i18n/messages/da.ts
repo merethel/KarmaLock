@@ -161,7 +161,8 @@ export const da: Dictionary = {
     historyBy: "Af {{name}}",
     historyOwnership: "Ejerskab: {{from}} → {{to}}",
     historyNote: "Bemærkning: {{note}}",
-    historyNoTransferNote: "Der er ikke tilføjet bemærkninger under denne overførsel.",
+    historyNoTransferNote:
+      "Der er ikke tilføjet bemærkninger under denne overførsel.",
     historyMoreChanges: "+{{count}} flere ændringer",
     loadMore: "Indlæs flere",
     save: "Gem",
@@ -341,8 +342,7 @@ export const da: Dictionary = {
     deleteFailedReason: {
       connection:
         "Vi kunne ikke få kontakt til tjenesten. Tjek din internetforbindelse og prøv igen.",
-      server:
-        "Der opstod et problem på vores side. Prøv igen om lidt.",
+      server: "Der opstod et problem på vores side. Prøv igen om lidt.",
       timeout:
         "Forespørgslen tog for lang tid. Tjek forbindelsen og prøv igen om et øjeblik.",
       forbidden:
@@ -351,8 +351,7 @@ export const da: Dictionary = {
         "Tjenesten kunne ikke gennemføre handlingen. Prøv igen senere eller kontakt support.",
       client:
         "Noget gik galt med anmodningen. Prøv igen, eller kontakt support, hvis det fortsætter.",
-      rateLimit:
-        "For mange forsøg på kort tid. Vent et øjeblik og prøv igen.",
+      rateLimit: "For mange forsøg på kort tid. Vent et øjeblik og prøv igen.",
       session:
         "Dit login var udløbet eller blev ikke accepteret. Log ind igen, hvis du stadig vil slette kontoen.",
       unknown:
@@ -363,7 +362,8 @@ export const da: Dictionary = {
   transfers: {
     title: "NOTIFIKATIONER",
     emptyTitle: "Ingen overførsler lige nu",
-    emptyBody: "Der er ingen, der prøver at overføre en genstand til dig lige nu.",
+    emptyBody:
+      "Der er ingen, der prøver at overføre en genstand til dig lige nu.",
     requestTitleFallback: "Overførselsanmodning",
     requestBody: "{{from}} vil overføre en genstand til dig.",
     accept: "Acceptér overførsel",
@@ -394,7 +394,7 @@ export const da: Dictionary = {
     noteLabel: "BEMÆRKNING",
     notePlaceholder: "Tilføj en bemærkning (valgfrit)",
     cancel: "Annuller",
-    send: "Send overførselsanmodning",
+    send: "Overfør",
     sending: "Sender…",
     scanning: "Scan chip…",
     chipMismatchTitle: "Forkert chip scannet",
