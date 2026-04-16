@@ -1,4 +1,5 @@
 import { Button } from "@/components/common_components/Button";
+import { BackButton } from "@/components/common_components/BackButton";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { palette } from "@/constants/Colors";
@@ -294,13 +295,11 @@ export default function TransfersInboxScreen() {
   return (
     <Screen style={styles.screen} withTabBarInset={false}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <Text style={styles.backText}>{t("registerFlow.back")}</Text>
-        </Pressable>
+        <BackButton onPress={() => router.back()} topInset={0} />
         <Text mono style={styles.headerTitle}>
           {t("transfers.title")}
         </Text>
-        <View style={{ width: 36 }} />
+        <View style={{ width: 42 }} />
       </View>
 
       {loading ? (
@@ -576,8 +575,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 8,
   },
-  backBtn: { paddingVertical: 6, width: 72 },
-  backText: { color: "rgba(255,255,255,0.85)", fontSize: 15 },
   headerTitle: {
     fontSize: 12,
     letterSpacing: 3,
