@@ -1,4 +1,5 @@
 import { Text } from "@/components/common_components/Text";
+import { BackButton } from "@/components/common_components/BackButton";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
@@ -35,9 +36,7 @@ export function RegisterWizardHeader({
   return (
     <>
       <View style={s.topBar}>
-        <Pressable onPress={onBack} hitSlop={12} style={s.backBtn}>
-          <Text style={s.backText}>{t("registerFlow.back")}</Text>
-        </Pressable>
+        <BackButton onPress={onBack} topInset={0} />
         <Text mono style={s.headerTitle}>
           {t("registerFlow.headerTitle")}
         </Text>
@@ -52,7 +51,7 @@ export function RegisterWizardHeader({
             <Ionicons name="close" size={18} color="rgba(255,255,255,0.7)" />
           </Pressable>
         ) : (
-          <View style={{ width: 32 }} />
+          <View style={{ width: 42 }} />
         )}
       </View>
 
