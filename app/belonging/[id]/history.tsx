@@ -56,6 +56,37 @@ function safeChanges(meta: unknown): Array<{ field: string; from?: unknown; to?:
   return out;
 }
 
+function safeOwnerLine(meta: unknown): { from?: string; to?: string } | null {
+  if (!meta || typeof meta !== "object") return null;
+  const m = meta as Record<string, unknown>;
+
+  const fromUser = m.fromUser;
+  const toUser = m.toUser;
+  const from = m.from;
+  const to = m.to;
+
+  function nameFromUser(u: unknown): string | undefined {
+    if (!u || typeof u !== "object") return undefined;
+    const o = u as Record<string, unknown>;
+    const n = typeof o.name === "string" ? o.name : "";
+    const e = typeof o.email === "string" ? o.email : "";
+    const v = (n || e).trim();
+    return v || undefined;
+  }
+
+  const fromName =
+    nameFromUser(fromUser) ||
+    (typeof from === "string" ? from.trim() : "") ||
+    undefined;
+  const toName =
+    nameFromUser(toUser) ||
+    (typeof to === "string" ? to.trim() : "") ||
+    undefined;
+
+  if (!fromName && !toName) return null;
+  return { from: fromName, to: toName };
+}
+
 function formatValue(v: unknown): string {
   if (v == null) return "—";
   if (typeof v === "string") return v || "—";
@@ -177,6 +208,9 @@ export default function BelongingHistoryScreen() {
             const when = formatTimestamp(parseIsoDate(item.createdAt), t);
             const actor = item.actor?.name || item.actor?.email || "—";
             const changes = safeChanges(item.metadata);
+            const ownerLine = item.type.includes("transfer")
+              ? safeOwnerLine(item.metadata)
+              : null;
 
             const title =
               item.type === "belonging.created"
@@ -198,6 +232,14 @@ export default function BelongingHistoryScreen() {
                 <Text dim style={styles.cardMeta}>
                   {t("vault.historyBy").replace("{{name}}", actor)}
                 </Text>
+
+                {ownerLine ? (
+                  <Text dim style={[styles.cardMeta, { marginTop: 6 }]}>
+                    {t("vault.historyOwnership")
+                      .replace("{{from}}", ownerLine.from ?? "—")
+                      .replace("{{to}}", ownerLine.to ?? "—")}
+                  </Text>
+                ) : null}
 
                 {changes.length > 0 ? (
                   <View style={{ marginTop: 10, gap: 8 }}>
