@@ -416,6 +416,21 @@ export const en = {
     acceptedToastBody: "{{name}} accepted your transfer request.",
   },
 
+  grants: {
+    title: "Grant access",
+    hint: "Enter the recipient’s email. They’ll be able to view this belonging in their app.",
+    emailLabel: "RECIPIENT EMAIL",
+    emailPlaceholder: "recipient@email.com",
+    searchingEmail: "Searching…",
+    emailNotFound: "No user found with that email.",
+    cancel: "Cancel",
+    grant: "Grant",
+    scanning: "Scan chip…",
+    chipMismatchTitle: "Wrong chip scanned",
+    chipMismatchBody:
+      "This chip doesn’t match the item you’re trying to share. Scan the chip on the correct physical item and try again.",
+  },
+
   aboutKarmalock: {
     headerTitle: "INFO",
     sectionWhatIs: "WHAT IS KARMALOCK?",

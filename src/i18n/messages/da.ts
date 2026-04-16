@@ -414,6 +414,21 @@ export const da: Dictionary = {
     acceptedToastBody: "{{name}} accepterede din overførselsanmodning.",
   },
 
+  grants: {
+    title: "Giv adgang",
+    hint: "Indtast modtagerens email. De får adgang til at se denne ejendel i deres app.",
+    emailLabel: "MODTAGER EMAIL",
+    emailPlaceholder: "modtager@email.com",
+    searchingEmail: "Søger…",
+    emailNotFound: "Ingen bruger fundet med den email.",
+    cancel: "Annuller",
+    grant: "Giv adgang",
+    scanning: "Scan chip…",
+    chipMismatchTitle: "Forkert chip scannet",
+    chipMismatchBody:
+      "Denne chip matcher ikke genstanden, du prøver at dele. Scan chippen på den rigtige fysiske genstand og prøv igen.",
+  },
+
   aboutKarmalock: {
     headerTitle: "INFO",
     sectionWhatIs: "HVAD ER KARMALOCK?",

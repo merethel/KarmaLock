@@ -3,6 +3,7 @@ import { BelongingHeroCard } from "@/components/belonging/BelongingHeroCard";
 import { BelongingHeroHeader } from "@/components/belonging/BelongingHeroHeader";
 import { BelongingLogActions } from "@/components/belonging/BelongingLogActions";
 import { BelongingPrimaryActions } from "@/components/belonging/BelongingPrimaryActions";
+import { GrantAccessModal } from "@/components/belonging/GrantAccessModal";
 import { TransferRequestModal } from "@/components/belonging/TransferRequestModal";
 import { Button } from "@/components/common_components/Button";
 import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
@@ -84,6 +85,7 @@ export default function BelongingDetailsScreen() {
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [grantOpen, setGrantOpen] = useState(false);
   const [cancelBusy, setCancelBusy] = useState(false);
   const [pendingOutgoingId, setPendingOutgoingId] = useState<string>("");
 
@@ -174,7 +176,7 @@ export default function BelongingDetailsScreen() {
       },
     ]);
   }, [idStr, pendingOutgoingId, t]);
-  const onGrant = () => Alert.alert("Grant", "Not implemented yet.");
+  const onGrant = () => setGrantOpen(true);
   const onReportStolen = useCallback(async () => {
     if (!item?._id) return;
     if (item.isStolen) {
@@ -483,6 +485,12 @@ export default function BelongingDetailsScreen() {
         visible={transferOpen}
         item={item}
         onClose={() => setTransferOpen(false)}
+      />
+
+      <GrantAccessModal
+        visible={grantOpen}
+        item={item}
+        onClose={() => setGrantOpen(false)}
       />
     </View>
   );

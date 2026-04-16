@@ -3,21 +3,14 @@ import { RecipientEmailPicker } from "@/components/belonging/RecipientEmailPicke
 import { Button } from "@/components/common_components/Button";
 import { Text } from "@/components/common_components/Text";
 import type { Belonging } from "@/src/api/belongings";
-import { requestTransfer } from "@/src/api/transfers";
+import { createGrant } from "@/src/api/grants";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
-import { setBelongingTransferStatus } from "@/src/state/belongingCache";
-import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
-export function TransferRequestModal({
+export function GrantAccessModal({
   visible,
   item,
   onClose,
@@ -27,40 +20,37 @@ export function TransferRequestModal({
   onClose: () => void;
 }) {
   const { t } = useI18n();
-  const router = useRouter();
 
-  const [transferEmail, setTransferEmail] = useState("");
-  const [transferNote, setTransferNote] = useState("");
-  const [transferBusy, setTransferBusy] = useState(false);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
-    setTransferEmail("");
-    setTransferNote("");
-    setTransferBusy(false);
+    setEmail("");
+    setBusy(false);
   }, [visible]);
 
-  const canSend = Boolean(item?._id) && Boolean(transferEmail.trim()) && !transferBusy;
+  const canGrant = Boolean(item?._id) && Boolean(email.trim()) && !busy;
 
   return (
     <ActionSheetModal
       visible={visible}
-      busy={transferBusy}
-      title={t("transfers.requestTitle")}
-      icon="swap-horizontal"
+      busy={busy}
+      title={t("grants.title")}
+      icon={"person-add" as React.ComponentProps<typeof Ionicons>["name"]}
       onClose={onClose}
       footer={
         <View style={styles.actionsRow}>
           <Button
-            title={transferBusy ? t("transfers.scanning") : t("transfers.send")}
-            disabled={!canSend}
+            title={busy ? t("grants.scanning") : t("grants.grant")}
+            disabled={!canGrant}
             style={{ height: 44, flex: 1 }}
             textStyle={{ fontSize: 14 }}
             onPress={() => {
               void (async () => {
                 if (!item?._id) return;
                 try {
-                  setTransferBusy(true);
+                  setBusy(true);
                   const normalizeChipUid = (v: string) => v.trim().toLowerCase();
                   const expected = normalizeChipUid(item.chipUid || "");
 
@@ -74,37 +64,34 @@ export function TransferRequestModal({
                   const got = normalizeChipUid(scanned);
                   if (!expected || !got || expected !== got) {
                     Alert.alert(
-                      t("transfers.chipMismatchTitle"),
-                      t("transfers.chipMismatchBody"),
+                      t("grants.chipMismatchTitle"),
+                      t("grants.chipMismatchBody"),
                     );
                     return;
                   }
 
-                  await requestTransfer({
+                  await createGrant({
                     belongingId: item._id,
-                    toEmail: transferEmail.trim(),
-                    note: transferNote.trim() ? transferNote.trim() : undefined,
+                    toEmail: email.trim(),
                     chipUid: scanned,
                   });
 
-                  setBelongingTransferStatus(item._id, "transferring");
                   onClose();
-                  router.replace("/vault");
                 } catch (e: unknown) {
                   Alert.alert(
                     t("errors.failed"),
                     e instanceof Error ? e.message : t("errors.failed"),
                   );
                 } finally {
-                  setTransferBusy(false);
+                  setBusy(false);
                 }
               })();
             }}
           />
           <Button
-            title={t("transfers.cancel")}
+            title={t("grants.cancel")}
             variant="outline"
-            disabled={transferBusy}
+            disabled={busy}
             style={{ height: 44, width: 120 }}
             textStyle={{ fontSize: 14 }}
             onPress={onClose}
@@ -118,33 +105,17 @@ export function TransferRequestModal({
         keyboardDismissMode="interactive"
       >
         <Text dim style={styles.hint}>
-          {t("transfers.requestHint")}
+          {t("grants.hint")}
         </Text>
 
         <RecipientEmailPicker
-          value={transferEmail}
-          onChange={setTransferEmail}
-          disabled={transferBusy}
-          label={t("transfers.emailLabel")}
-          placeholder={t("transfers.emailPlaceholder")}
-          tSearching={t("transfers.searchingEmail")}
-          tEmailNotFound={t("transfers.emailNotFound")}
-        />
-
-        <Text muted mono style={[styles.label, { marginTop: 10 }]}>
-          {t("transfers.noteLabel")}
-        </Text>
-        <TextInput
-          value={transferNote}
-          onChangeText={setTransferNote}
-          placeholder={t("transfers.notePlaceholder")}
-          placeholderTextColor="rgba(255,255,255,0.45)"
-          autoCapitalize="sentences"
-          autoCorrect
-          multiline
-          style={[styles.input, styles.noteInput]}
-          editable={!transferBusy}
-          maxLength={280}
+          value={email}
+          onChange={setEmail}
+          disabled={busy}
+          label={t("grants.emailLabel")}
+          placeholder={t("grants.emailPlaceholder")}
+          tSearching={t("grants.searchingEmail")}
+          tEmailNotFound={t("grants.emailNotFound")}
         />
       </ScrollView>
     </ActionSheetModal>
@@ -153,26 +124,6 @@ export function TransferRequestModal({
 
 const styles = StyleSheet.create({
   hint: { fontSize: 14, lineHeight: 20, marginBottom: 14 },
-  label: { letterSpacing: 2.4, fontSize: 11, marginBottom: 8 },
-  input: {
-    height: 52,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    paddingHorizontal: 14,
-    color: "rgba(255,255,255,0.92)",
-    fontSize: 16,
-  },
-  noteInput: {
-    height: 92,
-    paddingTop: 12,
-    paddingBottom: 12,
-    textAlignVertical: "top",
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
+  actionsRow: { flexDirection: "row", gap: 10 },
 });
 
