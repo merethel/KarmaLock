@@ -150,11 +150,28 @@ export default function VaultDashboard() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((i) => {
-      const hay =
-        `${i.title} ${i.description ?? ""} ${i.chipUid}`.toLowerCase();
-      return hay.includes(q);
+    const base = q
+      ? items.filter((i) => {
+          const hay =
+            `${i.title} ${i.description ?? ""} ${i.chipUid}`.toLowerCase();
+          return hay.includes(q);
+        })
+      : items;
+
+    function parseTime(s?: string): number {
+      if (!s) return 0;
+      const t = new Date(s).getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+
+    return [...base].sort((a, b) => {
+      const ta = parseTime(a.updatedAt) || parseTime(a.createdAt);
+      const tb = parseTime(b.updatedAt) || parseTime(b.createdAt);
+      if (tb !== ta) return tb - ta;
+      // Stable-ish fallback so items don’t jump unexpectedly.
+      const at = (a.title ?? "").localeCompare(b.title ?? "");
+      if (at !== 0) return at;
+      return a._id.localeCompare(b._id);
     });
   }, [items, search]);
 
