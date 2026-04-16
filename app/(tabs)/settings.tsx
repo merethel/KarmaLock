@@ -92,6 +92,18 @@ export default function SettingsScreen() {
             : t("settings.biometricUnavailableHint")}
         </Text>
 
+        <SectionTitle label={t("transfers.title")} />
+
+        <SettingsCard>
+          <SettingsRow
+            icon="notifications-outline"
+            title={t("settings.transfersInbox")}
+            subtitle={t("settings.transfersInboxSubtitle")}
+            chevron
+            onPress={() => router.push("/transfers")}
+          />
+        </SettingsCard>
+
         <SectionTitle label={t("settings.sectionAbout")} />
 
         <SettingsCard>

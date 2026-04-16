@@ -14,6 +14,7 @@ import {
   listMyBelongings,
   updateBelonging,
 } from "@/src/api/belongings";
+import { requestTransfer } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { getCachedBelonging } from "@/src/state/belongingCache";
 import { useFocusEffect } from "expo-router";
@@ -29,8 +30,11 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Modal,
+  Pressable,
   StatusBar,
   StyleSheet,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -74,6 +78,9 @@ export default function BelongingDetailsScreen() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferEmail, setTransferEmail] = useState("");
+  const [transferBusy, setTransferBusy] = useState(false);
 
   // If the route param arrives after first render, paint from cache immediately.
   useEffect(() => {
@@ -115,7 +122,10 @@ export default function BelongingDetailsScreen() {
     [item],
   );
 
-  const onTransfer = () => Alert.alert("Transfer", "Not implemented yet.");
+  const onTransfer = () => {
+    setTransferEmail("");
+    setTransferOpen(true);
+  };
   const onGrant = () => Alert.alert("Grant", "Not implemented yet.");
   const onReportStolen = useCallback(async () => {
     if (!item?._id) return;
@@ -393,6 +403,72 @@ export default function BelongingDetailsScreen() {
         }
         countdownSeconds={0}
       />
+
+      <Modal
+        visible={transferOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={transferBusy ? undefined : () => setTransferOpen(false)}
+      >
+        <Pressable
+          style={modalStyles.backdrop}
+          onPress={transferBusy ? undefined : () => setTransferOpen(false)}
+        >
+          <Pressable
+            style={modalStyles.sheet}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={modalStyles.title}>{t("transfers.requestTitle")}</Text>
+            <Text dim style={modalStyles.body}>
+              {t("transfers.requestHint")}
+            </Text>
+
+            <TextInput
+              value={transferEmail}
+              onChangeText={setTransferEmail}
+              placeholder={t("transfers.emailPlaceholder")}
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              style={modalStyles.input}
+              editable={!transferBusy}
+            />
+
+            <View style={{ gap: 12, marginTop: 14 }}>
+              <Button
+                title={t("transfers.cancel")}
+                variant="outline"
+                disabled={transferBusy}
+                onPress={() => setTransferOpen(false)}
+              />
+              <Button
+                title={transferBusy ? t("transfers.sending") : t("transfers.send")}
+                disabled={transferBusy || !transferEmail.trim() || !item?._id}
+                onPress={async () => {
+                  if (!item?._id) return;
+                  try {
+                    setTransferBusy(true);
+                    await requestTransfer({
+                      belongingId: item._id,
+                      toEmail: transferEmail.trim(),
+                    });
+                    setTransferOpen(false);
+                    Alert.alert(t("transfers.sentTitle"), t("transfers.sentBody"));
+                  } catch (e: unknown) {
+                    Alert.alert(
+                      t("errors.failed"),
+                      e instanceof Error ? e.message : t("errors.failed"),
+                    );
+                  } finally {
+                    setTransferBusy(false);
+                  }
+                }}
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -412,4 +488,40 @@ const styles = StyleSheet.create({
 
   body: { paddingHorizontal: 20, paddingTop: 18, gap: 14 },
 
+});
+
+const modalStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.72)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  sheet: {
+    backgroundColor: "#141414",
+    borderRadius: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 10,
+  },
+  body: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 14,
+  },
+  input: {
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    paddingHorizontal: 14,
+    color: "rgba(255,255,255,0.92)",
+    fontSize: 16,
+  },
 });

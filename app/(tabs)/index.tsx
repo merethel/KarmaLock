@@ -3,11 +3,13 @@ import { ConfirmModal } from "@/components/common_components/ConfirmModal";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { ScanButton } from "@/components/ScanButton";
+import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
 import { palette } from "@/constants/Colors";
 import { listMyBelongings } from "@/src/api/belongings";
 import { scanChip } from "@/src/api/endpoints";
 import { ApiError } from "@/src/api/client";
 import { getUser } from "@/src/auth/session";
+import { listIncomingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -26,6 +28,7 @@ export default function HomeScreen() {
   const [offlineReason, setOfflineReason] = useState<string>("");
   const [statusOpen, setStatusOpen] = useState(false);
   const [userId, setUserId] = useState<string>("");
+  const [transferCount, setTransferCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -65,6 +68,17 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       void refreshStatus();
+      void (async () => {
+        try {
+          const res = await listIncomingTransfers();
+          const reqs = res.data.requests ?? [];
+          setTransferCount(
+            reqs.filter((r) => (r.status ?? "pending") === "pending").length,
+          );
+        } catch {
+          // ignore
+        }
+      })();
     }, [refreshStatus]),
   );
 
@@ -190,6 +204,11 @@ export default function HomeScreen() {
             {t("home.brandLock")}
           </Text>
         </Text>
+
+        <TransfersClockButton
+          count={transferCount}
+          onPress={() => router.push("/transfers")}
+        />
       </View>
 
       {/* Center scan button */}
@@ -239,7 +258,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingHorizontal: 20 },
 
-  header: { gap: 6 },
+  header: { gap: 6, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   brand: { fontSize: 26, fontWeight: "900", letterSpacing: 0.5 },
   brandAccent: { color: palette.accent },
 

@@ -301,6 +301,8 @@ export const en = {
     supportEmail: "support@karmalock.com",
     faq: "FAQ",
     faqSubtitle: "karmalock.com/faq",
+    transfersInbox: "Transfers",
+    transfersInboxSubtitle: "See if anyone is trying to transfer to you.",
     deleteAccount: "Delete account",
     deleteSubtitle: "Permanently remove your account from this device and server.",
     deleteModalTitle: "Delete account?",
@@ -335,6 +337,25 @@ export const en = {
       unknown:
         "Something unexpected happened. Try again in a moment, or contact support.",
     },
+  },
+
+  transfers: {
+    title: "TRANSFERS",
+    emptyTitle: "No transfers right now",
+    emptyBody: "No one is trying to transfer an item to you right now.",
+    requestTitleFallback: "Transfer request",
+    requestBody: "{{from}} wants to transfer chip {{chipUid}} to you.",
+    accept: "Accept transfer",
+    decline: "Decline",
+
+    requestTitle: "Transfer item",
+    requestHint: "Enter the recipient’s email. The transfer completes only when they accept.",
+    emailPlaceholder: "recipient@email.com",
+    cancel: "Cancel",
+    send: "Send transfer request",
+    sending: "Sending…",
+    sentTitle: "Transfer requested",
+    sentBody: "We sent a transfer request. The item will transfer when they accept.",
   },
 
   aboutKarmalock: {

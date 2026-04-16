@@ -30,6 +30,8 @@ import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
 import { cacheBelonging, seedBelongingCache } from "@/src/state/belongingCache";
+import { listIncomingTransfers } from "@/src/api/transfers";
+import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
 const CARD_BORDER = "rgba(255,255,255,0.10)";
@@ -50,6 +52,7 @@ export default function VaultDashboard() {
   const [loadTimedOut, setLoadTimedOut] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const loadSeq = useRef(0);
+  const [transferCount, setTransferCount] = useState(0);
 
   const load = useCallback(async () => {
     const seq = ++loadSeq.current;
@@ -95,6 +98,17 @@ export default function VaultDashboard() {
     useCallback(() => {
       setLoading(true);
       void load();
+      void (async () => {
+        try {
+          const res = await listIncomingTransfers();
+          const reqs = res.data.requests ?? [];
+          setTransferCount(
+            reqs.filter((r) => (r.status ?? "pending") === "pending").length,
+          );
+        } catch {
+          // ignore
+        }
+      })();
     }, [load]),
   );
 
@@ -181,7 +195,13 @@ export default function VaultDashboard() {
         ListHeaderComponent={
           <>
             <View style={styles.headerBlock}>
-              <Text style={styles.pageTitle}>{t("vault.simpleTitle")}</Text>
+              <View style={styles.vaultHeaderRow}>
+                <Text style={styles.pageTitle}>{t("vault.simpleTitle")}</Text>
+                <TransfersClockButton
+                  count={transferCount}
+                  onPress={() => router.push("/transfers")}
+                />
+              </View>
               <View style={styles.pageSubRow}>
                 <Text dim style={styles.pageSub}>
                   {countLabel}
@@ -456,6 +476,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 14,
     gap: 6,
+  },
+  vaultHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   statRow: {
     flexDirection: "row",
