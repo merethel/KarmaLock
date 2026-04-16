@@ -470,7 +470,9 @@ export default function BelongingDetailsScreen() {
                   size={18}
                   color="rgba(255,255,255,0.70)"
                 />
-                <Text style={modalStyles.title}>{t("transfers.requestTitle")}</Text>
+                <Text style={modalStyles.title}>
+                  {t("transfers.requestTitle")}
+                </Text>
               </View>
               <Pressable
                 hitSlop={10}
@@ -489,7 +491,9 @@ export default function BelongingDetailsScreen() {
               </Pressable>
             </View>
 
-            <Text dim style={modalStyles.body}>{t("transfers.requestHint")}</Text>
+            <Text dim style={modalStyles.body}>
+              {t("transfers.requestHint")}
+            </Text>
 
             <Text muted mono style={modalStyles.label}>
               {t("transfers.emailLabel")}
@@ -527,7 +531,9 @@ export default function BelongingDetailsScreen() {
 
             <View style={modalStyles.actionsCol}>
               <Button
-                title={transferBusy ? t("transfers.sending") : t("transfers.send")}
+                title={
+                  transferBusy ? t("transfers.sending") : t("transfers.send")
+                }
                 disabled={transferBusy || !transferEmail.trim() || !item?._id}
                 style={{ height: 52 }}
                 onPress={async () => {
@@ -537,7 +543,9 @@ export default function BelongingDetailsScreen() {
                     await requestTransfer({
                       belongingId: item._id,
                       toEmail: transferEmail.trim(),
-                      note: transferNote.trim() ? transferNote.trim() : undefined,
+                      note: transferNote.trim()
+                        ? transferNote.trim()
+                        : undefined,
                     });
                     setTransferOpen(false);
                     setBelongingTransferStatus(item._id, "transferring");
@@ -622,7 +630,7 @@ const modalStyles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
   },
   sheetOffset: {
-    transform: [{ translateY: -40 }],
+    transform: [{ translateY: -100 }],
   },
   topRow: {
     flexDirection: "row",

@@ -161,7 +161,7 @@ export const da: Dictionary = {
     historyBy: "Af {{name}}",
     historyOwnership: "Ejerskab: {{from}} → {{to}}",
     historyNote: "Bemærkning: {{note}}",
-    historyNoDetails: "Ingen detaljer tilgængelige for denne hændelse.",
+    historyNoTransferNote: "Der er ikke tilføjet bemærkninger under denne overførsel.",
     historyMoreChanges: "+{{count}} flere ændringer",
     loadMore: "Indlæs flere",
     save: "Gem",

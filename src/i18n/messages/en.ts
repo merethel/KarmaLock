@@ -161,7 +161,7 @@ export const en = {
     historyBy: "By {{name}}",
     historyOwnership: "Ownership: {{from}} → {{to}}",
     historyNote: "Note: {{note}}",
-    historyNoDetails: "No details available for this event.",
+    historyNoTransferNote: "No note was added for this transfer.",
     historyMoreChanges: "+{{count}} more changes",
     loadMore: "Load more",
     save: "Save",

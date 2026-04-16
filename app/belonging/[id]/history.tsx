@@ -56,6 +56,18 @@ function safeChanges(meta: unknown): Array<{ field: string; from?: unknown; to?:
   return out;
 }
 
+function normalizeMetadata(meta: unknown): unknown {
+  if (typeof meta === "string") {
+    try {
+      return JSON.parse(meta) as unknown;
+    } catch {
+      return meta;
+    }
+  }
+  if (meta && typeof meta === "object") return meta;
+  return null;
+}
+
 function safeOwnerLine(meta: unknown): { from?: string; to?: string } | null {
   if (!meta || typeof meta !== "object") return null;
   const m = meta as Record<string, unknown>;
@@ -101,6 +113,17 @@ function safeNote(meta: unknown): string | null {
   if (typeof raw !== "string") return null;
   const s = raw.trim();
   return s ? s : null;
+}
+
+function safeNoteFromEvent(ev: BelongingHistoryEvent): string | null {
+  const top =
+    typeof (ev as unknown as Record<string, unknown>).note === "string"
+      ? String((ev as unknown as Record<string, unknown>).note)
+      : "";
+  const topClean = top.trim();
+  if (topClean) return topClean;
+  const norm = normalizeMetadata(ev.metadata);
+  return safeNote(norm);
 }
 
 function formatValue(v: unknown): string {
@@ -222,12 +245,13 @@ export default function BelongingHistoryScreen() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             const when = formatTimestamp(parseIsoDate(item.createdAt), t);
-            const actor = item.actor?.name || item.actor?.email || "—";
-            const changes = safeChanges(item.metadata);
+            const meta = normalizeMetadata(item.metadata);
+            const changes = safeChanges(meta);
             const ownerLine = item.type.includes("transfer")
-              ? safeOwnerLine(item.metadata)
+              ? safeOwnerLine(meta)
               : null;
-            const note = safeNote(item.metadata);
+            const note = safeNoteFromEvent(item);
+            const isTransfer = item.type.includes("transfer");
 
             const title =
               item.type === "belonging.created"
@@ -246,21 +270,20 @@ export default function BelongingHistoryScreen() {
                     {when}
                   </Text>
                 </View>
-                <Text dim style={styles.cardMeta}>
-                  {t("vault.historyBy").replace("{{name}}", actor)}
-                </Text>
 
                 {ownerLine ? (
-                  <Text dim style={[styles.cardMeta, { marginTop: 6 }]}>
+                  <Text dim style={styles.cardMeta}>
                     {t("vault.historyOwnership")
                       .replace("{{from}}", ownerLine.from ?? "—")
                       .replace("{{to}}", ownerLine.to ?? "—")}
                   </Text>
                 ) : null}
 
-                {note ? (
-                  <Text dim style={[styles.cardMeta, { marginTop: 6 }]}>
-                    {t("vault.historyNote").replace("{{note}}", note)}
+                {isTransfer ? (
+                  <Text dim style={[styles.cardMeta, ownerLine ? { marginTop: 6 } : null]}>
+                    {note
+                      ? t("vault.historyNote").replace("{{note}}", note)
+                      : t("vault.historyNoTransferNote")}
                   </Text>
                 ) : null}
 
@@ -285,11 +308,7 @@ export default function BelongingHistoryScreen() {
                       </Text>
                     ) : null}
                   </View>
-                ) : (
-                  <Text dim style={{ marginTop: 10 }}>
-                    {t("vault.historyNoDetails")}
-                  </Text>
-                )}
+                ) : null}
               </View>
             );
           }}
