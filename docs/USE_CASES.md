@@ -130,6 +130,152 @@ Track implementation by ticking boxes as you complete each flow.
 
 ---
 
+### UC-06A: Initiate transfer (send invite)
+
+|           |                                                |
+| --------- | ---------------------------------------------- |
+| **Actor** | Owner of an asset                              |
+| **Goal**  | Create a pending transfer and notify recipient |
+
+**Main success scenario**
+
+1. [ ] User opens an item and chooses **Overfør**.
+2. [ ] User selects how to identify the recipient (e.g. email/phone/username).
+3. [ ] User reviews what will transfer (ownership, access, photos/docs, history, etc. per product rules).
+4. [ ] System re-checks user is the owner (and re-auths if required by policy).
+5. [ ] System creates a **pending** transfer with an expiry time.
+6. [ ] System notifies the recipient and confirms to the sender.
+
+**Extensions / exceptions**
+
+1. [ ] Recipient not found → system offers an invite flow or blocks (per product rules).
+2. [ ] Item already has a pending transfer → system blocks or replaces the pending one (per product rules).
+3. [ ] Too many attempts → system rate-limits and shows a cooldown message.
+4. [ ] Network failure → retry is safe and does not create duplicates (idempotent).
+
+---
+
+### UC-06B: View pending transfer (sender)
+
+|           |                                                     |
+| --------- | --------------------------------------------------- |
+| **Actor** | Sender (current owner)                              |
+| **Goal**  | See status, expiry, and allowed actions while pending |
+
+**Main success scenario**
+
+1. [ ] Sender opens the item with a pending transfer.
+2. [ ] System shows transfer status (**Afventer**), recipient hint (minimal PII), and expiry.
+3. [ ] System shows available actions (e.g. cancel, resend) per product rules.
+
+---
+
+### UC-06C: Cancel transfer (sender)
+
+|           |                                           |
+| --------- | ----------------------------------------- |
+| **Actor** | Sender (current owner)                    |
+| **Goal**  | Stop a pending transfer before acceptance |
+
+**Main success scenario**
+
+1. [ ] Sender opens the pending transfer and chooses **Annuller overførsel**.
+2. [ ] System confirms the action (and re-checks sender is still owner).
+3. [ ] System marks the transfer as **annulleret**.
+4. [ ] System updates sender UI and (optionally) notifies recipient.
+
+**Extensions / exceptions**
+
+1. [ ] Recipient accepted simultaneously → cancel fails; system shows final status (**accepteret**) and updates UI.
+
+---
+
+### UC-06D: Accept transfer (recipient)
+
+|           |                                           |
+| --------- | ----------------------------------------- |
+| **Actor** | Recipient (intended new owner)             |
+| **Goal**  | Become the new owner of the asset          |
+
+**Main success scenario**
+
+1. [ ] Recipient opens the transfer notification / deep link.
+2. [ ] System requires login if not authenticated.
+3. [ ] System shows a review screen (sender identity, item name, what transfers).
+4. [ ] Recipient taps **Acceptér**.
+5. [ ] System atomically transfers ownership, marks transfer **accepteret**, and records a history/audit event.
+6. [ ] System notifies sender and shows success to recipient.
+
+**Extensions / exceptions**
+
+1. [ ] Wrong account is logged in → system asks recipient to switch account; no item details are revealed beyond minimal text.
+2. [ ] Transfer expired/canceled/declined → system shows status and prevents acceptance.
+3. [ ] Duplicate accept attempts → system treats retries safely and returns “already accepted”.
+
+---
+
+### UC-06E: Decline transfer (recipient)
+
+|           |                                  |
+| --------- | -------------------------------- |
+| **Actor** | Recipient                         |
+| **Goal**  | Refuse the transfer               |
+
+**Main success scenario**
+
+1. [ ] Recipient opens the transfer invite.
+2. [ ] Recipient taps **Afvis**.
+3. [ ] System marks transfer **afvist** and records a history/audit event.
+4. [ ] System notifies sender and shows confirmation to recipient.
+
+---
+
+### UC-06F: Expire transfer (system)
+
+|           |                                   |
+| --------- | --------------------------------- |
+| **Actor** | System (scheduled / background)   |
+| **Goal**  | Close unaccepted transfers safely |
+
+**Main success scenario**
+
+1. [ ] Transfer reaches expiry while still pending.
+2. [ ] System marks transfer **udløbet** and records a history/audit event.
+3. [ ] System updates sender and recipient views (and sends notifications if enabled).
+
+---
+
+### UC-06G: Resend transfer invite (sender)
+
+|           |                                 |
+| --------- | ------------------------------- |
+| **Actor** | Sender                           |
+| **Goal**  | Remind recipient about transfer  |
+
+**Main success scenario**
+
+1. [ ] Sender opens a pending transfer and chooses **Send igen**.
+2. [ ] System rate-limits resend attempts.
+3. [ ] System sends a new notification pointing to the same pending transfer.
+4. [ ] System records “reminder sent” (optional) and updates UI.
+
+---
+
+### UC-06H: Privacy protection for transfer invites
+
+|           |                                                       |
+| --------- | ----------------------------------------------------- |
+| **Actor** | Any user opening the invite link (including attacker) |
+| **Goal**  | Prevent data leakage before acceptance                 |
+
+**Main success scenario**
+
+1. [ ] Someone opens a transfer invite link.
+2. [ ] System requires login.
+3. [ ] If logged-in user is not the intended recipient, system shows a generic message and does not reveal item details.
+
+---
+
 ### UC-07: Search assets on dashboard
 
 |           |                               |
@@ -301,6 +447,14 @@ Track implementation by ticking boxes as you complete each flow.
 | UC-04  | Dashboard overview         |
 | UC-05  | Save/review locked items   |
 | UC-06  | Transfer to others         |
+| UC-06A | Initiate transfer          |
+| UC-06B | View pending transfer      |
+| UC-06C | Cancel transfer            |
+| UC-06D | Accept transfer            |
+| UC-06E | Decline transfer           |
+| UC-06F | Expire transfer            |
+| UC-06G | Resend transfer invite     |
+| UC-06H | Transfer invite privacy    |
 | UC-07  | Search on dashboard        |
 | UC-08  | Scan (general user)        |
 | UC-09  | Police scan                |
