@@ -84,6 +84,7 @@ export default function BelongingDetailsScreen() {
   const [error, setError] = useState("");
   const [transferredAway, setTransferredAway] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [unsubscribeOpen, setUnsubscribeOpen] = useState(false);
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -91,6 +92,8 @@ export default function BelongingDetailsScreen() {
   const [cancelBusy, setCancelBusy] = useState(false);
   const [pendingOutgoingId, setPendingOutgoingId] = useState<string>("");
   const [grantBusy, setGrantBusy] = useState(false);
+
+  const isGranted = Boolean(item?.accessRole === "granted" && item?.grantId);
 
   // If the route param arrives after first render, paint from cache immediately.
   useEffect(() => {
@@ -198,31 +201,8 @@ export default function BelongingDetailsScreen() {
 
   const onUnsubscribe = useCallback(() => {
     if (!item?.grantId) return;
-    Alert.alert(t("grants.unsubscribeTitle"), t("grants.unsubscribeBody"), [
-      { text: t("transfers.cancel"), style: "cancel" },
-      {
-        text: t("grants.unsubscribeConfirm"),
-        style: "destructive",
-        onPress: () => {
-          void (async () => {
-            try {
-              setGrantBusy(true);
-              await revokeGrant(item.grantId!);
-              // After revoke, belonging should disappear from their list.
-              router.replace("/vault");
-            } catch (e: unknown) {
-              Alert.alert(
-                t("errors.failed"),
-                e instanceof Error ? e.message : t("errors.failed"),
-              );
-            } finally {
-              setGrantBusy(false);
-            }
-          })();
-        },
-      },
-    ]);
-  }, [item?.grantId, router, t]);
+    setUnsubscribeOpen(true);
+  }, [item?.grantId]);
   const onReportStolen = useCallback(async () => {
     if (!item?._id) return;
     if (item.isStolen) {
@@ -449,19 +429,22 @@ export default function BelongingDetailsScreen() {
                   onAddDoc={onAddDoc}
                 />
 
-                <DangerRow
-                  title={t("vault.deleteBelonging")}
-                  subtitle={t("vault.deleteBelongingSubtitle")}
-                  onPress={() => setDeleteOpen(true)}
-                  marginTop={22}
-                />
-
-                {item?.accessRole === "granted" && item?.grantId ? (
+                {!isGranted ? (
                   <DangerRow
+                    title={t("vault.deleteBelonging")}
+                    subtitle={t("vault.deleteBelongingSubtitle")}
+                    onPress={() => setDeleteOpen(true)}
+                    marginTop={22}
+                  />
+                ) : null}
+
+                {isGranted ? (
+                  <DangerRow
+                    icon="remove-circle-outline"
                     title={t("grants.unsubscribeTitle")}
                     subtitle={t("grants.unsubscribeBody")}
                     onPress={grantBusy ? () => {} : onUnsubscribe}
-                    marginTop={12}
+                    marginTop={!isGranted ? 12 : 22}
                   />
                 ) : null}
               </View>
@@ -475,6 +458,7 @@ export default function BelongingDetailsScreen() {
         onClose={() => setDeleteOpen(false)}
         onConfirm={async () => {
           try {
+            if (isGranted) return;
             await onDelete();
           } catch (e: unknown) {
             Alert.alert(
@@ -492,6 +476,32 @@ export default function BelongingDetailsScreen() {
         waitLabel={(s) =>
           t("vault.deleteBelongingModalWait").replace("{{seconds}}", String(s))
         }
+      />
+
+      <DangerConfirmModal
+        visible={unsubscribeOpen}
+        onClose={() => setUnsubscribeOpen(false)}
+        onConfirm={async () => {
+          try {
+            if (!item?.grantId) return;
+            setGrantBusy(true);
+            await revokeGrant(item.grantId);
+            router.replace("/vault");
+          } catch (e: unknown) {
+            Alert.alert(
+              t("errors.failed"),
+              e instanceof Error ? e.message : t("errors.failed"),
+            );
+          } finally {
+            setGrantBusy(false);
+            setUnsubscribeOpen(false);
+          }
+        }}
+        title={t("grants.unsubscribeTitle")}
+        body={t("grants.unsubscribeBody")}
+        cancelLabel={t("transfers.cancel")}
+        confirmLabel={t("grants.unsubscribeConfirm")}
+        countdownSeconds={0}
       />
 
       <DangerConfirmModal

@@ -4,11 +4,13 @@ import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 export function DangerRow({
+  icon = "trash-outline",
   title,
   subtitle,
   onPress,
   marginTop = 20,
 }: {
+  icon?: React.ComponentProps<typeof Ionicons>["name"];
   title: string;
   subtitle: string;
   onPress: () => void;
@@ -23,7 +25,7 @@ export function DangerRow({
       ]}
       onPress={onPress}
     >
-      <Ionicons name="trash-outline" size={22} color="#E57373" />
+      <Ionicons name={icon} size={22} color="#E57373" />
       <View style={styles.textBlock}>
         <Text style={styles.title}>{title}</Text>
         <Text dim style={styles.subtitle}>
