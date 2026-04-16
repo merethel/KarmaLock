@@ -53,6 +53,8 @@ export function Button({
   return (
     <Pressable
       onPress={disabled ? undefined : onPress}
+      delayPressIn={80}
+      pressRetentionOffset={{ top: 20, left: 20, bottom: 20, right: 20 }}
       style={[base, variants[variant], style]}
     >
       <Text

@@ -293,7 +293,12 @@ export default function TransfersInboxScreen() {
   );
 
   return (
-    <Screen style={styles.screen} withTabBarInset={false}>
+    <Screen
+      style={styles.screen}
+      withTabBarInset={false}
+      dismissKeyboardOnPress={false}
+      keyboardAvoiding={false}
+    >
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} topInset={0} />
         <Text mono style={styles.headerTitle}>
@@ -329,6 +334,8 @@ export default function TransfersInboxScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ gap: 12, paddingTop: 12, paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           {error ? (
             <Text style={{ color: "tomato", marginBottom: 8 }}>{error}</Text>
