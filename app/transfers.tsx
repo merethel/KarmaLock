@@ -17,6 +17,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -91,6 +92,14 @@ function senderLabel(req: TransferRequest): string | null {
 function readFromObj(obj: unknown, key: string): unknown {
   if (!obj || typeof obj !== "object") return null;
   return (obj as Record<string, unknown>)[key];
+}
+
+function normalizePhotoUri(photoUrl?: string): string {
+  const v = (photoUrl ?? "").trim();
+  if (!v) return "";
+  if (v.startsWith("data:image/")) return v;
+  if (v.startsWith("http")) return v;
+  return `data:image/jpeg;base64,${v}`;
 }
 
 export default function TransfersInboxScreen() {
@@ -330,6 +339,8 @@ export default function TransfersInboxScreen() {
             if (it.kind === "incomingUpdate") {
               const r = it.req;
               const status = it.status;
+              const titleLine = r.title || t("transfers.requestTitleFallback");
+              const thumbUri = normalizePhotoUri(r.photoUrl);
               const body =
                 status === "accepted"
                   ? t("transfers.incomingAcceptedBody")
@@ -372,9 +383,29 @@ export default function TransfersInboxScreen() {
                       {formatTimestamp(it.createdAt, t)}
                     </Text>
                   </View>
-                  <Text dim style={styles.cardBody}>
-                    {body}
-                  </Text>
+
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      {thumbUri ? (
+                        <Image source={{ uri: thumbUri }} style={styles.thumbImg} />
+                      ) : (
+                        <Ionicons
+                          name="cube-outline"
+                          size={18}
+                          color="rgba(255,255,255,0.25)"
+                        />
+                      )}
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {titleLine}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {body}
+                      </Text>
+                    </View>
+                  </View>
+
                   {canOpen ? (
                     <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
                   ) : null}
@@ -384,6 +415,8 @@ export default function TransfersInboxScreen() {
             if (it.kind === "update") {
               const r = it.req;
               const status = it.status;
+              const titleLine = r.title || t("transfers.requestTitleFallback");
+              const thumbUri = normalizePhotoUri(r.photoUrl);
               const label =
                 status === "accepted"
                   ? t("transfers.updateAccepted").replace(
@@ -419,15 +452,36 @@ export default function TransfersInboxScreen() {
                       {formatTimestamp(it.createdAt, t)}
                     </Text>
                   </View>
-                  <Text dim style={styles.cardBody}>
-                    {label}
-                  </Text>
+
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      {thumbUri ? (
+                        <Image source={{ uri: thumbUri }} style={styles.thumbImg} />
+                      ) : (
+                        <Ionicons
+                          name="cube-outline"
+                          size={18}
+                          color="rgba(255,255,255,0.25)"
+                        />
+                      )}
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {titleLine}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {label}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               );
             }
 
             // incoming request
             const r = it.req;
+            const titleLine = r.title || t("transfers.requestTitleFallback");
+            const thumbUri = normalizePhotoUri(r.photoUrl);
             return (
               <View key={`i:${r._id}`} style={styles.card}>
                 <View style={styles.cardTopRow}>
@@ -442,12 +496,30 @@ export default function TransfersInboxScreen() {
                   </Text>
                 </View>
 
-                <Text dim style={styles.cardBody}>
-                  {t("transfers.requestBody").replace(
-                    "{{from}}",
-                    senderLabel(r) || t("transfers.someone"),
-                  )}
-                </Text>
+                <View style={styles.previewRow}>
+                  <View style={styles.thumb}>
+                    {thumbUri ? (
+                      <Image source={{ uri: thumbUri }} style={styles.thumbImg} />
+                    ) : (
+                      <Ionicons
+                        name="cube-outline"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    )}
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.itemTitle} numberOfLines={1}>
+                      {titleLine}
+                    </Text>
+                    <Text dim style={styles.cardBody}>
+                      {t("transfers.requestBody").replace(
+                        "{{from}}",
+                        senderLabel(r) || t("transfers.someone"),
+                      )}
+                    </Text>
+                  </View>
+                </View>
 
                 <View style={{ gap: 10, marginTop: 10 }}>
                   <Button
@@ -496,6 +568,24 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     padding: 16,
     gap: 8,
+  },
+  previewRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 6 },
+  thumb: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  thumbImg: { width: "100%", height: "100%" },
+  itemTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "rgba(255,255,255,0.94)",
   },
   cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   cardTitleRow: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1, minWidth: 0 },
