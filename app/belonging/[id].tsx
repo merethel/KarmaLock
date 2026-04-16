@@ -154,8 +154,6 @@ export default function BelongingDetailsScreen() {
     }
     setStolenOpen(true);
   }, [item?._id, item?.isStolen, t]);
-  const onTestAlert = () => Alert.alert("Test alert", "Not implemented yet.");
-  const onGetReport = () => Alert.alert("Get report", "Not implemented yet.");
   const onAddDoc = () => Alert.alert("Add doc", "Not implemented yet.");
 
   const onDelete = useCallback(async () => {
@@ -354,8 +352,6 @@ export default function BelongingDetailsScreen() {
                   onShowHistory={() =>
                     router.push((`/belonging/${item._id}/history` as unknown) as any)
                   }
-                  onTestAlert={onTestAlert}
-                  onGetReport={onGetReport}
                   onAddDoc={onAddDoc}
                 />
 
