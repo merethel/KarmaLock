@@ -36,9 +36,6 @@ import {
 } from "@/src/state/belongingCache";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
-import {
-  hasSeenTransferUpdate,
-} from "@/src/state/seenTransferUpdates";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
 const CARD_BORDER = "rgba(255,255,255,0.10)";
@@ -121,7 +118,7 @@ export default function VaultDashboard() {
             for (const r of outgoing) {
               const status = (r.status ?? "pending") as string;
               if (status !== "accepted" && status !== "declined") continue;
-              if (hasSeenTransferUpdate(r._id, status)) continue;
+              if (r.seenBySenderAt) continue;
               outgoingUnread += 1;
             }
           } catch {

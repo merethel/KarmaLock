@@ -10,6 +10,12 @@ export type TransferRequest = {
   toUser?: { id?: string; _id?: string; name?: string; email?: string };
   status?: "pending" | "accepted" | "declined" | string;
   createdAt?: string;
+  respondedAt?: string | null;
+  updatedAt?: string;
+  // For notifications/unread tracking (sender sees accept/decline).
+  seenBySenderAt?: string | null;
+  // For recipient-side unread tracking (optional).
+  seenByRecipientAt?: string | null;
 };
 
 export async function listIncomingTransfers() {
@@ -42,5 +48,12 @@ export async function declineTransfer(id: string) {
     `/transfers/${encodeURIComponent(id)}/decline`,
     { method: "POST" },
   );
+}
+
+export async function markOutgoingTransfersSeen(ids: string[]) {
+  return apiFetch<{ ok: true }>("/transfers/outgoing/seen", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
 }
 

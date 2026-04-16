@@ -12,7 +12,6 @@ import { getUser } from "@/src/auth/session";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
-import { hasSeenTransferUpdate } from "@/src/state/seenTransferUpdates";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, Pressable, StyleSheet, View } from "react-native";
@@ -84,7 +83,7 @@ export default function HomeScreen() {
             for (const r of outgoing) {
               const status = (r.status ?? "pending") as string;
               if (status !== "accepted" && status !== "declined") continue;
-              if (hasSeenTransferUpdate(r._id, status)) continue;
+              if (r.seenBySenderAt) continue;
               outgoingUnread += 1;
             }
           } catch {
@@ -96,7 +95,7 @@ export default function HomeScreen() {
           // ignore
         }
       })();
-    }, [refreshStatus, hasSeenTransferUpdate]),
+    }, [refreshStatus]),
   );
 
   async function onScan() {

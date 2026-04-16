@@ -8,6 +8,7 @@ import {
   declineTransfer,
   listIncomingTransfers,
   listOutgoingTransfers,
+  markOutgoingTransfersSeen,
 } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,15 +21,18 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import {
-  hasSeenTransferUpdate,
-  markSeenTransferUpdate,
-} from "@/src/state/seenTransferUpdates";
-
 function parseIsoDate(value: unknown): Date | null {
   if (typeof value !== "string" || !value.trim()) return null;
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function bestDateForTransfer(t: TransferRequest): Date | null {
+  return (
+    parseIsoDate(t.respondedAt) ||
+    parseIsoDate(t.updatedAt) ||
+    parseIsoDate(t.createdAt)
+  );
 }
 
 function formatTimestamp(
@@ -93,7 +97,7 @@ export default function TransfersInboxScreen() {
       items.push({
         kind: "incoming",
         _id: r._id,
-        createdAt: parseIsoDate(r.createdAt),
+        createdAt: bestDateForTransfer(r),
         req: r,
       });
     }
@@ -104,7 +108,7 @@ export default function TransfersInboxScreen() {
       items.push({
         kind: "update",
         _id: r._id,
-        createdAt: parseIsoDate(r.createdAt),
+        createdAt: bestDateForTransfer(r),
         status,
         req: r,
       });
@@ -139,17 +143,28 @@ export default function TransfersInboxScreen() {
   useFocusEffect(
     useCallback(() => {
       void load();
-      // Mark all sender-side updates as seen when opening notifications.
-      // This makes the bell badge clear naturally.
-      // (In-memory only; resets on app reload.)
+      // Mark sender-side updates as seen when opening notifications.
       void (async () => {
         try {
           const out = await listOutgoingTransfers();
           const list = out.data.requests ?? [];
-          for (const r of list) {
-            const status = (r.status ?? "pending") as string;
-            if (status !== "accepted" && status !== "declined") continue;
-            markSeenTransferUpdate(r._id, status);
+          const ids = list
+            .filter((r) => {
+              const status = (r.status ?? "pending") as string;
+              return (
+                (status === "accepted" || status === "declined") &&
+                !r.seenBySenderAt
+              );
+            })
+            .map((r) => r._id);
+          if (ids.length > 0) {
+            await markOutgoingTransfersSeen(ids);
+            // Optimistically update local state to remove unread dots immediately.
+            setOutgoing((prev) =>
+              prev.map((r) =>
+                ids.includes(r._id) ? { ...r, seenBySenderAt: new Date().toISOString() } : r,
+              ),
+            );
           }
         } catch {
           // ignore
@@ -244,7 +259,7 @@ export default function TransfersInboxScreen() {
                       "{{name}}",
                       r.toUser?.name || r.toUser?.email || "—",
                     );
-              const seen = hasSeenTransferUpdate(r._id, status);
+              const seen = Boolean(r.seenBySenderAt);
               return (
                 <View key={`u:${r._id}:${status}`} style={styles.card}>
                   <View style={styles.cardTopRow}>
