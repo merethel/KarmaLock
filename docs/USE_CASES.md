@@ -125,8 +125,9 @@ Track implementation by ticking boxes as you complete each flow.
 
 1. [ ] User opens dashboard and selects an item.
 2. [ ] User chooses **Overfør til andre** (or equivalent).
-3. [ ] User specifies recipient (per product rules: user, invite, link, etc.).
-4. [ ] System records transfer and updates views for both parties.
+3. [ ] User scans the chip/tag on the physical item to confirm the correct asset is being transferred.
+4. [ ] User specifies recipient (per product rules: user, invite, link, etc.).
+5. [ ] System records transfer and updates views for both parties.
 
 ---
 
@@ -140,18 +141,22 @@ Track implementation by ticking boxes as you complete each flow.
 **Main success scenario**
 
 1. [ ] User opens an item and chooses **Overfør**.
-2. [ ] User selects how to identify the recipient (e.g. email/phone/username).
-3. [ ] User reviews what will transfer (ownership, access, photos/docs, history, etc. per product rules).
-4. [ ] System re-checks user is the owner (and re-auths if required by policy).
-5. [ ] System creates a **pending** transfer with an expiry time.
-6. [ ] System notifies the recipient and confirms to the sender.
+2. [ ] System prompts user to scan the chip/tag on the physical item.
+3. [ ] User scans; system verifies the scanned identifier belongs to this item.
+4. [ ] User selects how to identify the recipient (e.g. email/phone/username).
+5. [ ] User reviews what will transfer (ownership, access, photos/docs, history, etc. per product rules).
+6. [ ] System re-checks user is the owner (and re-auths if required by policy).
+7. [ ] System creates a **pending** transfer with an expiry time.
+8. [ ] System notifies the recipient and confirms to the sender.
 
 **Extensions / exceptions**
 
-1. [ ] Recipient not found → system offers an invite flow or blocks (per product rules).
-2. [ ] Item already has a pending transfer → system blocks or replaces the pending one (per product rules).
-3. [ ] Too many attempts → system rate-limits and shows a cooldown message.
-4. [ ] Network failure → retry is safe and does not create duplicates (idempotent).
+1. [ ] Chip scan fails (no NFC / unreadable) → system asks to retry or cancels transfer initiation.
+2. [ ] Chip scan does not match this item → system blocks transfer initiation and explains mismatch.
+3. [ ] Recipient not found → system offers an invite flow or blocks (per product rules).
+4. [ ] Item already has a pending transfer → system blocks or replaces the pending one (per product rules).
+5. [ ] Too many attempts → system rate-limits and shows a cooldown message.
+6. [ ] Network failure → retry is safe and does not create duplicates (idempotent).
 
 ---
 

@@ -392,6 +392,10 @@ export const en = {
     cancel: "Cancel",
     send: "Send transfer request",
     sending: "Sending…",
+    scanning: "Scan chip…",
+    chipMismatchTitle: "Wrong chip scanned",
+    chipMismatchBody:
+      "This chip doesn’t match the item you’re trying to transfer. Scan the chip on the correct physical item and try again.",
     sentTitle: "Transfer requested",
     sentBody: "We sent a transfer request. The item will transfer when they accept.",
     sentToastTitle: "Transfer request sent",

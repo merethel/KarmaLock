@@ -16,6 +16,7 @@ import {
 } from "@/src/api/belongings";
 import { requestTransfer } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
+import { scanChipUid } from "@/src/nfc/scanChipUid";
 import {
   getCachedBelonging,
   setBelongingTransferStatus,
@@ -532,7 +533,7 @@ export default function BelongingDetailsScreen() {
             <View style={modalStyles.actionsCol}>
               <Button
                 title={
-                  transferBusy ? t("transfers.sending") : t("transfers.send")
+                  transferBusy ? t("transfers.scanning") : t("transfers.send")
                 }
                 disabled={transferBusy || !transferEmail.trim() || !item?._id}
                 style={{ height: 52 }}
@@ -540,12 +541,32 @@ export default function BelongingDetailsScreen() {
                   if (!item?._id) return;
                   try {
                     setTransferBusy(true);
+                    const normalizeChipUid = (v: string) => v.trim().toLowerCase();
+                    const expected = normalizeChipUid(item.chipUid || "");
+
+                    const scanned = await scanChipUid({
+                      iosAlertMessage: t("scan.iosAlertMessage"),
+                      nfcUnavailable: t("scan.nfcUnavailable"),
+                      nfcNotSupported: t("scan.nfcNotSupported"),
+                      noChipIdFound: t("scan.noChipIdFound"),
+                    });
+
+                    const got = normalizeChipUid(scanned);
+                    if (!expected || !got || expected !== got) {
+                      Alert.alert(
+                        t("transfers.chipMismatchTitle"),
+                        t("transfers.chipMismatchBody"),
+                      );
+                      return;
+                    }
+
                     await requestTransfer({
                       belongingId: item._id,
                       toEmail: transferEmail.trim(),
                       note: transferNote.trim()
                         ? transferNote.trim()
                         : undefined,
+                      chipUid: scanned,
                     });
                     setTransferOpen(false);
                     setBelongingTransferStatus(item._id, "transferring");

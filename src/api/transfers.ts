@@ -30,6 +30,8 @@ export async function requestTransfer(payload: {
   belongingId: string;
   toEmail: string;
   note?: string;
+  /** Optional: chip UID verified via NFC scan before transfer request. */
+  chipUid?: string;
 }) {
   return apiFetch<{ request: TransferRequest }>("/transfers", {
     method: "POST",

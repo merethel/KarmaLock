@@ -394,6 +394,10 @@ export const da: Dictionary = {
     cancel: "Annuller",
     send: "Send overførselsanmodning",
     sending: "Sender…",
+    scanning: "Scan chip…",
+    chipMismatchTitle: "Forkert chip scannet",
+    chipMismatchBody:
+      "Denne chip matcher ikke genstanden, du prøver at overføre. Scan chippen på den rigtige fysiske genstand og prøv igen.",
     sentTitle: "Overførsel anmodet",
     sentBody:
       "Vi har sendt en overførselsanmodning. Genstanden overføres, når modtageren accepterer.",
