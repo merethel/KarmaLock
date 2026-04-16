@@ -144,7 +144,7 @@ export const en = {
     markNotStolenModalConfirm: "Yes, mark as not stolen",
 
     actionTransfer: "TRANSFER",
-    actionCancelTransfer: "CANCEL TRANSFER",
+    actionCancelTransfer: "CANCEL",
     actionGrant: "GRANT",
     actionReportStolen: "REPORT STOLEN",
     actionMarkNotStolen: "MARK NOT STOLEN",

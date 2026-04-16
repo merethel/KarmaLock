@@ -142,7 +142,7 @@ export const da: Dictionary = {
     markNotStolenModalConfirm: "Ja, markér som ikke stjålet",
 
     actionTransfer: "OVERFØR",
-    actionCancelTransfer: "ANNULLÉR OVERFØRSEL",
+    actionCancelTransfer: "ANNULLÉR",
     actionGrant: "GIV ADGANG",
     actionReportStolen: "ANMELD STJÅLET",
     actionMarkNotStolen: "MARKÉR IKKE STJÅLET",
