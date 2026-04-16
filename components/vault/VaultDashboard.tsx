@@ -15,6 +15,7 @@ import React, {
 } from "react";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   Image,
   Pressable,
@@ -29,7 +30,12 @@ import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
-import { cacheBelonging, seedBelongingCache } from "@/src/state/belongingCache";
+import {
+  cacheBelonging,
+  getBelongingTransferStatus,
+  seedBelongingCache,
+} from "@/src/state/belongingCache";
+import { consumePendingToast } from "@/src/state/pendingToast";
 import { listIncomingTransfers } from "@/src/api/transfers";
 import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
 
@@ -53,6 +59,40 @@ export default function VaultDashboard() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const loadSeq = useRef(0);
   const [transferCount, setTransferCount] = useState(0);
+  const [toastOpen, setToastOpen] = useState(false);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
+
+  const showTransferSentToast = useCallback(() => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastAnim.stopAnimation();
+    toastAnim.setValue(0);
+    setToastOpen(true);
+
+    Animated.timing(toastAnim, {
+      toValue: 1,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+
+    // Keep it visible longer.
+    toastTimer.current = setTimeout(() => {
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished) return;
+        setToastOpen(false);
+      });
+    }, 2200);
+  }, [toastAnim]);
 
   const load = useCallback(async () => {
     const seq = ++loadSeq.current;
@@ -98,6 +138,10 @@ export default function VaultDashboard() {
     useCallback(() => {
       setLoading(true);
       void load();
+      const pending = consumePendingToast();
+      if (pending?.type === "transferSent") {
+        showTransferSentToast();
+      }
       void (async () => {
         try {
           const res = await listIncomingTransfers();
@@ -109,7 +153,7 @@ export default function VaultDashboard() {
           // ignore
         }
       })();
-    }, [load]),
+    }, [load, showTransferSentToast]),
   );
 
   async function onRefresh() {
@@ -279,6 +323,39 @@ export default function VaultDashboard() {
         renderItem={({ item }) => <VaultListRow item={item} t={t} />}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
       />
+
+      {toastOpen ? (
+        <View pointerEvents="none" style={toastStyles.wrap}>
+          <Animated.View
+            style={[
+              toastStyles.toast,
+              {
+                opacity: toastAnim,
+                transform: [
+                  {
+                    scale: toastAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.96, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <Ionicons
+              name="checkmark-circle"
+              size={34}
+              color="rgba(120,255,185,0.95)"
+            />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={toastStyles.title}>{t("transfers.sentToastTitle")}</Text>
+              <Text dim style={toastStyles.body}>
+                {t("transfers.sentToastBody")}
+              </Text>
+            </View>
+          </Animated.View>
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -398,6 +475,7 @@ function VaultListRow({
   t: (k: import("@/src/i18n/types").TranslationKey) => string;
 }) {
   const router = useRouter();
+  const isTransferring = getBelongingTransferStatus(item._id) === "transferring";
 
   const thumbUri =
     item.photoUrl && item.photoUrl.trim()
@@ -442,23 +520,41 @@ function VaultListRow({
           </Text>
         )}
       </View>
-      <StatusPill stolen={item.isStolen} t={t} />
+      <StatusPill stolen={item.isStolen} transferring={isTransferring} t={t} />
     </Pressable>
   );
 }
 
 function StatusPill({
   stolen,
+  transferring,
   t,
 }: {
   stolen: boolean;
+  transferring: boolean;
   t: (k: import("@/src/i18n/types").TranslationKey) => string;
 }) {
+  if (stolen) {
+    return (
+      <View style={[styles.pill, styles.pillStolen]}>
+        <Text style={[styles.pillText, styles.pillTextStolen]}>
+          {t("vault.statusStolen")}
+        </Text>
+      </View>
+    );
+  }
+  if (transferring) {
+    return (
+      <View style={[styles.pill, styles.pillTransferring]}>
+        <Text style={[styles.pillText, styles.pillTextTransferring]}>
+          {t("vault.statusTransferring")}
+        </Text>
+      </View>
+    );
+  }
   return (
-    <View style={[styles.pill, stolen ? styles.pillStolen : styles.pillOk]}>
-      <Text style={[styles.pillText, stolen && styles.pillTextStolen]}>
-        {stolen ? t("vault.statusStolen") : t("vault.statusOk")}
-      </Text>
+    <View style={[styles.pill, styles.pillOk]}>
+      <Text style={styles.pillText}>{t("vault.statusOk")}</Text>
     </View>
   );
 }
@@ -640,6 +736,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,100,100,0.35)",
     backgroundColor: "rgba(255,80,80,0.08)",
   },
+  pillTransferring: {
+    borderColor: "rgba(255,200,80,0.40)",
+    backgroundColor: "rgba(255,200,80,0.08)",
+  },
   pillText: {
     fontSize: 10,
     fontWeight: "700",
@@ -648,5 +748,39 @@ const styles = StyleSheet.create({
   },
   pillTextStolen: {
     color: "rgba(255,160,160,0.95)",
+  },
+  pillTextTransferring: {
+    color: "rgba(255,235,200,0.95)",
+  },
+});
+
+const toastStyles = StyleSheet.create({
+  wrap: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  toast: {
+    width: "100%",
+    maxWidth: 340,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 18,
+    backgroundColor: "rgba(20,20,20,0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  body: {
+    marginTop: 3,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

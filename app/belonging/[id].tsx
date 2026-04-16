@@ -16,7 +16,11 @@ import {
 } from "@/src/api/belongings";
 import { requestTransfer } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
-import { getCachedBelonging } from "@/src/state/belongingCache";
+import {
+  getCachedBelonging,
+  setBelongingTransferStatus,
+} from "@/src/state/belongingCache";
+import { setPendingToast } from "@/src/state/pendingToast";
 import { useFocusEffect } from "expo-router";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
@@ -454,7 +458,9 @@ export default function BelongingDetailsScreen() {
                       toEmail: transferEmail.trim(),
                     });
                     setTransferOpen(false);
-                    Alert.alert(t("transfers.sentTitle"), t("transfers.sentBody"));
+                    setBelongingTransferStatus(item._id, "transferring");
+                    setPendingToast({ type: "transferSent", createdAt: Date.now() });
+                    router.replace("/vault");
                   } catch (e: unknown) {
                     Alert.alert(
                       t("errors.failed"),

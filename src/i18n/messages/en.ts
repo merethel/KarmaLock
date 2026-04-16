@@ -112,6 +112,7 @@ export const en = {
     chip: "CHIP",
     statusOk: "OK",
     statusStolen: "STOLEN",
+    statusTransferring: "TRANSFERRING",
 
     deleteBelonging: "Delete belonging",
     deleteBelongingSubtitle: "Permanently remove this belonging from your vault.",
@@ -356,6 +357,8 @@ export const en = {
     sending: "Sending…",
     sentTitle: "Transfer requested",
     sentBody: "We sent a transfer request. The item will transfer when they accept.",
+    sentToastTitle: "Transfer request sent",
+    sentToastBody: "Awaiting recipient confirmation…",
   },
 
   aboutKarmalock: {

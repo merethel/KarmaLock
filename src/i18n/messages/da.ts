@@ -112,6 +112,7 @@ export const da: Dictionary = {
     chip: "CHIP",
     statusOk: "OK",
     statusStolen: "STJÅLET",
+    statusTransferring: "OVERFØRES",
 
     deleteBelonging: "Slet ejendel",
     deleteBelongingSubtitle: "Fjern denne ejendel permanent fra dit vault.",
@@ -358,6 +359,8 @@ export const da: Dictionary = {
     sentTitle: "Overførsel anmodet",
     sentBody:
       "Vi har sendt en overførselsanmodning. Genstanden overføres, når modtageren accepterer.",
+    sentToastTitle: "Overførselsanmodning sendt",
+    sentToastBody: "Afventer modtagers bekræftelse…",
   },
 
   aboutKarmalock: {
