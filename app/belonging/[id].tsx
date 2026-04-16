@@ -1,13 +1,13 @@
-import { Button } from "@/components/common_components/Button";
-import { Text } from "@/components/common_components/Text";
-import { palette } from "@/constants/Colors";
 import { BelongingAttributesCard } from "@/components/belonging/BelongingAttributesCard";
-import { BelongingHeroHeader } from "@/components/belonging/BelongingHeroHeader";
 import { BelongingHeroCard } from "@/components/belonging/BelongingHeroCard";
+import { BelongingHeroHeader } from "@/components/belonging/BelongingHeroHeader";
 import { BelongingLogActions } from "@/components/belonging/BelongingLogActions";
 import { BelongingPrimaryActions } from "@/components/belonging/BelongingPrimaryActions";
+import { Button } from "@/components/common_components/Button";
 import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
 import { DangerRow } from "@/components/common_components/DangerRow";
+import { Text } from "@/components/common_components/Text";
+import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import {
   deleteBelonging,
@@ -20,8 +20,8 @@ import {
   getCachedBelonging,
   setBelongingTransferStatus,
 } from "@/src/state/belongingCache";
-import { useFocusEffect } from "expo-router";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -42,7 +42,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 
 function normalizePhotoUri(photoUrl?: string): string {
   const v = (photoUrl ?? "").trim();
@@ -76,7 +75,10 @@ export default function BelongingDetailsScreen() {
   const didDismiss = useRef(false);
 
   const idStr = typeof id === "string" ? id : "";
-  const cached = useMemo(() => (idStr ? getCachedBelonging(idStr) : null), [idStr]);
+  const cached = useMemo(
+    () => (idStr ? getCachedBelonging(idStr) : null),
+    [idStr],
+  );
   const [item, setItem] = useState<Belonging | null>(() => cached);
   const [loading, setLoading] = useState(() => !cached);
   const [error, setError] = useState("");
@@ -344,13 +346,15 @@ export default function BelongingDetailsScreen() {
                   t={t}
                   item={item}
                   onEdit={() =>
-                    router.push((`/belonging/${item._id}/edit` as unknown) as any)
+                    router.push(`/belonging/${item._id}/edit` as unknown as any)
                   }
                 />
                 <BelongingLogActions
                   t={t}
                   onShowHistory={() =>
-                    router.push((`/belonging/${item._id}/history` as unknown) as any)
+                    router.push(
+                      `/belonging/${item._id}/history` as unknown as any,
+                    )
                   }
                   onAddDoc={onAddDoc}
                 />
@@ -476,13 +480,9 @@ export default function BelongingDetailsScreen() {
 
             <View style={{ gap: 12, marginTop: 14 }}>
               <Button
-                title={t("transfers.cancel")}
-                variant="outline"
-                disabled={transferBusy}
-                onPress={() => setTransferOpen(false)}
-              />
-              <Button
-                title={transferBusy ? t("transfers.sending") : t("transfers.send")}
+                title={
+                  transferBusy ? t("transfers.sending") : t("transfers.send")
+                }
                 disabled={transferBusy || !transferEmail.trim() || !item?._id}
                 onPress={async () => {
                   if (!item?._id) return;
@@ -504,6 +504,12 @@ export default function BelongingDetailsScreen() {
                     setTransferBusy(false);
                   }
                 }}
+              />
+              <Button
+                title={t("transfers.cancel")}
+                variant="outline"
+                disabled={transferBusy}
+                onPress={() => setTransferOpen(false)}
               />
             </View>
           </Pressable>
@@ -551,7 +557,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontSize: 15,
   },
-
 });
 
 const modalStyles = StyleSheet.create({
