@@ -43,6 +43,12 @@ function formatTimestamp(
 }
 
 function toComparable(value: unknown): unknown {
+  // Treat empty-ish values as the same to avoid noisy "— → —" changes.
+  if (value == null) return "";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed === "" ? "" : trimmed;
+  }
   if (value instanceof Date) return value.toISOString();
   if (value && typeof value === "object") {
     if ("toHexString" in (value as { toHexString?: unknown })) {
