@@ -443,6 +443,11 @@ export const en = {
     acceptedBody: "You can now view the belonging in your vault.",
   },
 
+  sharing: {
+    ownerLabel: "Owner",
+    sharedWithLabel: "Shared with",
+  },
+
   aboutKarmalock: {
     headerTitle: "INFO",
     sectionWhatIs: "WHAT IS KARMALOCK?",

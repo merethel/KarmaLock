@@ -441,6 +441,11 @@ export const da: Dictionary = {
     acceptedBody: "Du kan nu se ejendelen i dit vault.",
   },
 
+  sharing: {
+    ownerLabel: "Ejer",
+    sharedWithLabel: "Delt med",
+  },
+
   aboutKarmalock: {
     headerTitle: "INFO",
     sectionWhatIs: "HVAD ER KARMALOCK?",

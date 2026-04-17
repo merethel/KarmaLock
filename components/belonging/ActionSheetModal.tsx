@@ -26,8 +26,9 @@ export function ActionSheetModal({
   icon?: React.ComponentProps<typeof Ionicons>["name"];
   onClose: () => void;
   children: React.ReactNode;
-  footer: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
+  const hasHeaderLeft = Boolean((title ?? "").trim()) || Boolean(icon);
   return (
     <Modal
       visible={visible}
@@ -55,11 +56,21 @@ export function ActionSheetModal({
               e.stopPropagation();
             }}
           >
-            <View style={styles.topRow}>
-              <View style={styles.topLeft}>
-                <Ionicons name={icon} size={18} color="rgba(255,255,255,0.70)" />
-                <Text style={styles.title}>{title}</Text>
-              </View>
+            <View style={[styles.topRow, !hasHeaderLeft && styles.topRowNoLeft]}>
+              {hasHeaderLeft ? (
+                <View style={styles.topLeft}>
+                  {icon ? (
+                    <Ionicons
+                      name={icon}
+                      size={18}
+                      color="rgba(255,255,255,0.70)"
+                    />
+                  ) : null}
+                  {title?.trim() ? <Text style={styles.title}>{title}</Text> : null}
+                </View>
+              ) : (
+                <View />
+              )}
               <Pressable
                 hitSlop={10}
                 disabled={busy}
@@ -74,7 +85,7 @@ export function ActionSheetModal({
             </View>
 
             <View style={styles.body}>{children}</View>
-            <View style={styles.footer}>{footer}</View>
+            {footer ? <View style={styles.footer}>{footer}</View> : null}
           </Pressable>
         </KeyboardAvoidingView>
       </Pressable>
@@ -111,6 +122,9 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.08)",
+  },
+  topRowNoLeft: {
+    justifyContent: "flex-end",
   },
   topLeft: {
     flexDirection: "row",

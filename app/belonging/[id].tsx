@@ -5,6 +5,7 @@ import { BelongingLogActions } from "@/components/belonging/BelongingLogActions"
 import { BelongingPrimaryActions } from "@/components/belonging/BelongingPrimaryActions";
 import { GrantAccessModal } from "@/components/belonging/GrantAccessModal";
 import { TransferRequestModal } from "@/components/belonging/TransferRequestModal";
+import { ActionSheetModal } from "@/components/belonging/ActionSheetModal";
 import { Button } from "@/components/common_components/Button";
 import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
 import { DangerRow } from "@/components/common_components/DangerRow";
@@ -13,10 +14,11 @@ import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import {
   deleteBelonging,
-  listMyBelongings,
+  getBelonging,
+  getBelongingSharing,
   updateBelonging,
 } from "@/src/api/belongings";
-import { listOutgoingGrants, revokeGrant } from "@/src/api/grants";
+import { revokeGrant } from "@/src/api/grants";
 import { cancelTransfer, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import {
@@ -24,6 +26,7 @@ import {
   setBelongingGrantStatus,
   setBelongingTransferStatus,
 } from "@/src/state/belongingCache";
+import { getUser, type SessionUser } from "@/src/auth/session";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, {
@@ -49,6 +52,42 @@ function normalizePhotoUri(photoUrl?: string): string {
   if (v.startsWith("data:image/")) return v;
   if (v.startsWith("http")) return v;
   return `data:image/jpeg;base64,${v}`;
+}
+
+function displayName(user?: { name?: string; email?: string } | null): string {
+  const n = (user?.name ?? "").trim();
+  if (n) return n;
+  const e = (user?.email ?? "").trim();
+  return e || "—";
+}
+
+function initialsFrom(label: string): string {
+  const s = (label || "").trim();
+  if (!s) return "—";
+  const at = s.indexOf("@");
+  const base = at > 0 ? s.slice(0, at) : s;
+  const parts = base
+    .replace(/[^A-Za-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return base.slice(0, 2).toUpperCase();
+  const a = parts[0]?.[0] ?? "";
+  const b = parts.length > 1 ? parts[1]?.[0] ?? "" : parts[0]?.[1] ?? "";
+  return (a + b).toUpperCase();
+}
+
+function hashToColor(seed: string): { bg: string; border: string } {
+  const s = seed || "—";
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  const colors = [
+    { bg: "rgba(120,255,185,0.18)", border: "rgba(120,255,185,0.32)" },
+    { bg: "rgba(80,190,255,0.18)", border: "rgba(80,190,255,0.32)" },
+    { bg: "rgba(255,196,80,0.18)", border: "rgba(255,196,80,0.32)" },
+    { bg: "rgba(255,120,200,0.18)", border: "rgba(255,120,200,0.32)" },
+    { bg: "rgba(170,120,255,0.18)", border: "rgba(170,120,255,0.32)" },
+  ];
+  return colors[h % colors.length]!;
 }
 
 function formatDkk(value: unknown): string {
@@ -94,6 +133,17 @@ export default function BelongingDetailsScreen() {
   const [grantBusy, setGrantBusy] = useState(false);
 
   const isGranted = Boolean(item?.accessRole === "granted" && item?.grantId);
+  const isOwner = Boolean(item?.accessRole === "owner");
+  const [sharingOpen, setSharingOpen] = useState(false);
+  const [sharing, setSharing] = useState<{
+    ownerUser: { id: string; name: string; email: string } | null;
+    sharedWith: Array<{
+      user: { id: string; name: string; email: string };
+      grantId: string;
+      status: string;
+    }>;
+  } | null>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
 
   // If the route param arrives after first render, paint from cache immediately.
   useEffect(() => {
@@ -108,9 +158,13 @@ export default function BelongingDetailsScreen() {
       setTransferredAway(false);
       // If we already have something to render (from cache), refresh silently.
       if (!item) setLoading(true);
-      const res = await listMyBelongings();
-      const found = (res.data.items || []).find((x) => x._id === idStr) ?? null;
+      const [res, shareRes] = await Promise.all([
+        getBelonging(idStr),
+        getBelongingSharing(idStr),
+      ]);
+      const found = res.data.item ?? null;
       setItem(found);
+      setSharing(shareRes.data);
       if (!found) setTransferredAway(true);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t("errors.failed"));
@@ -127,6 +181,14 @@ export default function BelongingDetailsScreen() {
     useCallback(() => {
       // Returning from the edit screen should show updated values immediately.
       void load();
+      void (async () => {
+        try {
+          const u = await getUser();
+          setSessionUser(u);
+        } catch {
+          // ignore
+        }
+      })();
       void (async () => {
         if (!idStr) return;
         try {
@@ -146,19 +208,18 @@ export default function BelongingDetailsScreen() {
       void (async () => {
         if (!idStr) return;
         try {
-          const out = await listOutgoingGrants();
-          const reqs = out.data.grants ?? [];
+          const shareRes = await getBelongingSharing(idStr);
+          setSharing(shareRes.data);
           const pending =
-            reqs.find(
-              (g) =>
-                g.belongingId === idStr && (g.status ?? "pending") === "pending",
-            ) ?? null;
+            (shareRes.data.sharedWith ?? []).find((x) => x.status === "pending") ??
+            null;
           setBelongingGrantStatus(idStr, pending ? "granting" : null);
         } catch {
           // ignore
         }
       })();
-    }, [load]),
+
+    }, [idStr, isGranted, load]),
   );
 
   const photoUri = useMemo(() => normalizePhotoUri(item?.photoUrl), [item]);
@@ -166,6 +227,49 @@ export default function BelongingDetailsScreen() {
     () => formatDkk(item?.attributes?.estimatedValueDkk),
     [item],
   );
+
+  const sharingSummary = useMemo(() => {
+    const shared = sharing?.sharedWith ?? [];
+    const activeOutgoing = shared.filter((x) => (x.status ?? "pending") === "active");
+    const pendingOutgoing = shared.filter((x) => (x.status ?? "pending") === "pending");
+
+    const ownerLabel = isGranted
+      ? displayName(item?.ownerUser ?? null)
+      : displayName(sessionUser);
+
+    const avatars = [
+      { key: "owner", label: ownerLabel, kind: "owner" as const },
+      ...activeOutgoing.map((g) => ({
+        key: `a:${g.grantId}`,
+        label: displayName(g.user ?? null),
+        kind: "active" as const,
+      })),
+      ...pendingOutgoing.map((g) => ({
+        key: `p:${g.grantId}`,
+        label: displayName(g.user ?? null),
+        kind: "pending" as const,
+      })),
+    ];
+
+    const unique: { key: string; label: string; kind: "owner" | "active" | "pending" }[] =
+      [];
+    const seen = new Set<string>();
+    for (const a of avatars) {
+      const k = a.label.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      unique.push(a);
+    }
+    return {
+      ownerLabel,
+      activeCount: activeOutgoing.length,
+      pendingCount: pendingOutgoing.length,
+      avatars: unique.slice(0, 6),
+    };
+  }, [isGranted, item?.ownerUser, sessionUser, sharing?.sharedWith]);
+
+  // Always show at least the owner initial in the hero card.
+  const shouldShowSharing = Boolean(item);
 
   const onTransfer = () => {
     setTransferOpen(true);
@@ -400,7 +504,31 @@ export default function BelongingDetailsScreen() {
                 paddingBottom: 120,
               }}
             >
-              <BelongingHeroCard t={t} item={item} valueLabel={valueLabel} />
+              <BelongingHeroCard
+                t={t}
+                item={item}
+                valueLabel={valueLabel}
+                sharing={
+                  {
+                    avatars: sharingSummary.avatars.length
+                      ? sharingSummary.avatars.map((a) => ({
+                          key: a.key,
+                          initials: initialsFrom(a.label),
+                          dim: a.kind === "pending",
+                          ...hashToColor(a.label),
+                        }))
+                      : [
+                          {
+                            key: "owner",
+                            initials: initialsFrom(sharingSummary.ownerLabel),
+                            dim: false,
+                            ...hashToColor(sharingSummary.ownerLabel),
+                          },
+                        ],
+                  }
+                }
+                onPressSharing={() => setSharingOpen(true)}
+              />
 
               <View style={styles.body}>
                 <BelongingPrimaryActions
@@ -561,6 +689,33 @@ export default function BelongingDetailsScreen() {
         item={item}
         onClose={() => setGrantOpen(false)}
       />
+
+      <ActionSheetModal
+        visible={sharingOpen}
+        onClose={() => setSharingOpen(false)}
+        title=""
+        icon={undefined}
+      >
+        <View style={{ gap: 12 }}>
+          <Text style={styles.simpleLine}>
+            {t("sharing.ownerLabel")}{" "}
+            <Text style={styles.simpleLineStrong}>{sharingSummary.ownerLabel}</Text>
+          </Text>
+
+          {(sharing?.sharedWith ?? [])
+            .filter((g) => (g.status ?? "pending") === "active")
+            .map((g) => {
+              const label = displayName(g.user ?? null);
+              return (
+                <Text key={g.grantId} style={styles.simpleLine}>
+                  {t("sharing.sharedWithLabel")}{" "}
+                  <Text style={styles.simpleLineStrong}>{label}</Text>
+                </Text>
+              );
+            })}
+
+        </View>
+      </ActionSheetModal>
     </View>
   );
 }
@@ -578,6 +733,9 @@ const styles = StyleSheet.create({
   error: { color: "tomato", textAlign: "center" },
 
   body: { paddingHorizontal: 20, paddingTop: 18, gap: 14 },
+
+  simpleLine: { fontSize: 16, lineHeight: 22, color: "rgba(255,255,255,0.88)" },
+  simpleLineStrong: { fontWeight: "900", color: "rgba(255,255,255,0.98)" },
 
   transferredCard: {
     width: "100%",

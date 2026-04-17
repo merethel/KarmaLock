@@ -7,7 +7,7 @@ import {
 } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 function Pill({
   label,
@@ -32,10 +32,22 @@ export function BelongingHeroCard({
   t,
   item,
   valueLabel,
+  sharing,
+  onPressSharing,
 }: {
   t: (k: TranslationKey) => string;
   item: Belonging;
   valueLabel: string;
+  sharing?: {
+    avatars: {
+      key: string;
+      initials: string;
+      dim?: boolean;
+      bg?: string;
+      border?: string;
+    }[];
+  };
+  onPressSharing?: () => void;
 }) {
   const isTransferring = getBelongingTransferStatus(item._id) === "transferring";
   const isGranting = getBelongingGrantStatus(item._id) === "granting";
@@ -56,9 +68,42 @@ export function BelongingHeroCard({
         {item.title}
       </Text>
 
-      <View style={styles.heroPills}>
-        <Pill label={statusLabel} />
-        <Pill label={valueLabel} icon="cash-outline" />
+      <View style={styles.bottomRow}>
+        <View style={styles.heroPills}>
+          <Pill label={statusLabel} />
+          <Pill label={valueLabel} icon="cash-outline" />
+        </View>
+
+        {sharing?.avatars?.length ? (
+          <Pressable
+            onPress={onPressSharing}
+            disabled={!onPressSharing}
+            hitSlop={10}
+            style={({ pressed }) => [
+              styles.avatarStack,
+              pressed && onPressSharing && { opacity: 0.9 },
+            ]}
+            accessibilityRole={onPressSharing ? "button" : undefined}
+            accessibilityLabel={onPressSharing ? "Sharing" : undefined}
+          >
+            {sharing.avatars.slice(0, 4).map((a, idx) => (
+              <View
+                key={a.key}
+                style={[
+                  styles.avatar,
+                  a.dim && { opacity: 0.55 },
+                  a.bg ? { backgroundColor: a.bg } : null,
+                  a.border ? { borderColor: a.border } : null,
+                  { marginLeft: idx === 0 ? 0 : -8 },
+                ]}
+              >
+                <Text mono style={styles.avatarText}>
+                  {a.initials}
+                </Text>
+              </View>
+            ))}
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -88,6 +133,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
   },
+  bottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   pill: {
     flexDirection: "row",
     alignItems: "center",
@@ -104,6 +155,24 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     fontSize: 14,
     fontWeight: "900",
+  },
+
+  avatarStack: { flexDirection: "row", alignItems: "center" },
+  avatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1,
+    color: "rgba(255,255,255,0.92)",
   },
 });
 

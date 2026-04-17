@@ -34,10 +34,34 @@ export type Belonging = {
   accessRole?: "owner" | "granted";
   /** Provided for granted items so the recipient can revoke/unsubscribe. */
   grantId?: string;
+
+  /** Provided for granted items (and sometimes sharing endpoints). */
+  ownerUser?: { id: string; name: string; email: string } | null;
+  /** Provided for owned items to show recipients. */
+  sharedWith?: Array<{
+    user: { id: string; name: string; email: string };
+    grantId: string;
+    status: "pending" | "active" | "declined" | "revoked" | string;
+  }>;
 };
 
 export async function listMyBelongings() {
   return apiFetch<{ items: Belonging[] }>("/belongings");
+}
+
+export async function getBelonging(id: string) {
+  return apiFetch<{ item: Belonging }>(`/belongings/${encodeURIComponent(id)}`);
+}
+
+export async function getBelongingSharing(id: string) {
+  return apiFetch<{
+    ownerUser: { id: string; name: string; email: string } | null;
+    sharedWith: Array<{
+      user: { id: string; name: string; email: string };
+      grantId: string;
+      status: "pending" | "active" | "declined" | "revoked" | string;
+    }>;
+  }>(`/belongings/${encodeURIComponent(id)}/sharing`);
 }
 
 export async function createBelonging(payload: {
