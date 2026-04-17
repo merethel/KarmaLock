@@ -42,6 +42,31 @@ function formatTimestamp(
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function toComparable(value: unknown): unknown {
+  if (value instanceof Date) return value.toISOString();
+  if (value && typeof value === "object") {
+    if ("toHexString" in (value as { toHexString?: unknown })) {
+      try {
+        return String(value);
+      } catch {
+        // ignore
+      }
+    }
+  }
+  return value;
+}
+
+function valuesEqual(a: unknown, b: unknown): boolean {
+  const aa = toComparable(a);
+  const bb = toComparable(b);
+  if (aa === bb) return true;
+  try {
+    return JSON.stringify(aa) === JSON.stringify(bb);
+  } catch {
+    return false;
+  }
+}
+
 function safeChanges(meta: unknown): Array<{ field: string; from?: unknown; to?: unknown }> {
   if (!meta || typeof meta !== "object") return [];
   const m = meta as Record<string, unknown>;
@@ -52,6 +77,7 @@ function safeChanges(meta: unknown): Array<{ field: string; from?: unknown; to?:
   for (const [field, v] of Object.entries(changes)) {
     if (!v || typeof v !== "object") continue;
     const o = v as Record<string, unknown>;
+    if (valuesEqual(o.from, o.to)) continue;
     out.push({ field, from: o.from, to: o.to });
   }
   return out;
@@ -246,6 +272,8 @@ export default function BelongingHistoryScreen() {
             const when = formatTimestamp(parseIsoDate(item.createdAt), t);
             const meta = normalizeMetadata(item.metadata);
             const changes = safeChanges(meta);
+            const actorName =
+              (item.actor?.name || item.actor?.email || "").trim() || "";
             const ownerLine = item.type.includes("transfer")
               ? safeOwnerLine(meta)
               : null;
@@ -270,8 +298,14 @@ export default function BelongingHistoryScreen() {
                   </Text>
                 </View>
 
-                {ownerLine ? (
+                {actorName ? (
                   <Text dim style={styles.cardMeta}>
+                    {t("vault.historyBy").replace("{{name}}", actorName)}
+                  </Text>
+                ) : null}
+
+                {ownerLine ? (
+                  <Text dim style={[styles.cardMeta, actorName ? { marginTop: 6 } : null]}>
                     {t("vault.historyOwnership")
                       .replace("{{from}}", ownerLine.from ?? "—")
                       .replace("{{to}}", ownerLine.to ?? "—")}
@@ -279,7 +313,13 @@ export default function BelongingHistoryScreen() {
                 ) : null}
 
                 {isTransfer ? (
-                  <Text dim style={[styles.cardMeta, ownerLine ? { marginTop: 6 } : null]}>
+                  <Text
+                    dim
+                    style={[
+                      styles.cardMeta,
+                      actorName || ownerLine ? { marginTop: 6 } : null,
+                    ]}
+                  >
                     {note
                       ? t("vault.historyNote").replace("{{note}}", note)
                       : t("vault.historyNoTransferNote")}
