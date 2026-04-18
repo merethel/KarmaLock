@@ -36,7 +36,11 @@ export async function acceptGrant(id: string) {
   });
 }
 
-/** Recipient-side unsubscribe/revoke (owner must not be allowed). */
+/**
+ * Revoke/cancel a grant.
+ * - Recipient: unsubscribe from an active grant
+ * - Owner: remove a collaborator / cancel a pending invite (when supported by API)
+ */
 export async function revokeGrant(id: string) {
   return apiFetch<{ grant: Grant }>(`/grants/${encodeURIComponent(id)}/revoke`, {
     method: "POST",

@@ -16,6 +16,7 @@ import {
   deleteBelonging,
   getBelonging,
   getBelongingSharing,
+  grantIdFromSharingEntry,
   updateBelonging,
 } from "@/src/api/belongings";
 import { revokeGrant } from "@/src/api/grants";
@@ -40,8 +41,10 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  ScrollView,
   StatusBar,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -139,9 +142,14 @@ export default function BelongingDetailsScreen() {
     ownerUser: { id: string; name: string; email: string } | null;
     sharedWith: Array<{
       user: { id: string; name: string; email: string };
-      grantId: string;
+      grantId?: string;
+      _id?: string;
       status: string;
     }>;
+  } | null>(null);
+  const [removeGrantOpen, setRemoveGrantOpen] = useState(false);
+  const [removeGrantTarget, setRemoveGrantTarget] = useState<{
+    grantId: string;
   } | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
 
@@ -240,12 +248,12 @@ export default function BelongingDetailsScreen() {
     const avatars = [
       { key: "owner", label: ownerLabel, kind: "owner" as const },
       ...activeOutgoing.map((g) => ({
-        key: `a:${g.grantId}`,
+        key: `a:${grantIdFromSharingEntry(g) || displayName(g.user ?? null)}`,
         label: displayName(g.user ?? null),
         kind: "active" as const,
       })),
       ...pendingOutgoing.map((g) => ({
-        key: `p:${g.grantId}`,
+        key: `p:${grantIdFromSharingEntry(g) || displayName(g.user ?? null)}`,
         label: displayName(g.user ?? null),
         kind: "pending" as const,
       })),
@@ -267,6 +275,15 @@ export default function BelongingDetailsScreen() {
       avatars: unique.slice(0, 6),
     };
   }, [isGranted, item?.ownerUser, sessionUser, sharing?.sharedWith]);
+
+  const removableCollaborators = useMemo(() => {
+    if (!isOwner) return [];
+    const shared = sharing?.sharedWith ?? [];
+    return shared.filter((g) => {
+      const st = (g.status ?? "pending").toLowerCase();
+      return st === "pending" || st === "active";
+    });
+  }, [isOwner, sharing?.sharedWith]);
 
   // Always show at least the owner initial in the hero card.
   const shouldShowSharing = Boolean(item);
@@ -696,26 +713,121 @@ export default function BelongingDetailsScreen() {
         title=""
         icon={undefined}
       >
-        <View style={{ gap: 12 }}>
+        <ScrollView
+          keyboardShouldPersistTaps="always"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ gap: 12, paddingBottom: 6 }}
+        >
           <Text style={styles.simpleLine}>
             {t("sharing.ownerLabel")}{" "}
             <Text style={styles.simpleLineStrong}>{sharingSummary.ownerLabel}</Text>
           </Text>
 
-          {(sharing?.sharedWith ?? [])
-            .filter((g) => (g.status ?? "pending") === "active")
-            .map((g) => {
-              const label = displayName(g.user ?? null);
-              return (
-                <Text key={g.grantId} style={styles.simpleLine}>
-                  {t("sharing.sharedWithLabel")}{" "}
-                  <Text style={styles.simpleLineStrong}>{label}</Text>
-                </Text>
-              );
-            })}
+          {!isOwner
+            ? (sharing?.sharedWith ?? [])
+                .filter((g) => (g.status ?? "pending") === "active")
+                .map((g) => {
+                  const label = displayName(g.user ?? null);
+                  return (
+                    <Text
+                      key={grantIdFromSharingEntry(g) || displayName(g.user ?? null)}
+                      style={styles.simpleLine}
+                    >
+                      {t("sharing.sharedWithLabel")}{" "}
+                      <Text style={styles.simpleLineStrong}>{label}</Text>
+                    </Text>
+                  );
+                })
+            : null}
 
-        </View>
+          {isOwner && removableCollaborators.length > 0 ? (
+            <View style={{ gap: 10, marginTop: 4 }}>
+              <Text dim style={styles.collabSectionTitle}>
+                {t("sharing.collaboratorsTitle")}
+              </Text>
+              {removableCollaborators.map((g) => {
+                const st = (g.status ?? "pending").toLowerCase();
+                const label = displayName(g.user ?? null);
+                const gid = grantIdFromSharingEntry(g);
+                const statusLabel =
+                  st === "pending"
+                    ? t("sharing.statusPending")
+                    : t("sharing.statusActive");
+                return (
+                  <View key={gid || label} style={styles.collabRow}>
+                    <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                      <Text style={styles.simpleLineStrong} numberOfLines={1}>
+                        {label}
+                      </Text>
+                      <Text dim style={styles.collabStatus}>
+                        {statusLabel}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      onPress={() => {
+                        if (!gid) {
+                          Alert.alert(
+                            t("errors.failed"),
+                            t("sharing.removeMissingGrantId"),
+                          );
+                          return;
+                        }
+                        // Only one RN Modal should be visible on iOS; close sharing first.
+                        setSharingOpen(false);
+                        setRemoveGrantTarget({ grantId: gid });
+                        setRemoveGrantOpen(true);
+                      }}
+                      style={styles.collabRemove}
+                    >
+                      <Text style={styles.collabRemoveText}>
+                        {t("sharing.removeAccess")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
+        </ScrollView>
       </ActionSheetModal>
+
+      <DangerConfirmModal
+        visible={removeGrantOpen}
+        onClose={() => {
+          setRemoveGrantOpen(false);
+          setRemoveGrantTarget(null);
+          setSharingOpen(true);
+        }}
+        onConfirm={async () => {
+          const gid = removeGrantTarget?.grantId;
+          if (!gid || !idStr) return;
+          try {
+            await revokeGrant(gid);
+            const shareRes = await getBelongingSharing(idStr);
+            setSharing(shareRes.data);
+            const pending =
+              (shareRes.data.sharedWith ?? []).find((x) => x.status === "pending") ??
+              null;
+            setBelongingGrantStatus(idStr, pending ? "granting" : null);
+          } catch (e: unknown) {
+            Alert.alert(
+              t("errors.failed"),
+              e instanceof Error ? e.message : t("errors.failed"),
+            );
+          } finally {
+            setRemoveGrantOpen(false);
+            setRemoveGrantTarget(null);
+            setSharingOpen(true);
+          }
+        }}
+        title={t("sharing.removeAccessTitle")}
+        body={t("sharing.removeAccessBody")}
+        cancelLabel={t("transfers.cancel")}
+        confirmLabel={t("sharing.removeAccessConfirm")}
+        countdownSeconds={0}
+      />
     </View>
   );
 }
@@ -736,6 +848,26 @@ const styles = StyleSheet.create({
 
   simpleLine: { fontSize: 16, lineHeight: 22, color: "rgba(255,255,255,0.88)" },
   simpleLineStrong: { fontWeight: "900", color: "rgba(255,255,255,0.98)" },
+
+  collabSectionTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+  },
+  collabRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  collabStatus: { fontSize: 13, lineHeight: 18 },
+  collabRemove: { paddingVertical: 6, paddingHorizontal: 2 },
+  collabRemoveText: { fontSize: 14, fontWeight: "900", color: palette.danger },
 
   transferredCard: {
     width: "100%",

@@ -150,6 +150,81 @@ function isGrantEventType(type: string): boolean {
   return t.includes("grant");
 }
 
+function isGrantRevokeEventType(type: string): boolean {
+  const t = (type || "").toLowerCase();
+  if (!t.includes("grant")) return false;
+  return (
+    t.includes("revok") ||
+    t.includes("remov") ||
+    t.includes("unsub") ||
+    t.includes("cancel")
+  );
+}
+
+function extractGrantIdFromMetadata(meta: unknown): string | null {
+  const m = normalizeMetadata(meta);
+  if (!m || typeof m !== "object") return null;
+  const r = m as Record<string, unknown>;
+  const direct = r.grantId ?? r.grant_id;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+  const nested = r.grant;
+  if (nested && typeof nested === "object") {
+    const g = nested as Record<string, unknown>;
+    const id = g._id ?? g.id;
+    if (typeof id === "string" && id.trim()) return id.trim();
+  }
+  return null;
+}
+
+/** Drop duplicate grant cards when the API emits the same grant + type twice. */
+function dedupeGrantHistoryEvents(
+  events: BelongingHistoryEvent[],
+): BelongingHistoryEvent[] {
+  const seen = new Set<string>();
+  const out: BelongingHistoryEvent[] = [];
+  for (const e of events) {
+    const ty = (e.type || "").toLowerCase();
+    if (isGrantEventType(e.type) && !isGrantRevokeEventType(e.type)) {
+      const gid = extractGrantIdFromMetadata(e.metadata);
+      if (gid) {
+        const key = `${ty}:${gid}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+      }
+    }
+    out.push(e);
+  }
+  return out;
+}
+
+function normalizeHistoryFieldKey(field: string): string {
+  return field.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/** Fields that duplicate the human-readable grant line / identities in metadata. */
+const GRANT_HISTORY_SUPPRESSED_FIELD_KEYS = new Set([
+  "touser",
+  "fromuser",
+  "touserid",
+  "fromuserid",
+  "grantid",
+  "grant",
+  "recipient",
+  "recipientemail",
+  "toemail",
+]);
+
+function filterHistoryChangesForGrant(
+  changes: Array<{ field: string; from?: unknown; to?: unknown }>,
+  isGrant: boolean,
+): Array<{ field: string; from?: unknown; to?: unknown }> {
+  if (!isGrant) return changes;
+  return changes.filter((c) => {
+    const k = normalizeHistoryFieldKey(c.field);
+    return !GRANT_HISTORY_SUPPRESSED_FIELD_KEYS.has(k);
+  });
+}
+
 function safeNote(meta: unknown): string | null {
   if (!meta || typeof meta !== "object") return null;
   const m = meta as Record<string, unknown>;
@@ -210,7 +285,7 @@ export default function BelongingHistoryScreen() {
         const tb = parseIsoDate(b.createdAt)?.getTime() ?? 0;
         return tb - ta;
       });
-      setEvents(sorted);
+      setEvents(dedupeGrantHistoryEvents(sorted));
       const next = res.data.nextCursor ?? "";
       setCursor(next || "");
       setHasMore(Boolean(next));
@@ -237,7 +312,7 @@ export default function BelongingHistoryScreen() {
         const tb = parseIsoDate(b.createdAt)?.getTime() ?? 0;
         return tb - ta;
       });
-      setEvents(merged);
+      setEvents(dedupeGrantHistoryEvents(merged));
       const next = res.data.nextCursor ?? "";
       setCursor(next || "");
       setHasMore(Boolean(next));
@@ -312,13 +387,16 @@ export default function BelongingHistoryScreen() {
             const when = formatTimestamp(parseIsoDate(item.createdAt), t);
             const createdAt = parseIsoDate(item.createdAt);
             const meta = normalizeMetadata(item.metadata);
-            const changes = safeChanges(meta);
+            const isGrant = isGrantEventType(item.type);
+            const isGrantRevoke = isGrantRevokeEventType(item.type);
+            const changes = filterHistoryChangesForGrant(safeChanges(meta), isGrant);
             const actorName =
               (item.actor?.name || item.actor?.email || "").trim() || "";
-            const ownerLine = item.type.includes("transfer")
-              ? safeOwnerLine(meta)
-              : null;
-            const grantLine = isGrantEventType(item.type) ? safeOwnerLine(meta) : null;
+            const ownerLine =
+              item.type.includes("transfer") && !isGrant
+                ? safeOwnerLine(meta)
+                : null;
+            const grantLine = isGrant ? safeOwnerLine(meta) : null;
             const note = safeNoteFromEvent(item);
             const isTransfer = item.type.includes("transfer");
 
@@ -327,8 +405,10 @@ export default function BelongingHistoryScreen() {
                 ? t("vault.historyCreated")
                 : item.type === "belonging.updated"
                   ? t("vault.historyUpdated")
-                  : isGrantEventType(item.type)
-                    ? t("vault.historyGrant")
+                  : isGrantRevoke
+                    ? t("vault.historyGrantRevoked")
+                    : isGrant
+                      ? t("vault.historyGrant")
                   : item.type.includes("transfer")
                     ? t("vault.historyTransfer")
                     : t("vault.historyEvent");
@@ -383,7 +463,20 @@ export default function BelongingHistoryScreen() {
                   </Text>
                 ) : null}
 
-                {grantLine ? (
+                {grantLine && isGrantRevoke ? (
+                  <Text
+                    dim
+                    style={[
+                      styles.cardMeta,
+                      actorName && !isCreated ? { marginTop: 6 } : null,
+                    ]}
+                  >
+                    {t("vault.historyGrantRevokedLine").replace(
+                      "{{name}}",
+                      grantLine.to ?? grantLine.from ?? "—",
+                    )}
+                  </Text>
+                ) : grantLine ? (
                   <Text
                     dim
                     style={[

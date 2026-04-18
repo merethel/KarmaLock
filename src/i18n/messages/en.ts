@@ -166,6 +166,8 @@ export const en = {
     historyUpdated: "Edited",
     historyTransfer: "Transfer",
     historyGrant: "Access",
+    historyGrantRevoked: "Access removed",
+    historyGrantRevokedLine: "Removed access for {{name}}",
     historyBy: "By {{name}}",
     historyOwnership: "Ownership: {{from}} → {{to}}",
     historyGrantLine: "Access: {{from}} → {{to}}",
@@ -451,6 +453,16 @@ export const en = {
   sharing: {
     ownerLabel: "Owner",
     sharedWithLabel: "Shared with",
+    collaboratorsTitle: "COLLABORATORS",
+    statusActive: "Active",
+    statusPending: "Pending",
+    removeAccess: "Remove",
+    removeAccessTitle: "Remove access?",
+    removeAccessBody:
+      "This will remove this person’s access to this belonging. They will no longer see it in their vault.",
+    removeAccessConfirm: "Remove",
+    removeMissingGrantId:
+      "Could not determine this grant’s id from the server. Pull to refresh or check that sharing includes grantId (or _id).",
   },
 
   aboutKarmalock: {

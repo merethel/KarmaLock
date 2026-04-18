@@ -164,6 +164,8 @@ export const da: Dictionary = {
     historyUpdated: "Redigeret",
     historyTransfer: "Overførsel",
     historyGrant: "Adgang",
+    historyGrantRevoked: "Adgang fjernet",
+    historyGrantRevokedLine: "Fjernet adgang for {{name}}",
     historyBy: "Af {{name}}",
     historyOwnership: "Ejerskab: {{from}} → {{to}}",
     historyGrantLine: "Adgang: {{from}} → {{to}}",
@@ -449,6 +451,16 @@ export const da: Dictionary = {
   sharing: {
     ownerLabel: "Ejer",
     sharedWithLabel: "Delt med",
+    collaboratorsTitle: "SAMARBEJDSPARTNERE",
+    statusActive: "Aktiv",
+    statusPending: "Afventer",
+    removeAccess: "Fjern",
+    removeAccessTitle: "Fjern adgang?",
+    removeAccessBody:
+      "Dette fjerner personens adgang til denne ejendel. De vil ikke længere kunne se den i deres vault.",
+    removeAccessConfirm: "Fjern",
+    removeMissingGrantId:
+      "Kunne ikke finde dette grants id fra serveren. Opdatér siden eller tjek at sharing indeholder grantId (eller _id).",
   },
 
   aboutKarmalock: {

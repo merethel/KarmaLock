@@ -40,7 +40,9 @@ export type Belonging = {
   /** Provided for owned items to show recipients. */
   sharedWith?: Array<{
     user: { id: string; name: string; email: string };
-    grantId: string;
+    /** Some deployments use `_id` for the grant document instead of `grantId`. */
+    grantId?: string;
+    _id?: string;
     status: "pending" | "active" | "declined" | "revoked" | string;
   }>;
 };
@@ -58,10 +60,22 @@ export async function getBelongingSharing(id: string) {
     ownerUser: { id: string; name: string; email: string } | null;
     sharedWith: Array<{
       user: { id: string; name: string; email: string };
-      grantId: string;
+      grantId?: string;
+      _id?: string;
       status: "pending" | "active" | "declined" | "revoked" | string;
     }>;
   }>(`/belongings/${encodeURIComponent(id)}/sharing`);
+}
+
+/** Grant id for revoke / UI keys — API may expose `grantId` or `_id` on sharing rows. */
+export function grantIdFromSharingEntry(entry: {
+  grantId?: string;
+  _id?: string;
+}): string {
+  const a = typeof entry.grantId === "string" ? entry.grantId.trim() : "";
+  if (a) return a;
+  const b = typeof entry._id === "string" ? entry._id.trim() : "";
+  return b;
 }
 
 export async function createBelonging(payload: {

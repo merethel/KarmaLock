@@ -2,7 +2,6 @@ import { Text } from "@/components/common_components/Text";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -36,26 +35,18 @@ export function ActionSheetModal({
       animationType="fade"
       onRequestClose={busy ? undefined : onClose}
     >
-      <Pressable
-        style={styles.backdrop}
-        onPress={
-          busy
-            ? undefined
-            : () => {
-                Keyboard.dismiss();
-              }
-        }
-      >
+      {/*
+       Root must be a plain View. A Pressable wrapper (even “only for keyboard dismiss”)
+       can still win the responder on iOS and swallow taps meant for children
+       (e.g. Remove inside ScrollView).
+       */}
+      <View style={styles.backdrop}>
         <KeyboardAvoidingView
           style={styles.kav}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
+          pointerEvents="box-none"
         >
-          <Pressable
-            style={styles.sheet}
-            onPress={(e) => {
-              e.stopPropagation();
-            }}
-          >
+          <View style={styles.sheet}>
             <View style={[styles.topRow, !hasHeaderLeft && styles.topRowNoLeft]}>
               {hasHeaderLeft ? (
                 <View style={styles.topLeft}>
@@ -86,9 +77,9 @@ export function ActionSheetModal({
 
             <View style={styles.body}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
-          </Pressable>
+          </View>
         </KeyboardAvoidingView>
-      </Pressable>
+      </View>
     </Modal>
   );
 }
