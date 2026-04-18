@@ -21,10 +21,16 @@ export function TransferRequestModal({
   visible,
   item,
   onClose,
+  presetToEmail,
+  presetGrantId,
 }: {
   visible: boolean;
   item: Belonging | null;
   onClose: () => void;
+  /** Pre-filled recipient (e.g. active grantee chosen from sharing). */
+  presetToEmail?: string;
+  /** Sent with the request when transferring ownership to an existing grantee. */
+  presetGrantId?: string;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -35,10 +41,10 @@ export function TransferRequestModal({
 
   useEffect(() => {
     if (!visible) return;
-    setTransferEmail("");
+    setTransferEmail((presetToEmail ?? "").trim());
     setTransferNote("");
     setTransferBusy(false);
-  }, [visible]);
+  }, [visible, presetToEmail]);
 
   const canSend = Boolean(item?._id) && Boolean(transferEmail.trim()) && !transferBusy;
 
@@ -85,6 +91,7 @@ export function TransferRequestModal({
                     toEmail: transferEmail.trim(),
                     note: transferNote.trim() ? transferNote.trim() : undefined,
                     chipUid: scanned,
+                    grantId: presetGrantId?.trim() || undefined,
                   });
 
                   setBelongingTransferStatus(item._id, "transferring");
@@ -118,7 +125,9 @@ export function TransferRequestModal({
         keyboardDismissMode="interactive"
       >
         <Text dim style={styles.hint}>
-          {t("transfers.requestHint")}
+          {presetToEmail?.trim()
+            ? t("transfers.presetGranteeHint")
+            : t("transfers.requestHint")}
         </Text>
 
         <RecipientEmailPicker

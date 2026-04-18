@@ -169,6 +169,7 @@ const TRANSFER_EVENT_TYPES = new Set<string>([
   "belonging.transfer.accepted",
   "belonging.transfer.declined",
   "belonging.transfer.cancelled",
+  "belonging.ownership.transferred",
 ]);
 
 const GRANT_DEDUPE_TYPES = new Set<string>([
@@ -211,6 +212,8 @@ function historyEventTitle(
       return t("vault.historyTransferDeclined");
     case "belonging.transfer.cancelled":
       return t("vault.historyTransferCancelled");
+    case "belonging.ownership.transferred":
+      return t("vault.historyOwnershipTransferred");
     default:
       return t("vault.historyEvent");
   }

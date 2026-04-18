@@ -130,6 +130,10 @@ export default function BelongingDetailsScreen() {
   const [stolenOpen, setStolenOpen] = useState(false);
   const [markBusy, setMarkBusy] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [transferPreset, setTransferPreset] = useState<{
+    toEmail: string;
+    grantId: string;
+  } | null>(null);
   const [grantOpen, setGrantOpen] = useState(false);
   const [cancelBusy, setCancelBusy] = useState(false);
   const [pendingOutgoingId, setPendingOutgoingId] = useState<string>("");
@@ -289,6 +293,7 @@ export default function BelongingDetailsScreen() {
   const shouldShowSharing = Boolean(item);
 
   const onTransfer = () => {
+    setTransferPreset(null);
     setTransferOpen(true);
   };
   const onCancelTransfer = useCallback(() => {
@@ -698,7 +703,12 @@ export default function BelongingDetailsScreen() {
       <TransferRequestModal
         visible={transferOpen}
         item={item}
-        onClose={() => setTransferOpen(false)}
+        presetToEmail={transferPreset?.toEmail}
+        presetGrantId={transferPreset?.grantId}
+        onClose={() => {
+          setTransferOpen(false);
+          setTransferPreset(null);
+        }}
       />
 
       <GrantAccessModal
@@ -753,6 +763,10 @@ export default function BelongingDetailsScreen() {
                   st === "pending"
                     ? t("sharing.statusPending")
                     : t("sharing.statusActive");
+                const granteeEmail = (g.user?.email ?? "").trim();
+                const canTransferOwnership =
+                  st === "active" && Boolean(granteeEmail) && Boolean(gid);
+
                 return (
                   <View key={gid || label} style={styles.collabRow}>
                     <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
@@ -763,28 +777,48 @@ export default function BelongingDetailsScreen() {
                         {statusLabel}
                       </Text>
                     </View>
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      onPress={() => {
-                        if (!gid) {
-                          Alert.alert(
-                            t("errors.failed"),
-                            t("sharing.removeMissingGrantId"),
-                          );
-                          return;
-                        }
-                        // Only one RN Modal should be visible on iOS; close sharing first.
-                        setSharingOpen(false);
-                        setRemoveGrantTarget({ grantId: gid });
-                        setRemoveGrantOpen(true);
-                      }}
-                      style={styles.collabRemove}
-                    >
-                      <Text style={styles.collabRemoveText}>
-                        {t("sharing.removeAccess")}
-                      </Text>
-                    </TouchableOpacity>
+                    <View style={styles.collabActions}>
+                      {canTransferOwnership ? (
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          onPress={() => {
+                            setSharingOpen(false);
+                            setTransferPreset({
+                              toEmail: granteeEmail,
+                              grantId: gid,
+                            });
+                            setTransferOpen(true);
+                          }}
+                          style={styles.collabTransfer}
+                        >
+                          <Text style={styles.collabTransferText}>
+                            {t("sharing.transferOwnership")}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
+                      <TouchableOpacity
+                        activeOpacity={0.85}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        onPress={() => {
+                          if (!gid) {
+                            Alert.alert(
+                              t("errors.failed"),
+                              t("sharing.removeMissingGrantId"),
+                            );
+                            return;
+                          }
+                          setSharingOpen(false);
+                          setRemoveGrantTarget({ grantId: gid });
+                          setRemoveGrantOpen(true);
+                        }}
+                        style={styles.collabRemove}
+                      >
+                        <Text style={styles.collabRemoveText}>
+                          {t("sharing.removeAccess")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 );
               })}
@@ -865,7 +899,14 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     backgroundColor: "rgba(255,255,255,0.04)",
   },
+  collabActions: {
+    alignItems: "flex-end",
+    gap: 8,
+    justifyContent: "center",
+  },
   collabStatus: { fontSize: 13, lineHeight: 18 },
+  collabTransfer: { paddingVertical: 6, paddingHorizontal: 2 },
+  collabTransferText: { fontSize: 13, fontWeight: "900", color: palette.accent },
   collabRemove: { paddingVertical: 6, paddingHorizontal: 2 },
   collabRemoveText: { fontSize: 14, fontWeight: "900", color: palette.danger },
 

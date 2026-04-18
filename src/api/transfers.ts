@@ -32,6 +32,8 @@ export async function requestTransfer(payload: {
   note?: string;
   /** Optional: chip UID verified via NFC scan before transfer request. */
   chipUid?: string;
+  /** When the recipient already has an active grant on this belonging (owner → grantee). */
+  grantId?: string;
 }) {
   return apiFetch<{ request: TransferRequest }>("/transfers", {
     method: "POST",

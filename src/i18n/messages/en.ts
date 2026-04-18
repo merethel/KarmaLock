@@ -174,6 +174,7 @@ export const en = {
     historyTransferAccepted: "Transfer completed",
     historyTransferDeclined: "Transfer declined",
     historyTransferCancelled: "Transfer cancelled",
+    historyOwnershipTransferred: "Ownership transferred",
     historyOwnership: "Ownership: {{from}} → {{to}}",
     historyGrantLine: "{{from}} → {{to}}",
     historyNote: "Note: {{note}}",
@@ -403,6 +404,8 @@ export const en = {
     requestTitle: "Transfer item",
     requestHint:
       "Enter the recipient’s email. The transfer completes only when they accept.",
+    presetGranteeHint:
+      "This person already has access. They will get a transfer request to become the owner after they accept (and complete any steps your server requires).",
     emailLabel: "RECIPIENT EMAIL",
     emailPlaceholder: "recipient@email.com",
     searchingEmail: "Searching…",
@@ -461,6 +464,7 @@ export const en = {
     collaboratorsTitle: "COLLABORATORS",
     statusActive: "Active",
     statusPending: "Pending",
+    transferOwnership: "Transfer ownership",
     removeAccess: "Remove",
     removeAccessTitle: "Remove access?",
     removeAccessBody:

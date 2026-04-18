@@ -172,6 +172,7 @@ export const da: Dictionary = {
     historyTransferAccepted: "Overførsel gennemført",
     historyTransferDeclined: "Overførsel afvist",
     historyTransferCancelled: "Overførsel annulleret",
+    historyOwnershipTransferred: "Ejerskab overført",
     historyOwnership: "Ejerskab: {{from}} → {{to}}",
     historyGrantLine: "{{from}} → {{to}}",
     historyNote: "Bemærkning: {{note}}",
@@ -401,6 +402,8 @@ export const da: Dictionary = {
     requestTitle: "Overfør genstand",
     requestHint:
       "Indtast modtagerens email. Overførslen sker først, når modtageren accepterer.",
+    presetGranteeHint:
+      "Personen har allerede adgang. De får en overførselsanmodning om at blive ejer, når de accepterer (og evt. fuldfører trin på serveren).",
     emailLabel: "MODTAGER EMAIL",
     emailPlaceholder: "modtager@email.com",
     searchingEmail: "Søger…",
@@ -459,6 +462,7 @@ export const da: Dictionary = {
     collaboratorsTitle: "SAMARBEJDSPARTNERE",
     statusActive: "Aktiv",
     statusPending: "Afventer",
+    transferOwnership: "Overfør ejerskab",
     removeAccess: "Fjern",
     removeAccessTitle: "Fjern adgang?",
     removeAccessBody:

@@ -13,6 +13,8 @@ export const BELONGING_EVENT_TYPES = [
   "belonging.transfer.accepted",
   "belonging.transfer.declined",
   "belonging.transfer.cancelled",
+  /** Optional: explicit ownership handoff (e.g. to an existing grantee); same metadata shape as transfers. */
+  "belonging.ownership.transferred",
 ] as const;
 
 export type BelongingEventType = (typeof BELONGING_EVENT_TYPES)[number];
