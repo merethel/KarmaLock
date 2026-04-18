@@ -118,10 +118,13 @@ export async function updateBelonging(
     attributes: Record<string, unknown>;
   }>,
 ) {
-  return apiFetch<{ item: Belonging }>(`/belongings/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
+  return apiFetch<{ item: Belonging }>(
+    `/belongings/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export async function describeBelongingPhoto(photoUri: string) {
