@@ -12,7 +12,12 @@ import {
   listOutgoingTransfers,
   markOutgoingTransfersSeen,
 } from "@/src/api/transfers";
-import { acceptGrant, declineGrant, listIncomingGrants } from "@/src/api/grants";
+import {
+  acceptGrant,
+  declineGrant,
+  listIncomingGrants,
+  listOutgoingGrants,
+} from "@/src/api/grants";
 import {
   appendInboxActivity,
   loadInboxActivity,
@@ -129,6 +134,7 @@ export default function TransfersInboxScreen() {
   const [requests, setRequests] = useState<TransferRequest[]>([]);
   const [outgoing, setOutgoing] = useState<TransferRequest[]>([]);
   const [grantRequests, setGrantRequests] = useState<Grant[]>([]);
+  const [outgoingGrants, setOutgoingGrants] = useState<Grant[]>([]);
   const [activityLog, setActivityLog] = useState<InboxActivityEntry[]>([]);
   const [busyId, setBusyId] = useState<string>("");
 
@@ -228,12 +234,28 @@ export default function TransfersInboxScreen() {
     [grantRequests],
   );
 
+  const respondedOutgoingGrantsFromApi = useMemo(
+    () =>
+      (outgoingGrants ?? []).filter((g) => {
+        const s = (g.status ?? "").toLowerCase();
+        if (s === "revoked") return false;
+        return s === "accepted" || s === "declined" || s === "active";
+      }),
+    [outgoingGrants],
+  );
+
   const mergedRows = useMemo(() => {
     type FeedItem = (typeof feed)[number];
     type Merged =
       | { kind: "feed"; item: FeedItem; at: number }
       | { kind: "grantApi"; g: Grant; at: number }
       | { kind: "grantLocal"; e: Extract<InboxActivityEntry, { kind: "grant_response" }>; at: number }
+      | { kind: "grantOutgoingApi"; g: Grant; at: number }
+      | {
+          kind: "grantOutgoingLocal";
+          e: Extract<InboxActivityEntry, { kind: "grant_owner_outcome" }>;
+          at: number;
+        }
       | {
           kind: "transferLocal";
           e: Extract<InboxActivityEntry, { kind: "transfer_response" }>;
@@ -247,6 +269,13 @@ export default function TransfersInboxScreen() {
     for (const g of respondedGrantsFromApi) {
       rows.push({
         kind: "grantApi",
+        g,
+        at: bestDateForGrant(g)?.getTime() ?? 0,
+      });
+    }
+    for (const g of respondedOutgoingGrantsFromApi) {
+      rows.push({
+        kind: "grantOutgoingApi",
         g,
         at: bestDateForGrant(g)?.getTime() ?? 0,
       });
@@ -266,28 +295,76 @@ export default function TransfersInboxScreen() {
           e,
           at: parseIsoDate(e.createdAt)?.getTime() ?? 0,
         });
+      } else if (e.kind === "grant_owner_outcome") {
+        if (outgoingGrants.some((gg) => gg._id === e.grantId)) continue;
+        rows.push({
+          kind: "grantOutgoingLocal",
+          e,
+          at: parseIsoDate(e.createdAt)?.getTime() ?? 0,
+        });
       }
     }
     rows.sort((a, b) => b.at - a.at);
     return rows;
-  }, [activityLog, feed, grantRequests, requests, respondedGrantsFromApi]);
+  }, [
+    activityLog,
+    feed,
+    grantRequests,
+    outgoingGrants,
+    requests,
+    respondedGrantsFromApi,
+    respondedOutgoingGrantsFromApi,
+  ]);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const [inc, out, grants, activity] = await Promise.all([
+      const [inc, out, grantsIn, grantsOut, activity] = await Promise.all([
         listIncomingTransfers(),
         listOutgoingTransfers(),
         listIncomingGrants(),
+        listOutgoingGrants().catch(() => ({ data: { grants: [] as Grant[] } })),
         loadInboxActivity(),
       ]);
       const incReqs = inc.data.requests ?? [];
       const outReqs = out.data.requests ?? [];
+      const incomingGrantList = grantsIn.data.grants ?? [];
+      const outgoingGrantList = grantsOut.data.grants ?? [];
       setRequests(incReqs);
       setOutgoing(outReqs);
-      setGrantRequests(grants.data.grants ?? []);
-      setActivityLog(activity);
+      setGrantRequests(incomingGrantList);
+      setOutgoingGrants(outgoingGrantList);
+
+      const ownerLogged = new Set(
+        activity
+          .filter((e): e is Extract<InboxActivityEntry, { kind: "grant_owner_outcome" }> => {
+            return e.kind === "grant_owner_outcome";
+          })
+          .map((e) => e.grantId),
+      );
+
+      for (const g of outgoingGrantList) {
+        const s = (g.status ?? "").toLowerCase();
+        if (s !== "active" && s !== "declined") continue;
+        if (ownerLogged.has(g._id)) continue;
+        const outcome = s === "declined" ? "declined" : "accepted";
+        await appendInboxActivity({
+          v: 1,
+          id: `grant-owner-${g._id}-${outcome}`,
+          createdAt:
+            parseIsoDate(g.respondedAt)?.toISOString() ?? new Date().toISOString(),
+          kind: "grant_owner_outcome",
+          grantId: g._id,
+          belongingId: g.belongingId,
+          outcome,
+          toName: g.toUser?.name,
+          toEmail: g.toUser?.email,
+        });
+        ownerLogged.add(g._id);
+      }
+
+      setActivityLog(await loadInboxActivity());
 
       // When an outgoing transfer has been responded to, it is no longer “transferring”.
       for (const r of outReqs) {
@@ -672,6 +749,174 @@ export default function TransfersInboxScreen() {
                         {outcome === "accepted"
                           ? t("grants.acceptedBody")
                           : t("grants.inboxGrantDeclinedBody").replace("{{from}}", from)}
+                      </Text>
+                    </View>
+                  </View>
+                  {canOpen ? (
+                    <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
+                  ) : null}
+                </Container>
+              );
+            }
+            if (row.kind === "grantOutgoingApi") {
+              const g = row.g;
+              const outcome = grantInboxOutcome(g);
+              const name =
+                g.toUser?.name || g.toUser?.email || t("transfers.someone");
+              const createdAt = bestDateForGrant(g);
+              const canOpen = outcome === "accepted" && Boolean(g.belongingId);
+              const Container = canOpen ? Pressable : View;
+              const containerProps = canOpen
+                ? {
+                    onPress: () =>
+                      router.push(
+                        (`/belonging/${encodeURIComponent(g.belongingId)}` as unknown) as any,
+                      ),
+                    style: ({ pressed }: { pressed: boolean }) => [
+                      styles.card,
+                      outcome === "accepted"
+                        ? styles.cardOutgoingAccepted
+                        : styles.cardOutgoingDeclined,
+                      pressed && { opacity: 0.92 },
+                    ],
+                  }
+                : {
+                    style: [
+                      styles.card,
+                      outcome === "accepted"
+                        ? styles.cardOutgoingAccepted
+                        : styles.cardOutgoingDeclined,
+                    ],
+                  };
+              const acceptGreen = "#7CFFB9";
+              const label =
+                outcome === "accepted"
+                  ? t("grants.ownerInviteAcceptedBody").replace("{{name}}", name)
+                  : t("grants.ownerInviteDeclinedBody").replace("{{name}}", name);
+              return (
+                <Container key={`goa:${g._id}`} {...(containerProps as any)}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name={outcome === "accepted" ? "checkmark-circle" : "close-circle"}
+                        size={18}
+                        color={
+                          outcome === "accepted"
+                            ? acceptGreen
+                            : "rgba(255,120,120,0.95)"
+                        }
+                      />
+                      <Text style={styles.cardTitle}>
+                        {outcome === "accepted"
+                          ? t("grants.ownerInviteAcceptedTitle")
+                          : t("grants.ownerInviteDeclinedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(createdAt, t)}
+                    </Text>
+                  </View>
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      <Ionicons
+                        name="person-add"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {t("transfers.badgeOutgoing")}
+                      </Text>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {t("grants.title")}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {label}
+                      </Text>
+                    </View>
+                  </View>
+                  {canOpen ? (
+                    <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
+                  ) : null}
+                </Container>
+              );
+            }
+            if (row.kind === "grantOutgoingLocal") {
+              const e = row.e;
+              const outcome = e.outcome;
+              const name =
+                e.toName || e.toEmail || t("transfers.someone");
+              const createdAt = parseIsoDate(e.createdAt);
+              const canOpen = outcome === "accepted" && Boolean(e.belongingId);
+              const Container = canOpen ? Pressable : View;
+              const containerProps = canOpen
+                ? {
+                    onPress: () =>
+                      router.push(
+                        (`/belonging/${encodeURIComponent(e.belongingId!)}` as unknown) as any,
+                      ),
+                    style: ({ pressed }: { pressed: boolean }) => [
+                      styles.card,
+                      outcome === "accepted"
+                        ? styles.cardOutgoingAccepted
+                        : styles.cardOutgoingDeclined,
+                      pressed && { opacity: 0.92 },
+                    ],
+                  }
+                : {
+                    style: [
+                      styles.card,
+                      outcome === "accepted"
+                        ? styles.cardOutgoingAccepted
+                        : styles.cardOutgoingDeclined,
+                    ],
+                  };
+              const acceptGreen = "#7CFFB9";
+              const label =
+                outcome === "accepted"
+                  ? t("grants.ownerInviteAcceptedBody").replace("{{name}}", name)
+                  : t("grants.ownerInviteDeclinedBody").replace("{{name}}", name);
+              return (
+                <Container key={`gol:${e.id}`} {...(containerProps as any)}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name={outcome === "accepted" ? "checkmark-circle" : "close-circle"}
+                        size={18}
+                        color={
+                          outcome === "accepted"
+                            ? acceptGreen
+                            : "rgba(255,120,120,0.95)"
+                        }
+                      />
+                      <Text style={styles.cardTitle}>
+                        {outcome === "accepted"
+                          ? t("grants.ownerInviteAcceptedTitle")
+                          : t("grants.ownerInviteDeclinedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(createdAt, t)}
+                    </Text>
+                  </View>
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      <Ionicons
+                        name="person-add"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {t("transfers.badgeOutgoing")}
+                      </Text>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {t("grants.title")}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {label}
                       </Text>
                     </View>
                   </View>

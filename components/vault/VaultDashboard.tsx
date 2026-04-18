@@ -34,7 +34,7 @@ import {
   getBelongingTransferStatus,
   seedBelongingCache,
 } from "@/src/state/belongingCache";
-import { listIncomingGrants } from "@/src/api/grants";
+import { listIncomingGrants, listOutgoingGrants } from "@/src/api/grants";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
@@ -105,10 +105,11 @@ export default function VaultDashboard() {
       setLoading(true);
       void load();
       void (async () => {
-        const [incR, outR, grantR] = await Promise.allSettled([
+        const [incR, outR, grantInR, grantOutR] = await Promise.allSettled([
           listIncomingTransfers(),
           listOutgoingTransfers(),
           listIncomingGrants(),
+          listOutgoingGrants(),
         ]);
 
         let incomingPending = 0;
@@ -132,14 +133,24 @@ export default function VaultDashboard() {
         }
 
         let pendingGrants = 0;
-        if (grantR.status === "fulfilled") {
-          const grants = grantR.value.data.grants ?? [];
+        if (grantInR.status === "fulfilled") {
+          const grants = grantInR.value.data.grants ?? [];
           pendingGrants = grants.filter(
             (g) => (g.status ?? "pending") === "pending",
           ).length;
         }
 
-        setTransferCount(incomingPending + outgoingUnread + pendingGrants);
+        let pendingOutgoingGrants = 0;
+        if (grantOutR.status === "fulfilled") {
+          const og = grantOutR.value.data.grants ?? [];
+          pendingOutgoingGrants = og.filter(
+            (g) => (g.status ?? "pending") === "pending",
+          ).length;
+        }
+
+        setTransferCount(
+          incomingPending + outgoingUnread + pendingGrants + pendingOutgoingGrants,
+        );
       })();
     }, [load]),
   );

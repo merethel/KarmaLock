@@ -458,6 +458,10 @@ export const en = {
     acceptedBody: "You can now view the belonging in your vault.",
     inboxGrantDeclinedTitle: "Access declined",
     inboxGrantDeclinedBody: "You declined an invitation from {{from}}.",
+    ownerInviteAcceptedTitle: "Invitation accepted",
+    ownerInviteAcceptedBody: "{{name}} accepted access to your belonging.",
+    ownerInviteDeclinedTitle: "Invitation declined",
+    ownerInviteDeclinedBody: "{{name}} declined access to your belonging.",
   },
 
   sharing: {

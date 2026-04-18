@@ -456,6 +456,10 @@ export const da: Dictionary = {
     acceptedBody: "Du kan nu se ejendelen i dit vault.",
     inboxGrantDeclinedTitle: "Adgang afslået",
     inboxGrantDeclinedBody: "Du afviste en invitation fra {{from}}.",
+    ownerInviteAcceptedTitle: "Invitation accepteret",
+    ownerInviteAcceptedBody: "{{name}} accepterede adgang til din ejendel.",
+    ownerInviteDeclinedTitle: "Invitation afvist",
+    ownerInviteDeclinedBody: "{{name}} afviste adgang til din ejendel.",
   },
 
   sharing: {

@@ -26,7 +26,23 @@ export type InboxTransferActivityEntry = {
   title?: string;
 };
 
-export type InboxActivityEntry = InboxGrantActivityEntry | InboxTransferActivityEntry;
+/** Owner’s copy: someone accepted/declined an invite the owner sent (survives after API drops the grant row). */
+export type InboxGrantOwnerOutcomeEntry = {
+  v: 1;
+  id: string;
+  createdAt: string;
+  kind: "grant_owner_outcome";
+  grantId: string;
+  belongingId?: string;
+  outcome: "accepted" | "declined";
+  toName?: string;
+  toEmail?: string;
+};
+
+export type InboxActivityEntry =
+  | InboxGrantActivityEntry
+  | InboxTransferActivityEntry
+  | InboxGrantOwnerOutcomeEntry;
 
 function inboxFile(): File {
   return new File(Paths.document, FILE_NAME);
@@ -39,6 +55,10 @@ function isActivityEntry(x: unknown): x is InboxActivityEntry {
   if (o.kind === "grant_response" && typeof o.grantId === "string") return true;
   if (o.kind === "transfer_response" && typeof o.transferId === "string")
     return true;
+  if (o.kind === "grant_owner_outcome" && typeof o.grantId === "string") {
+    const oc = o.outcome;
+    return oc === "accepted" || oc === "declined";
+  }
   return false;
 }
 

@@ -9,7 +9,7 @@ import { listMyBelongings } from "@/src/api/belongings";
 import { scanChip } from "@/src/api/endpoints";
 import { ApiError } from "@/src/api/client";
 import { getUser } from "@/src/auth/session";
-import { listIncomingGrants } from "@/src/api/grants";
+import { listIncomingGrants, listOutgoingGrants } from "@/src/api/grants";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
@@ -71,10 +71,11 @@ export default function HomeScreen() {
     useCallback(() => {
       void refreshStatus();
       void (async () => {
-        const [incR, outR, grantR] = await Promise.allSettled([
+        const [incR, outR, grantInR, grantOutR] = await Promise.allSettled([
           listIncomingTransfers(),
           listOutgoingTransfers(),
           listIncomingGrants(),
+          listOutgoingGrants(),
         ]);
 
         let incomingPending = 0;
@@ -98,14 +99,24 @@ export default function HomeScreen() {
         }
 
         let pendingGrants = 0;
-        if (grantR.status === "fulfilled") {
-          const grants = grantR.value.data.grants ?? [];
+        if (grantInR.status === "fulfilled") {
+          const grants = grantInR.value.data.grants ?? [];
           pendingGrants = grants.filter(
             (g) => (g.status ?? "pending") === "pending",
           ).length;
         }
 
-        setTransferCount(incomingPending + outgoingUnread + pendingGrants);
+        let pendingOutgoingGrants = 0;
+        if (grantOutR.status === "fulfilled") {
+          const og = grantOutR.value.data.grants ?? [];
+          pendingOutgoingGrants = og.filter(
+            (g) => (g.status ?? "pending") === "pending",
+          ).length;
+        }
+
+        setTransferCount(
+          incomingPending + outgoingUnread + pendingGrants + pendingOutgoingGrants,
+        );
       })();
     }, [refreshStatus]),
   );
