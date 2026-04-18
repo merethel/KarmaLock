@@ -35,6 +35,11 @@ import {
   seedBelongingCache,
 } from "@/src/state/belongingCache";
 import { listIncomingGrants, listOutgoingGrants } from "@/src/api/grants";
+import { loadInboxActivity } from "@/src/notifications/inboxActivityLog";
+import {
+  countUnseenOwnerGrantOutcomes,
+  loadSeenOwnerGrantIds,
+} from "@/src/notifications/ownerGrantBellSeen";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
@@ -105,11 +110,13 @@ export default function VaultDashboard() {
       setLoading(true);
       void load();
       void (async () => {
-        const [incR, outR, grantInR, grantOutR] = await Promise.allSettled([
+        const [incR, outR, grantInR, grantOutR, activityR, seenR] = await Promise.allSettled([
           listIncomingTransfers(),
           listOutgoingTransfers(),
           listIncomingGrants(),
           listOutgoingGrants(),
+          loadInboxActivity(),
+          loadSeenOwnerGrantIds(),
         ]);
 
         let incomingPending = 0;
@@ -140,16 +147,21 @@ export default function VaultDashboard() {
           ).length;
         }
 
-        let pendingOutgoingGrants = 0;
-        if (grantOutR.status === "fulfilled") {
-          const og = grantOutR.value.data.grants ?? [];
-          pendingOutgoingGrants = og.filter(
-            (g) => (g.status ?? "pending") === "pending",
-          ).length;
-        }
+        const outgoingGrantList =
+          grantOutR.status === "fulfilled" ? (grantOutR.value.data.grants ?? []) : [];
+
+        const seenOwnerGrants =
+          seenR.status === "fulfilled" ? seenR.value : new Set<string>();
+        const activityEntries =
+          activityR.status === "fulfilled" ? activityR.value : [];
+        const ownerGrantBell = countUnseenOwnerGrantOutcomes(
+          seenOwnerGrants,
+          outgoingGrantList,
+          activityEntries,
+        );
 
         setTransferCount(
-          incomingPending + outgoingUnread + pendingGrants + pendingOutgoingGrants,
+          incomingPending + outgoingUnread + pendingGrants + ownerGrantBell,
         );
       })();
     }, [load]),

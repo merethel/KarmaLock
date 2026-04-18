@@ -23,6 +23,10 @@ import {
   loadInboxActivity,
   type InboxActivityEntry,
 } from "@/src/notifications/inboxActivityLog";
+import {
+  markOwnerGrantIdsSeen,
+  ownerGrantIdsToMarkSeenOnInboxOpen,
+} from "@/src/notifications/ownerGrantBellSeen";
 import { useI18n } from "@/src/i18n/context";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
@@ -364,7 +368,11 @@ export default function TransfersInboxScreen() {
         ownerLogged.add(g._id);
       }
 
-      setActivityLog(await loadInboxActivity());
+      const finalActivity = await loadInboxActivity();
+      setActivityLog(finalActivity);
+      await markOwnerGrantIdsSeen(
+        ownerGrantIdsToMarkSeenOnInboxOpen(outgoingGrantList, finalActivity),
+      );
 
       // When an outgoing transfer has been responded to, it is no longer “transferring”.
       for (const r of outReqs) {
