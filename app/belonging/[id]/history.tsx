@@ -1,5 +1,5 @@
-import { Button } from "@/components/common_components/Button";
 import { BackButton } from "@/components/common_components/BackButton";
+import { Button } from "@/components/common_components/Button";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { palette } from "@/constants/Colors";
@@ -14,9 +14,8 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   StyleSheet,
-  View,
+  View
 } from "react-native";
 
 function parseIsoDate(value: unknown): Date | null {
@@ -34,12 +33,24 @@ function formatTimestamp(
   const diffMs = now - d.getTime();
   const min = Math.round(diffMs / 60_000);
   if (min < 1) return t("vault.syncedJustNow");
-  if (min < 60) return t("vault.syncedMinutesAgo").replace("{{count}}", String(min));
+  if (min < 60)
+    return t("vault.syncedMinutesAgo").replace("{{count}}", String(min));
   const h = Math.round(min / 60);
   if (h < 24) return t("vault.syncedHoursAgo").replace("{{count}}", String(h));
   const days = Math.round(h / 24);
-  if (days < 14) return t("vault.syncedDaysAgo").replace("{{count}}", String(days));
+  if (days < 14)
+    return t("vault.syncedDaysAgo").replace("{{count}}", String(days));
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function formatCreatedDay(d: Date | null): string {
+  if (!d) return "—";
+  return d.toLocaleDateString(undefined, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function toComparable(value: unknown): unknown {
@@ -73,7 +84,9 @@ function valuesEqual(a: unknown, b: unknown): boolean {
   }
 }
 
-function safeChanges(meta: unknown): Array<{ field: string; from?: unknown; to?: unknown }> {
+function safeChanges(
+  meta: unknown,
+): Array<{ field: string; from?: unknown; to?: unknown }> {
   if (!meta || typeof meta !== "object") return [];
   const m = meta as Record<string, unknown>;
   const raw = m.changes;
@@ -130,6 +143,11 @@ function safeOwnerLine(meta: unknown): { from?: string; to?: string } | null {
 
   if (!fromName && !toName) return null;
   return { from: fromName, to: toName };
+}
+
+function isGrantEventType(type: string): boolean {
+  const t = (type || "").toLowerCase();
+  return t.includes("grant");
 }
 
 function safeNote(meta: unknown): string | null {
@@ -207,7 +225,11 @@ export default function BelongingHistoryScreen() {
     if (!idStr || !cursor || moreBusy) return;
     try {
       setMoreBusy(true);
-      const res = await getBelongingHistory({ belongingId: idStr, cursor, limit: 50 });
+      const res = await getBelongingHistory({
+        belongingId: idStr,
+        cursor,
+        limit: 50,
+      });
       const list = res.data.events ?? [];
       const merged = [...events, ...list];
       merged.sort((a, b) => {
@@ -232,10 +254,13 @@ export default function BelongingHistoryScreen() {
     }, [load]),
   );
 
-  const empty = useMemo(() => !loading && events.length === 0 && !error, [error, events.length, loading]);
+  const empty = useMemo(
+    () => !loading && events.length === 0 && !error,
+    [error, events.length, loading],
+  );
 
   return (
-    <Screen style={styles.screen} withTabBarInset={false}>
+    <Screen style={styles.screen} withTabBarInset={false} dismissKeyboardOnPress={false}>
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} topInset={0} />
         <Text mono style={styles.headerTitle}>
@@ -260,11 +285,18 @@ export default function BelongingHistoryScreen() {
         </View>
       ) : empty ? (
         <View style={styles.center}>
-          <Ionicons name="time-outline" size={28} color="rgba(255,255,255,0.25)" />
+          <Ionicons
+            name="time-outline"
+            size={28}
+            color="rgba(255,255,255,0.25)"
+          />
           <Text style={{ marginTop: 10, fontSize: 18, fontWeight: "800" }}>
             {t("vault.editHistoryEmptyTitle")}
           </Text>
-          <Text dim style={{ marginTop: 8, textAlign: "center", lineHeight: 22 }}>
+          <Text
+            dim
+            style={{ marginTop: 8, textAlign: "center", lineHeight: 22 }}
+          >
             {t("vault.editHistoryEmptyBody")}
           </Text>
         </View>
@@ -272,10 +304,13 @@ export default function BelongingHistoryScreen() {
         <FlatList
           data={events}
           keyExtractor={(e) => e._id}
+          style={{ flex: 1 }}
           contentContainerStyle={{ paddingTop: 10, paddingBottom: 24, gap: 12 }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => {
             const when = formatTimestamp(parseIsoDate(item.createdAt), t);
+            const createdAt = parseIsoDate(item.createdAt);
             const meta = normalizeMetadata(item.metadata);
             const changes = safeChanges(meta);
             const actorName =
@@ -283,6 +318,7 @@ export default function BelongingHistoryScreen() {
             const ownerLine = item.type.includes("transfer")
               ? safeOwnerLine(meta)
               : null;
+            const grantLine = isGrantEventType(item.type) ? safeOwnerLine(meta) : null;
             const note = safeNoteFromEvent(item);
             const isTransfer = item.type.includes("transfer");
 
@@ -291,9 +327,15 @@ export default function BelongingHistoryScreen() {
                 ? t("vault.historyCreated")
                 : item.type === "belonging.updated"
                   ? t("vault.historyUpdated")
+                  : isGrantEventType(item.type)
+                    ? t("vault.historyGrant")
                   : item.type.includes("transfer")
                     ? t("vault.historyTransfer")
                     : t("vault.historyEvent");
+
+            const isCreated = item.type === "belonging.created";
+            const createdByName = actorName;
+            const createdDay = formatCreatedDay(createdAt);
 
             return (
               <View style={styles.card}>
@@ -304,17 +346,54 @@ export default function BelongingHistoryScreen() {
                   </Text>
                 </View>
 
-                {actorName ? (
+                {!isCreated && actorName ? (
                   <Text dim style={styles.cardMeta}>
                     {t("vault.historyBy").replace("{{name}}", actorName)}
                   </Text>
                 ) : null}
 
+                {isCreated ? (
+                  <View style={{ marginTop: 8, gap: 6 }}>
+                    <Text dim style={styles.cardMeta}>
+                      {t("vault.historyCreatedOn").replace("{{date}}", createdDay)}
+                    </Text>
+                    {createdByName ? (
+                      <Text dim style={styles.cardMeta}>
+                        {t("vault.historyCreatedBy").replace("{{name}}", createdByName)}
+                      </Text>
+                    ) : (
+                      <Text dim style={styles.cardMeta}>
+                        {t("vault.historyCreatedByUnknown")}
+                      </Text>
+                    )}
+                  </View>
+                ) : null}
+
                 {ownerLine ? (
-                  <Text dim style={[styles.cardMeta, actorName ? { marginTop: 6 } : null]}>
+                  <Text
+                    dim
+                    style={[
+                      styles.cardMeta,
+                      actorName && !isCreated ? { marginTop: 6 } : null,
+                    ]}
+                  >
                     {t("vault.historyOwnership")
                       .replace("{{from}}", ownerLine.from ?? "—")
                       .replace("{{to}}", ownerLine.to ?? "—")}
+                  </Text>
+                ) : null}
+
+                {grantLine ? (
+                  <Text
+                    dim
+                    style={[
+                      styles.cardMeta,
+                      actorName && !isCreated ? { marginTop: 6 } : null,
+                    ]}
+                  >
+                    {t("vault.historyGrantLine")
+                      .replace("{{from}}", grantLine.from ?? "—")
+                      .replace("{{to}}", grantLine.to ?? "—")}
                   </Text>
                 ) : null}
 
@@ -323,7 +402,9 @@ export default function BelongingHistoryScreen() {
                     dim
                     style={[
                       styles.cardMeta,
-                      actorName || ownerLine ? { marginTop: 6 } : null,
+                      (!isCreated && actorName) || ownerLine || grantLine
+                        ? { marginTop: 6 }
+                        : null,
                     ]}
                   >
                     {note
@@ -392,7 +473,12 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.9)",
     fontWeight: "800",
   },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
   error: { color: "tomato", textAlign: "center" },
   card: {
     backgroundColor: "rgba(255,255,255,0.06)",
@@ -401,7 +487,12 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
     padding: 16,
   },
-  cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  cardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   cardTitle: { fontSize: 16, fontWeight: "900", flex: 1 },
   cardTime: { fontSize: 10, letterSpacing: 1.6, opacity: 0.65 },
   cardMeta: { marginTop: 6, lineHeight: 18 },
@@ -409,4 +500,3 @@ const styles = StyleSheet.create({
   changeField: { fontSize: 10, letterSpacing: 1.6, opacity: 0.65 },
   changeValue: { lineHeight: 20 },
 });
-
