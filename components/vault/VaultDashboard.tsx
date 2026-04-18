@@ -34,6 +34,7 @@ import {
   getBelongingTransferStatus,
   seedBelongingCache,
 } from "@/src/state/belongingCache";
+import { listIncomingGrants } from "@/src/api/grants";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
@@ -104,34 +105,41 @@ export default function VaultDashboard() {
       setLoading(true);
       void load();
       void (async () => {
-        try {
-          const res = await listIncomingTransfers();
-          const reqs = res.data.requests ?? [];
-          const incomingPending = reqs.filter(
+        const [incR, outR, grantR] = await Promise.allSettled([
+          listIncomingTransfers(),
+          listOutgoingTransfers(),
+          listIncomingGrants(),
+        ]);
+
+        let incomingPending = 0;
+        if (incR.status === "fulfilled") {
+          const reqs = incR.value.data.requests ?? [];
+          incomingPending = reqs.filter(
             (r) => (r.status ?? "pending") === "pending",
           ).length;
-
-          // Sender-side unread updates: accepted/declined outgoing.
-          let outgoingUnread = 0;
-          try {
-            const out = await listOutgoingTransfers();
-            const outgoing = out.data.requests ?? [];
-            for (const r of outgoing) {
-              const status = (r.status ?? "pending") as string;
-              if (status !== "accepted" && status !== "declined") continue;
-              // Transfer completed/declined → clear local “transferring”.
-              setBelongingTransferStatus(r.belongingId, null);
-              if (r.seenBySenderAt) continue;
-              outgoingUnread += 1;
-            }
-          } catch {
-            // ignore
-          }
-
-          setTransferCount(incomingPending + outgoingUnread);
-        } catch {
-          // ignore
         }
+
+        let outgoingUnread = 0;
+        if (outR.status === "fulfilled") {
+          const outgoing = outR.value.data.requests ?? [];
+          for (const r of outgoing) {
+            const status = (r.status ?? "pending") as string;
+            if (status !== "accepted" && status !== "declined") continue;
+            setBelongingTransferStatus(r.belongingId, null);
+            if (r.seenBySenderAt) continue;
+            outgoingUnread += 1;
+          }
+        }
+
+        let pendingGrants = 0;
+        if (grantR.status === "fulfilled") {
+          const grants = grantR.value.data.grants ?? [];
+          pendingGrants = grants.filter(
+            (g) => (g.status ?? "pending") === "pending",
+          ).length;
+        }
+
+        setTransferCount(incomingPending + outgoingUnread + pendingGrants);
       })();
     }, [load]),
   );
