@@ -39,10 +39,23 @@ export type InboxGrantOwnerOutcomeEntry = {
   toEmail?: string;
 };
 
+/** Collaborator: owner revoked access (survives after API drops the grant row). */
+export type InboxGrantAccessRevokedEntry = {
+  v: 1;
+  id: string;
+  createdAt: string;
+  kind: "grant_access_revoked";
+  grantId: string;
+  belongingId?: string;
+  fromName?: string;
+  fromEmail?: string;
+};
+
 export type InboxActivityEntry =
   | InboxGrantActivityEntry
   | InboxTransferActivityEntry
-  | InboxGrantOwnerOutcomeEntry;
+  | InboxGrantOwnerOutcomeEntry
+  | InboxGrantAccessRevokedEntry;
 
 function inboxFile(): File {
   return new File(Paths.document, FILE_NAME);
@@ -59,6 +72,7 @@ function isActivityEntry(x: unknown): x is InboxActivityEntry {
     const oc = o.outcome;
     return oc === "accepted" || oc === "declined";
   }
+  if (o.kind === "grant_access_revoked" && typeof o.grantId === "string") return true;
   return false;
 }
 

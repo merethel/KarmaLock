@@ -15,6 +15,11 @@ import {
   countUnseenOwnerGrantOutcomes,
   loadSeenOwnerGrantIds,
 } from "@/src/notifications/ownerGrantBellSeen";
+import {
+  countUnseenRecipientGrantRevoked,
+  loadRecipientGrantRevokedSeenIds,
+} from "@/src/notifications/recipientGrantRevokedBellSeen";
+import { loadSelfRevokedGrantIds } from "@/src/notifications/selfRevokedGrantIds";
 import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import { scanChipUid } from "@/src/nfc/scanChipUid";
@@ -76,14 +81,17 @@ export default function HomeScreen() {
     useCallback(() => {
       void refreshStatus();
       void (async () => {
-        const [incR, outR, grantInR, grantOutR, activityR, seenR] = await Promise.allSettled([
-          listIncomingTransfers(),
-          listOutgoingTransfers(),
-          listIncomingGrants(),
-          listOutgoingGrants(),
-          loadInboxActivity(),
-          loadSeenOwnerGrantIds(),
-        ]);
+        const [incR, outR, grantInR, grantOutR, activityR, seenR, seenRevokedR, selfRvR] =
+          await Promise.allSettled([
+            listIncomingTransfers(),
+            listOutgoingTransfers(),
+            listIncomingGrants(),
+            listOutgoingGrants(),
+            loadInboxActivity(),
+            loadSeenOwnerGrantIds(),
+            loadRecipientGrantRevokedSeenIds(),
+            loadSelfRevokedGrantIds(),
+          ]);
 
         let incomingPending = 0;
         if (incR.status === "fulfilled") {
@@ -105,13 +113,13 @@ export default function HomeScreen() {
           }
         }
 
+        const incomingGrantList =
+          grantInR.status === "fulfilled" ? (grantInR.value.data.grants ?? []) : [];
+
         let pendingGrants = 0;
-        if (grantInR.status === "fulfilled") {
-          const grants = grantInR.value.data.grants ?? [];
-          pendingGrants = grants.filter(
-            (g) => (g.status ?? "pending") === "pending",
-          ).length;
-        }
+        pendingGrants = incomingGrantList.filter(
+          (g) => (g.status ?? "pending") === "pending",
+        ).length;
 
         const outgoingGrantList =
           grantOutR.status === "fulfilled" ? (grantOutR.value.data.grants ?? []) : [];
@@ -126,8 +134,23 @@ export default function HomeScreen() {
           activityEntries,
         );
 
+        const seenRecipientRevoked =
+          seenRevokedR.status === "fulfilled" ? seenRevokedR.value : new Set<string>();
+        const selfRevokedIds =
+          selfRvR.status === "fulfilled" ? selfRvR.value : new Set<string>();
+        const recipientRevokedBell = countUnseenRecipientGrantRevoked(
+          seenRecipientRevoked,
+          selfRevokedIds,
+          incomingGrantList,
+          activityEntries,
+        );
+
         setTransferCount(
-          incomingPending + outgoingUnread + pendingGrants + ownerGrantBell,
+          incomingPending +
+            outgoingUnread +
+            pendingGrants +
+            ownerGrantBell +
+            recipientRevokedBell,
         );
       })();
     }, [refreshStatus]),

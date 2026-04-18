@@ -462,6 +462,9 @@ export const en = {
     ownerInviteAcceptedBody: "{{name}} accepted access to your belonging.",
     ownerInviteDeclinedTitle: "Invitation declined",
     ownerInviteDeclinedBody: "{{name}} declined access to your belonging.",
+    accessRemovedTitle: "Access removed",
+    accessRemovedBody: "{{from}} removed your access to this belonging.",
+    badgeAccessRemoved: "ACCESS REMOVED",
   },
 
   sharing: {

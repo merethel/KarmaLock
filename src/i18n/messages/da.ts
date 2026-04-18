@@ -460,6 +460,9 @@ export const da: Dictionary = {
     ownerInviteAcceptedBody: "{{name}} accepterede adgang til din ejendel.",
     ownerInviteDeclinedTitle: "Invitation afvist",
     ownerInviteDeclinedBody: "{{name}} afviste adgang til din ejendel.",
+    accessRemovedTitle: "Adgang fjernet",
+    accessRemovedBody: "{{from}} fjernede din adgang til denne ejendel.",
+    badgeAccessRemoved: "ADGANG FJERNET",
   },
 
   sharing: {

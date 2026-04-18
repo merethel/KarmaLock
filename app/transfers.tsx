@@ -27,6 +27,11 @@ import {
   markOwnerGrantIdsSeen,
   ownerGrantIdsToMarkSeenOnInboxOpen,
 } from "@/src/notifications/ownerGrantBellSeen";
+import {
+  markRecipientGrantRevokedSeen,
+  recipientRevokedIdsToMarkSeenOnInboxOpen,
+} from "@/src/notifications/recipientGrantRevokedBellSeen";
+import { loadSelfRevokedGrantIds } from "@/src/notifications/selfRevokedGrantIds";
 import { useI18n } from "@/src/i18n/context";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,6 +61,14 @@ function bestDateForTransfer(t: TransferRequest): Date | null {
 
 function bestDateForGrant(g: Grant): Date | null {
   return parseIsoDate(g.respondedAt) || parseIsoDate(g.createdAt);
+}
+
+function bestDateForRevokedGrant(g: Grant): Date | null {
+  return (
+    parseIsoDate(g.revokedAt) ||
+    parseIsoDate(g.respondedAt) ||
+    parseIsoDate(g.createdAt)
+  );
 }
 
 function grantInboxOutcome(g: Grant): "accepted" | "declined" {
@@ -140,6 +153,9 @@ export default function TransfersInboxScreen() {
   const [grantRequests, setGrantRequests] = useState<Grant[]>([]);
   const [outgoingGrants, setOutgoingGrants] = useState<Grant[]>([]);
   const [activityLog, setActivityLog] = useState<InboxActivityEntry[]>([]);
+  const [selfRevokedGrantIds, setSelfRevokedGrantIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [busyId, setBusyId] = useState<string>("");
 
   const pending = useMemo(
@@ -248,6 +264,15 @@ export default function TransfersInboxScreen() {
     [outgoingGrants],
   );
 
+  const revokedIncomingGrantsFromApi = useMemo(
+    () =>
+      (grantRequests ?? []).filter((g) => {
+        if ((g.status ?? "").toLowerCase() !== "revoked") return false;
+        return !selfRevokedGrantIds.has(g._id);
+      }),
+    [grantRequests, selfRevokedGrantIds],
+  );
+
   const mergedRows = useMemo(() => {
     type FeedItem = (typeof feed)[number];
     type Merged =
@@ -263,6 +288,12 @@ export default function TransfersInboxScreen() {
       | {
           kind: "transferLocal";
           e: Extract<InboxActivityEntry, { kind: "transfer_response" }>;
+          at: number;
+        }
+      | { kind: "grantRevokedApi"; g: Grant; at: number }
+      | {
+          kind: "grantRevokedLocal";
+          e: Extract<InboxActivityEntry, { kind: "grant_access_revoked" }>;
           at: number;
         };
 
@@ -282,6 +313,13 @@ export default function TransfersInboxScreen() {
         kind: "grantOutgoingApi",
         g,
         at: bestDateForGrant(g)?.getTime() ?? 0,
+      });
+    }
+    for (const g of revokedIncomingGrantsFromApi) {
+      rows.push({
+        kind: "grantRevokedApi",
+        g,
+        at: bestDateForRevokedGrant(g)?.getTime() ?? 0,
       });
     }
     for (const e of activityLog) {
@@ -306,6 +344,20 @@ export default function TransfersInboxScreen() {
           e,
           at: parseIsoDate(e.createdAt)?.getTime() ?? 0,
         });
+      } else if (e.kind === "grant_access_revoked") {
+        if (selfRevokedGrantIds.has(e.grantId)) continue;
+        if (
+          grantRequests.some(
+            (gg) =>
+              gg._id === e.grantId && (gg.status ?? "").toLowerCase() === "revoked",
+          )
+        )
+          continue;
+        rows.push({
+          kind: "grantRevokedLocal",
+          e,
+          at: parseIsoDate(e.createdAt)?.getTime() ?? 0,
+        });
       }
     }
     rows.sort((a, b) => b.at - a.at);
@@ -318,27 +370,58 @@ export default function TransfersInboxScreen() {
     requests,
     respondedGrantsFromApi,
     respondedOutgoingGrantsFromApi,
+    revokedIncomingGrantsFromApi,
+    selfRevokedGrantIds,
   ]);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const [inc, out, grantsIn, grantsOut, activity] = await Promise.all([
+      const [inc, out, grantsIn, grantsOut, activity, selfRvIds] = await Promise.all([
         listIncomingTransfers(),
         listOutgoingTransfers(),
         listIncomingGrants(),
         listOutgoingGrants().catch(() => ({ data: { grants: [] as Grant[] } })),
         loadInboxActivity(),
+        loadSelfRevokedGrantIds(),
       ]);
       const incReqs = inc.data.requests ?? [];
       const outReqs = out.data.requests ?? [];
       const incomingGrantList = grantsIn.data.grants ?? [];
       const outgoingGrantList = grantsOut.data.grants ?? [];
+      setSelfRevokedGrantIds(selfRvIds);
       setRequests(incReqs);
       setOutgoing(outReqs);
       setGrantRequests(incomingGrantList);
       setOutgoingGrants(outgoingGrantList);
+
+      const revokedLogged = new Set(
+        activity
+          .filter(
+            (e): e is Extract<InboxActivityEntry, { kind: "grant_access_revoked" }> =>
+              e.kind === "grant_access_revoked",
+          )
+          .map((e) => e.grantId),
+      );
+
+      for (const g of incomingGrantList) {
+        if ((g.status ?? "").toLowerCase() !== "revoked") continue;
+        if (selfRvIds.has(g._id)) continue;
+        if (revokedLogged.has(g._id)) continue;
+        await appendInboxActivity({
+          v: 1,
+          id: `grant-revoked-${g._id}`,
+          createdAt:
+            bestDateForRevokedGrant(g)?.toISOString() ?? new Date().toISOString(),
+          kind: "grant_access_revoked",
+          grantId: g._id,
+          belongingId: g.belongingId,
+          fromName: g.fromUser?.name,
+          fromEmail: g.fromUser?.email,
+        });
+        revokedLogged.add(g._id);
+      }
 
       const ownerLogged = new Set(
         activity
@@ -372,6 +455,9 @@ export default function TransfersInboxScreen() {
       setActivityLog(finalActivity);
       await markOwnerGrantIdsSeen(
         ownerGrantIdsToMarkSeenOnInboxOpen(outgoingGrantList, finalActivity),
+      );
+      await markRecipientGrantRevokedSeen(
+        recipientRevokedIdsToMarkSeenOnInboxOpen(incomingGrantList, finalActivity),
       );
 
       // When an outgoing transfer has been responded to, it is no longer “transferring”.
@@ -932,6 +1018,102 @@ export default function TransfersInboxScreen() {
                     <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
                   ) : null}
                 </Container>
+              );
+            }
+            if (row.kind === "grantRevokedApi") {
+              const g = row.g;
+              const from =
+                g.fromUser?.name || g.fromUser?.email || t("transfers.someone");
+              const createdAt = bestDateForRevokedGrant(g);
+              return (
+                <View
+                  key={`gra:${g._id}`}
+                  style={[styles.card, styles.cardOutgoingDeclined]}
+                >
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name="remove-circle"
+                        size={18}
+                        color="rgba(255,120,120,0.95)"
+                      />
+                      <Text style={styles.cardTitle}>
+                        {t("grants.accessRemovedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(createdAt, t)}
+                    </Text>
+                  </View>
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      <Ionicons
+                        name="remove-circle-outline"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {t("grants.badgeAccessRemoved")}
+                      </Text>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {t("grants.title")}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {t("grants.accessRemovedBody").replace("{{from}}", from)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            }
+            if (row.kind === "grantRevokedLocal") {
+              const e = row.e;
+              const from =
+                e.fromName || e.fromEmail || t("transfers.someone");
+              const createdAt = parseIsoDate(e.createdAt);
+              return (
+                <View
+                  key={`grl:${e.id}`}
+                  style={[styles.card, styles.cardOutgoingDeclined]}
+                >
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name="remove-circle"
+                        size={18}
+                        color="rgba(255,120,120,0.95)"
+                      />
+                      <Text style={styles.cardTitle}>
+                        {t("grants.accessRemovedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(createdAt, t)}
+                    </Text>
+                  </View>
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      <Ionicons
+                        name="remove-circle-outline"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {t("grants.badgeAccessRemoved")}
+                      </Text>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {t("grants.title")}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {t("grants.accessRemovedBody").replace("{{from}}", from)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               );
             }
             if (row.kind === "transferLocal") {

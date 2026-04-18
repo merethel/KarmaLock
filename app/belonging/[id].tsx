@@ -20,6 +20,7 @@ import {
   updateBelonging,
 } from "@/src/api/belongings";
 import { revokeGrant } from "@/src/api/grants";
+import { recordSelfRevokedGrantId } from "@/src/notifications/selfRevokedGrantIds";
 import { cancelTransfer, listOutgoingTransfers } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
 import {
@@ -639,6 +640,7 @@ export default function BelongingDetailsScreen() {
             if (!item?.grantId) return;
             setGrantBusy(true);
             await revokeGrant(item.grantId);
+            await recordSelfRevokedGrantId(item.grantId);
             router.replace("/vault");
           } catch (e: unknown) {
             Alert.alert(
