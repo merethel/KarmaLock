@@ -456,6 +456,8 @@ export const en = {
     decline: "Decline",
     acceptedTitle: "Access granted",
     acceptedBody: "You can now view the belonging in your vault.",
+    inboxGrantDeclinedTitle: "Access declined",
+    inboxGrantDeclinedBody: "You declined an invitation from {{from}}.",
   },
 
   sharing: {

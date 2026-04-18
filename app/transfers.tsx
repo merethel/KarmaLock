@@ -13,6 +13,11 @@ import {
   markOutgoingTransfersSeen,
 } from "@/src/api/transfers";
 import { acceptGrant, declineGrant, listIncomingGrants } from "@/src/api/grants";
+import {
+  appendInboxActivity,
+  loadInboxActivity,
+  type InboxActivityEntry,
+} from "@/src/notifications/inboxActivityLog";
 import { useI18n } from "@/src/i18n/context";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,6 +43,16 @@ function bestDateForTransfer(t: TransferRequest): Date | null {
     parseIsoDate(t.updatedAt) ||
     parseIsoDate(t.createdAt)
   );
+}
+
+function bestDateForGrant(g: Grant): Date | null {
+  return parseIsoDate(g.respondedAt) || parseIsoDate(g.createdAt);
+}
+
+function grantInboxOutcome(g: Grant): "accepted" | "declined" {
+  const s = (g.status ?? "").toLowerCase();
+  if (s === "declined") return "declined";
+  return "accepted";
 }
 
 function formatTimestamp(
@@ -114,6 +129,7 @@ export default function TransfersInboxScreen() {
   const [requests, setRequests] = useState<TransferRequest[]>([]);
   const [outgoing, setOutgoing] = useState<TransferRequest[]>([]);
   const [grantRequests, setGrantRequests] = useState<Grant[]>([]);
+  const [activityLog, setActivityLog] = useState<InboxActivityEntry[]>([]);
   const [busyId, setBusyId] = useState<string>("");
 
   const pending = useMemo(
@@ -202,20 +218,76 @@ export default function TransfersInboxScreen() {
     return items;
   }, [incomingUpdates, outgoingUpdates, pending]);
 
+  const respondedGrantsFromApi = useMemo(
+    () =>
+      (grantRequests ?? []).filter((g) => {
+        const s = (g.status ?? "").toLowerCase();
+        if (s === "revoked") return false;
+        return s === "accepted" || s === "declined" || s === "active";
+      }),
+    [grantRequests],
+  );
+
+  const mergedRows = useMemo(() => {
+    type FeedItem = (typeof feed)[number];
+    type Merged =
+      | { kind: "feed"; item: FeedItem; at: number }
+      | { kind: "grantApi"; g: Grant; at: number }
+      | { kind: "grantLocal"; e: Extract<InboxActivityEntry, { kind: "grant_response" }>; at: number }
+      | {
+          kind: "transferLocal";
+          e: Extract<InboxActivityEntry, { kind: "transfer_response" }>;
+          at: number;
+        };
+
+    const rows: Merged[] = [];
+    for (const it of feed) {
+      rows.push({ kind: "feed", item: it, at: it.createdAt?.getTime() ?? 0 });
+    }
+    for (const g of respondedGrantsFromApi) {
+      rows.push({
+        kind: "grantApi",
+        g,
+        at: bestDateForGrant(g)?.getTime() ?? 0,
+      });
+    }
+    for (const e of activityLog) {
+      if (e.kind === "grant_response") {
+        if (grantRequests.some((gg) => gg._id === e.grantId)) continue;
+        rows.push({
+          kind: "grantLocal",
+          e,
+          at: parseIsoDate(e.createdAt)?.getTime() ?? 0,
+        });
+      } else if (e.kind === "transfer_response") {
+        if (requests.some((r) => r._id === e.transferId)) continue;
+        rows.push({
+          kind: "transferLocal",
+          e,
+          at: parseIsoDate(e.createdAt)?.getTime() ?? 0,
+        });
+      }
+    }
+    rows.sort((a, b) => b.at - a.at);
+    return rows;
+  }, [activityLog, feed, grantRequests, requests, respondedGrantsFromApi]);
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const [inc, out, grants] = await Promise.all([
+      const [inc, out, grants, activity] = await Promise.all([
         listIncomingTransfers(),
         listOutgoingTransfers(),
         listIncomingGrants(),
+        loadInboxActivity(),
       ]);
       const incReqs = inc.data.requests ?? [];
       const outReqs = out.data.requests ?? [];
       setRequests(incReqs);
       setOutgoing(outReqs);
       setGrantRequests(grants.data.grants ?? []);
+      setActivityLog(activity);
 
       // When an outgoing transfer has been responded to, it is no longer “transferring”.
       for (const r of outReqs) {
@@ -265,13 +337,23 @@ export default function TransfersInboxScreen() {
   );
 
   const onAccept = useCallback(
-    async (id: string) => {
+    async (r: TransferRequest) => {
       try {
-        setBusyId(id);
-        const res = await acceptTransfer(id);
+        setBusyId(r._id);
+        const res = await acceptTransfer(r._id);
         // Recipient accepted → the item is now owned by this user, so it must not
         // remain in a local “transferring” state.
         setBelongingTransferStatus(res.data.request.belongingId, null);
+        await appendInboxActivity({
+          v: 1,
+          id: `transfer-${r._id}-accepted`,
+          createdAt: new Date().toISOString(),
+          kind: "transfer_response",
+          transferId: r._id,
+          belongingId: r.belongingId,
+          outcome: "accepted",
+          title: r.title,
+        });
         await load();
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : t("errors.failed"));
@@ -283,10 +365,20 @@ export default function TransfersInboxScreen() {
   );
 
   const onDecline = useCallback(
-    async (id: string) => {
+    async (r: TransferRequest) => {
       try {
-        setBusyId(id);
-        await declineTransfer(id);
+        setBusyId(r._id);
+        await declineTransfer(r._id);
+        await appendInboxActivity({
+          v: 1,
+          id: `transfer-${r._id}-declined`,
+          createdAt: new Date().toISOString(),
+          kind: "transfer_response",
+          transferId: r._id,
+          belongingId: r.belongingId,
+          outcome: "declined",
+          title: r.title,
+        });
         await load();
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : t("errors.failed"));
@@ -298,10 +390,21 @@ export default function TransfersInboxScreen() {
   );
 
   const onAcceptGrant = useCallback(
-    async (id: string) => {
+    async (g: Grant) => {
       try {
-        setBusyId(id);
-        await acceptGrant(id);
+        setBusyId(g._id);
+        await acceptGrant(g._id);
+        await appendInboxActivity({
+          v: 1,
+          id: `grant-${g._id}-accepted`,
+          createdAt: new Date().toISOString(),
+          kind: "grant_response",
+          grantId: g._id,
+          belongingId: g.belongingId,
+          outcome: "accepted",
+          fromName: g.fromUser?.name,
+          fromEmail: g.fromUser?.email,
+        });
         await load();
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : t("errors.failed"));
@@ -313,10 +416,21 @@ export default function TransfersInboxScreen() {
   );
 
   const onDeclineGrant = useCallback(
-    async (id: string) => {
+    async (g: Grant) => {
       try {
-        setBusyId(id);
-        await declineGrant(id);
+        setBusyId(g._id);
+        await declineGrant(g._id);
+        await appendInboxActivity({
+          v: 1,
+          id: `grant-${g._id}-declined`,
+          createdAt: new Date().toISOString(),
+          kind: "grant_response",
+          grantId: g._id,
+          belongingId: g.belongingId,
+          outcome: "declined",
+          fromName: g.fromUser?.name,
+          fromEmail: g.fromUser?.email,
+        });
         await load();
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : t("errors.failed"));
@@ -354,10 +468,7 @@ export default function TransfersInboxScreen() {
             {t("vault.loading")}
           </Text>
         </View>
-      ) : pending.length === 0 &&
-        outgoingUpdates.length === 0 &&
-        incomingUpdates.length === 0 &&
-        pendingGrants.length === 0 ? (
+      ) : pendingGrants.length === 0 && mergedRows.length === 0 ? (
         <View style={styles.center}>
           <Ionicons
             name="notifications-outline"
@@ -404,13 +515,13 @@ export default function TransfersInboxScreen() {
                     <View style={{ gap: 10, marginTop: 10 }}>
                       <Button
                         title={t("grants.accept")}
-                        onPress={() => void onAcceptGrant(g._id)}
+                        onPress={() => void onAcceptGrant(g)}
                         disabled={busyId === g._id}
                       />
                       <Button
                         title={t("grants.decline")}
                         variant="outline"
-                        onPress={() => void onDeclineGrant(g._id)}
+                        onPress={() => void onDeclineGrant(g)}
                         disabled={busyId === g._id}
                       />
                     </View>
@@ -420,7 +531,239 @@ export default function TransfersInboxScreen() {
             </View>
           ) : null}
 
-          {feed.map((it) => {
+          {mergedRows.map((row) => {
+            if (row.kind === "grantApi") {
+              const g = row.g;
+              const outcome = grantInboxOutcome(g);
+              const from = g.fromUser?.name || g.fromUser?.email || t("transfers.someone");
+              const createdAt = bestDateForGrant(g);
+              const canOpen = outcome === "accepted" && Boolean(g.belongingId);
+              const Container = canOpen ? Pressable : View;
+              const containerProps = canOpen
+                ? {
+                    onPress: () =>
+                      router.push(
+                        (`/belonging/${encodeURIComponent(g.belongingId)}` as unknown) as any,
+                      ),
+                    style: ({ pressed }: { pressed: boolean }) => [
+                      styles.card,
+                      styles.cardIncomingAccepted,
+                      pressed && { opacity: 0.92 },
+                    ],
+                  }
+                : { style: [styles.card, styles.cardIncomingAccepted] };
+              const acceptGreen = "#39D98A";
+              return (
+                <Container key={`ga:${g._id}`} {...(containerProps as any)}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name={outcome === "accepted" ? "checkmark-circle" : "close-circle"}
+                        size={18}
+                        color={
+                          outcome === "accepted"
+                            ? acceptGreen
+                            : "rgba(255,120,120,0.95)"
+                        }
+                      />
+                      <Text style={styles.cardTitle}>
+                        {outcome === "accepted"
+                          ? t("grants.acceptedTitle")
+                          : t("grants.inboxGrantDeclinedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(createdAt, t)}
+                    </Text>
+                  </View>
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      <Ionicons
+                        name="person-add"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {outcome === "accepted"
+                          ? t("transfers.badgeYouAccepted")
+                          : t("transfers.badgeYouDeclined")}
+                      </Text>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {t("grants.title")}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {outcome === "accepted"
+                          ? t("grants.acceptedBody")
+                          : t("grants.inboxGrantDeclinedBody").replace("{{from}}", from)}
+                      </Text>
+                    </View>
+                  </View>
+                  {canOpen ? (
+                    <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
+                  ) : null}
+                </Container>
+              );
+            }
+            if (row.kind === "grantLocal") {
+              const e = row.e;
+              const outcome = e.outcome;
+              const from =
+                e.fromName || e.fromEmail || t("transfers.someone");
+              const createdAt = parseIsoDate(e.createdAt);
+              const canOpen = outcome === "accepted" && Boolean(e.belongingId);
+              const Container = canOpen ? Pressable : View;
+              const containerProps = canOpen
+                ? {
+                    onPress: () =>
+                      router.push(
+                        (`/belonging/${encodeURIComponent(e.belongingId!)}` as unknown) as any,
+                      ),
+                    style: ({ pressed }: { pressed: boolean }) => [
+                      styles.card,
+                      styles.cardIncomingAccepted,
+                      pressed && { opacity: 0.92 },
+                    ],
+                  }
+                : { style: [styles.card, styles.cardIncomingAccepted] };
+              const acceptGreen = "#39D98A";
+              return (
+                <Container key={`gl:${e.id}`} {...(containerProps as any)}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name={outcome === "accepted" ? "checkmark-circle" : "close-circle"}
+                        size={18}
+                        color={
+                          outcome === "accepted"
+                            ? acceptGreen
+                            : "rgba(255,120,120,0.95)"
+                        }
+                      />
+                      <Text style={styles.cardTitle}>
+                        {outcome === "accepted"
+                          ? t("grants.acceptedTitle")
+                          : t("grants.inboxGrantDeclinedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(createdAt, t)}
+                    </Text>
+                  </View>
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      <Ionicons
+                        name="person-add"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {outcome === "accepted"
+                          ? t("transfers.badgeYouAccepted")
+                          : t("transfers.badgeYouDeclined")}
+                      </Text>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {t("grants.title")}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {outcome === "accepted"
+                          ? t("grants.acceptedBody")
+                          : t("grants.inboxGrantDeclinedBody").replace("{{from}}", from)}
+                      </Text>
+                    </View>
+                  </View>
+                  {canOpen ? (
+                    <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
+                  ) : null}
+                </Container>
+              );
+            }
+            if (row.kind === "transferLocal") {
+              const e = row.e;
+              const status = e.outcome;
+              const titleLine = e.title || t("transfers.requestTitleFallback");
+              const createdAt = parseIsoDate(e.createdAt);
+              const badge =
+                status === "accepted"
+                  ? t("transfers.badgeYouAccepted")
+                  : t("transfers.badgeYouDeclined");
+              const acceptGreen = "#39D98A";
+              const body =
+                status === "accepted"
+                  ? t("transfers.incomingAcceptedBody")
+                  : t("transfers.incomingDeclinedBody");
+              const canOpen = status === "accepted" && Boolean(e.belongingId);
+              const Container = canOpen ? Pressable : View;
+              const containerProps = canOpen
+                ? {
+                    onPress: () =>
+                      router.push(
+                        (`/belonging/${encodeURIComponent(e.belongingId!)}` as unknown) as any,
+                      ),
+                    style: ({ pressed }: { pressed: boolean }) => [
+                      styles.card,
+                      styles.cardIncomingAccepted,
+                      pressed && { opacity: 0.92 },
+                    ],
+                  }
+                : { style: [styles.card, styles.cardIncomingAccepted] };
+
+              return (
+                <Container key={`tl:${e.id}`} {...(containerProps as any)}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardTitleRow}>
+                      <Ionicons
+                        name={status === "accepted" ? "checkmark-circle" : "close-circle"}
+                        size={18}
+                        color={
+                          status === "accepted"
+                            ? acceptGreen
+                            : "rgba(255,120,120,0.95)"
+                        }
+                      />
+                      <Text style={styles.cardTitle}>
+                        {status === "accepted"
+                          ? t("transfers.incomingAcceptedTitle")
+                          : t("transfers.incomingDeclinedTitle")}
+                      </Text>
+                    </View>
+                    <Text muted mono style={styles.cardTime}>
+                      {formatTimestamp(createdAt, t)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.previewRow}>
+                    <View style={styles.thumb}>
+                      <Ionicons
+                        name="swap-horizontal"
+                        size={18}
+                        color="rgba(255,255,255,0.25)"
+                      />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text muted mono style={styles.badgeText}>
+                        {badge}
+                      </Text>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {titleLine}
+                      </Text>
+                      <Text dim style={styles.cardBody}>
+                        {body}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {canOpen ? (
+                    <Text style={styles.linkText}>{t("transfers.viewBelonging")}</Text>
+                  ) : null}
+                </Container>
+              );
+            }
+
+            const it = row.item;
             if (it.kind === "incomingUpdate") {
               const r = it.req;
               const status = it.status;
@@ -635,13 +978,13 @@ export default function TransfersInboxScreen() {
                 <View style={{ gap: 10, marginTop: 10 }}>
                   <Button
                     title={t("transfers.accept")}
-                    onPress={() => void onAccept(r._id)}
+                    onPress={() => void onAccept(r)}
                     disabled={busyId === r._id}
                   />
                   <Button
                     title={t("transfers.decline")}
                     variant="outline"
-                    onPress={() => void onDecline(r._id)}
+                    onPress={() => void onDecline(r)}
                     disabled={busyId === r._id}
                   />
                 </View>
