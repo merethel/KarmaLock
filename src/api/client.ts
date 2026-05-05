@@ -1,3 +1,5 @@
+//this file is used to make api calls to the backend
+
 import Constants from "expo-constants";
 
 import { emitUnauthorized } from "../auth/authEvents";

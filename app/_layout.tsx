@@ -129,7 +129,6 @@ function RootLayoutNav() {
               contentStyle: { backgroundColor: "#000000" },
             }}
           />
-          <Stack.Screen name="about-karmalock" />
         </Stack>
         {!navReady ? (
           <View

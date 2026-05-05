@@ -112,7 +112,6 @@ export default function SettingsScreen() {
             title={t("settings.aboutApp")}
             subtitle={t("settings.aboutAppSubtitle")}
             chevron
-            onPress={() => router.push("/about-karmalock")}
             showDivider
           />
           <SettingsRow
