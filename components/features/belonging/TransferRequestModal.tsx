@@ -1,7 +1,7 @@
-import { ActionSheetModal } from "@/components/belonging/ActionSheetModal";
-import { RecipientEmailPicker } from "@/components/belonging/RecipientEmailPicker";
 import { Button } from "@/components/common_components/Button";
 import { Text } from "@/components/common_components/Text";
+import { ActionSheetModal } from "@/components/features/belonging/ActionSheetModal";
+import { RecipientEmailPicker } from "@/components/features/belonging/RecipientEmailPicker";
 import type { Belonging } from "@/src/api/belongings";
 import { requestTransfer } from "@/src/api/transfers";
 import { useI18n } from "@/src/i18n/context";
@@ -9,13 +9,7 @@ import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, ScrollView, StyleSheet, TextInput, View } from "react-native";
 
 export function TransferRequestModal({
   visible,
@@ -46,7 +40,8 @@ export function TransferRequestModal({
     setTransferBusy(false);
   }, [visible, presetToEmail]);
 
-  const canSend = Boolean(item?._id) && Boolean(transferEmail.trim()) && !transferBusy;
+  const canSend =
+    Boolean(item?._id) && Boolean(transferEmail.trim()) && !transferBusy;
 
   return (
     <ActionSheetModal
@@ -67,7 +62,8 @@ export function TransferRequestModal({
                 if (!item?._id) return;
                 try {
                   setTransferBusy(true);
-                  const normalizeChipUid = (v: string) => v.trim().toLowerCase();
+                  const normalizeChipUid = (v: string) =>
+                    v.trim().toLowerCase();
                   const expected = normalizeChipUid(item.chipUid || "");
 
                   const scanned = await scanChipUid({
@@ -184,4 +180,3 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
-

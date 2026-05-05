@@ -1,5 +1,5 @@
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import React from "react";
 import {
     Text as RNText,

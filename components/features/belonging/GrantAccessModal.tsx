@@ -1,7 +1,7 @@
-import { ActionSheetModal } from "@/components/belonging/ActionSheetModal";
-import { RecipientEmailPicker } from "@/components/belonging/RecipientEmailPicker";
 import { Button } from "@/components/common_components/Button";
 import { Text } from "@/components/common_components/Text";
+import { ActionSheetModal } from "@/components/features/belonging/ActionSheetModal";
+import { RecipientEmailPicker } from "@/components/features/belonging/RecipientEmailPicker";
 import type { Belonging } from "@/src/api/belongings";
 import { createGrant } from "@/src/api/grants";
 import { useI18n } from "@/src/i18n/context";
@@ -52,7 +52,8 @@ export function GrantAccessModal({
                 if (!item?._id) return;
                 try {
                   setBusy(true);
-                  const normalizeChipUid = (v: string) => v.trim().toLowerCase();
+                  const normalizeChipUid = (v: string) =>
+                    v.trim().toLowerCase();
                   const expected = normalizeChipUid(item.chipUid || "");
 
                   const scanned = await scanChipUid({
@@ -128,4 +129,3 @@ const styles = StyleSheet.create({
   hint: { fontSize: 14, lineHeight: 20, marginBottom: 14 },
   actionsRow: { flexDirection: "row", gap: 10 },
 });
-

@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/components/useColorScheme";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 import { onUnauthorized } from "../src/auth/authEvents";
 import { shouldUseBiometricGate } from "../src/auth/biometrics";
@@ -106,29 +106,9 @@ function RootLayoutNav() {
           }}
         >
           <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(pages)" />
           <Stack.Screen name="unlock" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="belonging/[id]"
-            options={{
-              // Use a normal "card" push on iOS so the native interactive
-              // back-swipe gesture feels smooth and familiar.
-              presentation: "card",
-              animation: Platform.OS === "ios" ? "ios_from_right" : "default",
-              gestureEnabled: true,
-              contentStyle: { backgroundColor: "#000000" },
-            }}
-          />
-          <Stack.Screen
-            name="belonging/[id]/edit"
-            options={{
-              // Use a normal card push so iOS edge-swipe back feels native.
-              presentation: "card",
-              animation: Platform.OS === "ios" ? "ios_from_right" : "default",
-              gestureEnabled: true,
-              contentStyle: { backgroundColor: "#000000" },
-            }}
-          />
         </Stack>
         {!navReady ? (
           <View

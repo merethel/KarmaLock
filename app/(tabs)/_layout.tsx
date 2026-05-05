@@ -1,4 +1,4 @@
-import { CustomTabBar } from "@/components/navigation/CustomTabBar";
+import { CustomTabBar } from "@/components/features/navigation/CustomTabBar";
 import { useI18n } from "@/src/i18n/context";
 import { Tabs } from "expo-router";
 import { Easing } from "react-native";

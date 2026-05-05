@@ -1,9 +1,9 @@
-import { LanguageFlagSwitcher } from "@/components/LanguagePicker";
 import { Button } from "@/components/common_components/Button";
-import { Screen } from "@/components/common_components/Screen";
-import { Text } from "@/components/common_components/Text";
 import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
 import { DangerRow } from "@/components/common_components/DangerRow";
+import { LanguageFlagSwitcher } from "@/components/common_components/LanguagePicker";
+import { Screen } from "@/components/common_components/Screen";
+import { Text } from "@/components/common_components/Text";
 import {
   SectionTitle,
   SettingsAccentSwitch,
@@ -12,7 +12,7 @@ import {
   SettingsRow,
   SettingsScreenHeader,
   settingsRowStyles,
-} from "@/components/settings";
+} from "@/components/features/settings";
 import { useSettingsScreen } from "@/src/settings/useSettingsScreen";
 import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";

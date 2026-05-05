@@ -2,7 +2,7 @@ import { Button } from "@/components/common_components/Button";
 import { RegisterPrimaryCta } from "@/components/common_components/RegisterPrimaryCta";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
-import { formatVaultSyncLabel } from "@/components/vault/formatSyncLabel";
+import { formatVaultSyncLabel } from "@/components/features/vault/formatSyncLabel";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -25,16 +25,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { TransfersClockButton } from "@/components/features/transfers/TransfersClockButton";
 import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings } from "@/src/api/belongings";
-import { useI18n } from "@/src/i18n/context";
-import {
-  cacheBelonging,
-  getBelongingTransferStatus,
-  seedBelongingCache,
-} from "@/src/state/belongingCache";
 import { listIncomingGrants, listOutgoingGrants } from "@/src/api/grants";
+import {
+  listIncomingTransfers,
+  listOutgoingTransfers,
+} from "@/src/api/transfers";
+import { useI18n } from "@/src/i18n/context";
 import { loadInboxActivity } from "@/src/notifications/inboxActivityLog";
 import {
   countUnseenOwnerGrantOutcomes,
@@ -45,9 +45,12 @@ import {
   loadRecipientGrantRevokedSeenIds,
 } from "@/src/notifications/recipientGrantRevokedBellSeen";
 import { loadSelfRevokedGrantIds } from "@/src/notifications/selfRevokedGrantIds";
-import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
-import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
-import { setBelongingTransferStatus } from "@/src/state/belongingCache";
+import {
+  cacheBelonging,
+  getBelongingTransferStatus,
+  seedBelongingCache,
+  setBelongingTransferStatus,
+} from "@/src/state/belongingCache";
 
 const CARD_BG = "rgba(255,255,255,0.06)";
 const CARD_BORDER = "rgba(255,255,255,0.10)";
@@ -115,17 +118,25 @@ export default function VaultDashboard() {
       setLoading(true);
       void load();
       void (async () => {
-        const [incR, outR, grantInR, grantOutR, activityR, seenR, seenRevokedR, selfRvR] =
-          await Promise.allSettled([
-            listIncomingTransfers(),
-            listOutgoingTransfers(),
-            listIncomingGrants(),
-            listOutgoingGrants(),
-            loadInboxActivity(),
-            loadSeenOwnerGrantIds(),
-            loadRecipientGrantRevokedSeenIds(),
-            loadSelfRevokedGrantIds(),
-          ]);
+        const [
+          incR,
+          outR,
+          grantInR,
+          grantOutR,
+          activityR,
+          seenR,
+          seenRevokedR,
+          selfRvR,
+        ] = await Promise.allSettled([
+          listIncomingTransfers(),
+          listOutgoingTransfers(),
+          listIncomingGrants(),
+          listOutgoingGrants(),
+          loadInboxActivity(),
+          loadSeenOwnerGrantIds(),
+          loadRecipientGrantRevokedSeenIds(),
+          loadSelfRevokedGrantIds(),
+        ]);
 
         let incomingPending = 0;
         if (incR.status === "fulfilled") {
@@ -148,7 +159,9 @@ export default function VaultDashboard() {
         }
 
         const incomingGrantList =
-          grantInR.status === "fulfilled" ? (grantInR.value.data.grants ?? []) : [];
+          grantInR.status === "fulfilled"
+            ? (grantInR.value.data.grants ?? [])
+            : [];
 
         let pendingGrants = 0;
         pendingGrants = incomingGrantList.filter(
@@ -156,7 +169,9 @@ export default function VaultDashboard() {
         ).length;
 
         const outgoingGrantList =
-          grantOutR.status === "fulfilled" ? (grantOutR.value.data.grants ?? []) : [];
+          grantOutR.status === "fulfilled"
+            ? (grantOutR.value.data.grants ?? [])
+            : [];
 
         const seenOwnerGrants =
           seenR.status === "fulfilled" ? seenR.value : new Set<string>();
@@ -169,7 +184,9 @@ export default function VaultDashboard() {
         );
 
         const seenRecipientRevoked =
-          seenRevokedR.status === "fulfilled" ? seenRevokedR.value : new Set<string>();
+          seenRevokedR.status === "fulfilled"
+            ? seenRevokedR.value
+            : new Set<string>();
         const selfRevokedIds =
           selfRvR.status === "fulfilled" ? selfRvR.value : new Set<string>();
         const recipientRevokedBell = countUnseenRecipientGrantRevoked(
@@ -374,7 +391,6 @@ export default function VaultDashboard() {
         renderItem={({ item }) => <VaultListRow item={item} t={t} />}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
       />
-
     </Screen>
   );
 }
@@ -494,7 +510,8 @@ function VaultListRow({
   t: (k: import("@/src/i18n/types").TranslationKey) => string;
 }) {
   const router = useRouter();
-  const isTransferring = getBelongingTransferStatus(item._id) === "transferring";
+  const isTransferring =
+    getBelongingTransferStatus(item._id) === "transferring";
 
   const thumbUri =
     item.photoUrl && item.photoUrl.trim()

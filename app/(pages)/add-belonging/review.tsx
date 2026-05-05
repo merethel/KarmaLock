@@ -1,27 +1,27 @@
 import { ConfirmModal } from "@/components/common_components/ConfirmModal";
 import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
 import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard";
-import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { useI18n } from "@/src/i18n/context";
+import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform, ScrollView, View } from "react-native";
 import type { ScrollView as RNScrollView } from "react-native";
+import { Alert, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { uploadImage } from "@/src/api/uploads";
 import { createBelonging } from "@/src/api/belongings";
 import { ApiError } from "@/src/api/client";
 import { scanChip } from "@/src/api/endpoints";
+import { uploadImage } from "@/src/api/uploads";
 import { getUser } from "@/src/auth/session";
 
-import { RegisterReviewStep } from "@/components/register/RegisterReviewStep";
-import { useRegisterDraft } from "@/components/register/RegisterDraftContext";
-import { RegisterWizardHeader } from "@/components/register/RegisterWizardHeader";
-import { registerStyles as s } from "@/components/register/registerStyles";
+import { useRegisterDraft } from "@/components/features/register/RegisterDraftContext";
+import { RegisterReviewStep } from "@/components/features/register/RegisterReviewStep";
+import { RegisterWizardHeader } from "@/components/features/register/RegisterWizardHeader";
+import { registerStyles as s } from "@/components/features/register/registerStyles";
 
 export default function AddBelongingReviewScreen() {
   const { t } = useI18n();
@@ -51,7 +51,8 @@ export default function AddBelongingReviewScreen() {
   const [error, setError] = useState("");
 
   const [chipExistsOpen, setChipExistsOpen] = useState(false);
-  const [chipExistsBelongingId, setChipExistsBelongingId] = useState<string>("");
+  const [chipExistsBelongingId, setChipExistsBelongingId] =
+    useState<string>("");
   const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
@@ -248,7 +249,9 @@ export default function AddBelongingReviewScreen() {
         visible={busy}
         title={busyMessage || t("addBelonging.processing")}
         subtitle={
-          busyMessage ? t("registerFlow.analyzingSubtitle") : t("addBelonging.analyzing")
+          busyMessage
+            ? t("registerFlow.analyzingSubtitle")
+            : t("addBelonging.analyzing")
         }
       />
 
@@ -269,7 +272,9 @@ export default function AddBelongingReviewScreen() {
             { paddingBottom: 120 + Math.max(0, kb - insets.bottom) },
           ]}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={(e) => {
@@ -297,4 +302,3 @@ export default function AddBelongingReviewScreen() {
     </View>
   );
 }
-

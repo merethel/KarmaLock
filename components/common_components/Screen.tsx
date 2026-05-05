@@ -1,23 +1,23 @@
 import { useIsFocused } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  View,
-  ViewProps,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableWithoutFeedback,
+    View,
+    ViewProps,
 } from "react-native";
 import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
+    Easing,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 type Props = ViewProps & {
   animate?: boolean;
@@ -97,18 +97,16 @@ export function Screen({
             <View style={{ flex: 1 }}>{children}</View>
           )}
         </TouchableWithoutFeedback>
-      ) : (
-        keyboardAvoiding ? (
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={0}
-          >
-            <View style={{ flex: 1 }}>{children}</View>
-          </KeyboardAvoidingView>
-        ) : (
+      ) : keyboardAvoiding ? (
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
+        >
           <View style={{ flex: 1 }}>{children}</View>
-        )
+        </KeyboardAvoidingView>
+      ) : (
+        <View style={{ flex: 1 }}>{children}</View>
       )}
     </Animated.View>
   );

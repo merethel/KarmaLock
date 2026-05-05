@@ -1,15 +1,15 @@
-import { BelongingAttributesCard } from "@/components/belonging/BelongingAttributesCard";
-import { BelongingHeroCard } from "@/components/belonging/BelongingHeroCard";
-import { BelongingHeroHeader } from "@/components/belonging/BelongingHeroHeader";
-import { BelongingLogActions } from "@/components/belonging/BelongingLogActions";
-import { BelongingPrimaryActions } from "@/components/belonging/BelongingPrimaryActions";
-import { GrantAccessModal } from "@/components/belonging/GrantAccessModal";
-import { TransferRequestModal } from "@/components/belonging/TransferRequestModal";
-import { ActionSheetModal } from "@/components/belonging/ActionSheetModal";
 import { Button } from "@/components/common_components/Button";
 import { DangerConfirmModal } from "@/components/common_components/DangerConfirmModal";
 import { DangerRow } from "@/components/common_components/DangerRow";
 import { Text } from "@/components/common_components/Text";
+import { ActionSheetModal } from "@/components/features/belonging/ActionSheetModal";
+import { BelongingAttributesCard } from "@/components/features/belonging/BelongingAttributesCard";
+import { BelongingHeroCard } from "@/components/features/belonging/BelongingHeroCard";
+import { BelongingHeroHeader } from "@/components/features/belonging/BelongingHeroHeader";
+import { BelongingLogActions } from "@/components/features/belonging/BelongingLogActions";
+import { BelongingPrimaryActions } from "@/components/features/belonging/BelongingPrimaryActions";
+import { GrantAccessModal } from "@/components/features/belonging/GrantAccessModal";
+import { TransferRequestModal } from "@/components/features/belonging/TransferRequestModal";
 import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import {
@@ -20,15 +20,15 @@ import {
   updateBelonging,
 } from "@/src/api/belongings";
 import { revokeGrant } from "@/src/api/grants";
-import { recordSelfRevokedGrantId } from "@/src/notifications/selfRevokedGrantIds";
 import { cancelTransfer, listOutgoingTransfers } from "@/src/api/transfers";
+import { getUser, type SessionUser } from "@/src/auth/session";
 import { useI18n } from "@/src/i18n/context";
+import { recordSelfRevokedGrantId } from "@/src/notifications/selfRevokedGrantIds";
 import {
   getCachedBelonging,
   setBelongingGrantStatus,
   setBelongingTransferStatus,
 } from "@/src/state/belongingCache";
-import { getUser, type SessionUser } from "@/src/auth/session";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, {
@@ -76,7 +76,7 @@ function initialsFrom(label: string): string {
     .filter(Boolean);
   if (parts.length === 0) return base.slice(0, 2).toUpperCase();
   const a = parts[0]?.[0] ?? "";
-  const b = parts.length > 1 ? parts[1]?.[0] ?? "" : parts[0]?.[1] ?? "";
+  const b = parts.length > 1 ? (parts[1]?.[0] ?? "") : (parts[0]?.[1] ?? "");
   return (a + b).toUpperCase();
 }
 
@@ -210,7 +210,8 @@ export default function BelongingDetailsScreen() {
           const pending =
             reqs.find(
               (r) =>
-                r.belongingId === idStr && (r.status ?? "pending") === "pending",
+                r.belongingId === idStr &&
+                (r.status ?? "pending") === "pending",
             ) ?? null;
           setPendingOutgoingId(pending?._id ?? "");
           setBelongingTransferStatus(idStr, pending ? "transferring" : null);
@@ -224,14 +225,14 @@ export default function BelongingDetailsScreen() {
           const shareRes = await getBelongingSharing(idStr);
           setSharing(shareRes.data);
           const pending =
-            (shareRes.data.sharedWith ?? []).find((x) => x.status === "pending") ??
-            null;
+            (shareRes.data.sharedWith ?? []).find(
+              (x) => x.status === "pending",
+            ) ?? null;
           setBelongingGrantStatus(idStr, pending ? "granting" : null);
         } catch {
           // ignore
         }
       })();
-
     }, [idStr, isGranted, load]),
   );
 
@@ -243,8 +244,12 @@ export default function BelongingDetailsScreen() {
 
   const sharingSummary = useMemo(() => {
     const shared = sharing?.sharedWith ?? [];
-    const activeOutgoing = shared.filter((x) => (x.status ?? "pending") === "active");
-    const pendingOutgoing = shared.filter((x) => (x.status ?? "pending") === "pending");
+    const activeOutgoing = shared.filter(
+      (x) => (x.status ?? "pending") === "active",
+    );
+    const pendingOutgoing = shared.filter(
+      (x) => (x.status ?? "pending") === "pending",
+    );
 
     const ownerLabel = isGranted
       ? displayName(item?.ownerUser ?? null)
@@ -264,8 +269,11 @@ export default function BelongingDetailsScreen() {
       })),
     ];
 
-    const unique: { key: string; label: string; kind: "owner" | "active" | "pending" }[] =
-      [];
+    const unique: {
+      key: string;
+      label: string;
+      kind: "owner" | "active" | "pending";
+    }[] = [];
     const seen = new Set<string>();
     for (const a of avatars) {
       const k = a.label.toLowerCase();
@@ -299,30 +307,34 @@ export default function BelongingDetailsScreen() {
   };
   const onCancelTransfer = useCallback(() => {
     if (!pendingOutgoingId || !idStr) return;
-    Alert.alert(t("transfers.cancelRequestTitle"), t("transfers.cancelRequestBody"), [
-      { text: t("transfers.cancel"), style: "cancel" },
-      {
-        text: t("transfers.cancelRequestConfirm"),
-        style: "destructive",
-        onPress: () => {
-          void (async () => {
-            try {
-              setCancelBusy(true);
-              await cancelTransfer(pendingOutgoingId);
-              setPendingOutgoingId("");
-              setBelongingTransferStatus(idStr, null);
-            } catch (e: unknown) {
-              Alert.alert(
-                t("errors.failed"),
-                e instanceof Error ? e.message : t("errors.failed"),
-              );
-            } finally {
-              setCancelBusy(false);
-            }
-          })();
+    Alert.alert(
+      t("transfers.cancelRequestTitle"),
+      t("transfers.cancelRequestBody"),
+      [
+        { text: t("transfers.cancel"), style: "cancel" },
+        {
+          text: t("transfers.cancelRequestConfirm"),
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              try {
+                setCancelBusy(true);
+                await cancelTransfer(pendingOutgoingId);
+                setPendingOutgoingId("");
+                setBelongingTransferStatus(idStr, null);
+              } catch (e: unknown) {
+                Alert.alert(
+                  t("errors.failed"),
+                  e instanceof Error ? e.message : t("errors.failed"),
+                );
+              } finally {
+                setCancelBusy(false);
+              }
+            })();
+          },
         },
-      },
-    ]);
+      ],
+    );
   }, [idStr, pendingOutgoingId, t]);
   const onGrant = () => setGrantOpen(true);
 
@@ -531,25 +543,23 @@ export default function BelongingDetailsScreen() {
                 t={t}
                 item={item}
                 valueLabel={valueLabel}
-                sharing={
-                  {
-                    avatars: sharingSummary.avatars.length
-                      ? sharingSummary.avatars.map((a) => ({
-                          key: a.key,
-                          initials: initialsFrom(a.label),
-                          dim: a.kind === "pending",
-                          ...hashToColor(a.label),
-                        }))
-                      : [
-                          {
-                            key: "owner",
-                            initials: initialsFrom(sharingSummary.ownerLabel),
-                            dim: false,
-                            ...hashToColor(sharingSummary.ownerLabel),
-                          },
-                        ],
-                  }
-                }
+                sharing={{
+                  avatars: sharingSummary.avatars.length
+                    ? sharingSummary.avatars.map((a) => ({
+                        key: a.key,
+                        initials: initialsFrom(a.label),
+                        dim: a.kind === "pending",
+                        ...hashToColor(a.label),
+                      }))
+                    : [
+                        {
+                          key: "owner",
+                          initials: initialsFrom(sharingSummary.ownerLabel),
+                          dim: false,
+                          ...hashToColor(sharingSummary.ownerLabel),
+                        },
+                      ],
+                }}
                 onPressSharing={() => setSharingOpen(true)}
               />
 
@@ -732,7 +742,9 @@ export default function BelongingDetailsScreen() {
         >
           <Text style={styles.simpleLine}>
             {t("sharing.ownerLabel")}{" "}
-            <Text style={styles.simpleLineStrong}>{sharingSummary.ownerLabel}</Text>
+            <Text style={styles.simpleLineStrong}>
+              {sharingSummary.ownerLabel}
+            </Text>
           </Text>
 
           {!isOwner
@@ -742,7 +754,10 @@ export default function BelongingDetailsScreen() {
                   const label = displayName(g.user ?? null);
                   return (
                     <Text
-                      key={grantIdFromSharingEntry(g) || displayName(g.user ?? null)}
+                      key={
+                        grantIdFromSharingEntry(g) ||
+                        displayName(g.user ?? null)
+                      }
                       style={styles.simpleLine}
                     >
                       {t("sharing.sharedWithLabel")}{" "}
@@ -844,8 +859,9 @@ export default function BelongingDetailsScreen() {
             const shareRes = await getBelongingSharing(idStr);
             setSharing(shareRes.data);
             const pending =
-              (shareRes.data.sharedWith ?? []).find((x) => x.status === "pending") ??
-              null;
+              (shareRes.data.sharedWith ?? []).find(
+                (x) => x.status === "pending",
+              ) ?? null;
             setBelongingGrantStatus(idStr, pending ? "granting" : null);
           } catch (e: unknown) {
             Alert.alert(
@@ -908,7 +924,11 @@ const styles = StyleSheet.create({
   },
   collabStatus: { fontSize: 13, lineHeight: 18 },
   collabTransfer: { paddingVertical: 6, paddingHorizontal: 2 },
-  collabTransferText: { fontSize: 13, fontWeight: "900", color: palette.accent },
+  collabTransferText: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: palette.accent,
+  },
   collabRemove: { paddingVertical: 6, paddingHorizontal: 2 },
   collabRemoveText: { fontSize: 14, fontWeight: "900", color: palette.danger },
 

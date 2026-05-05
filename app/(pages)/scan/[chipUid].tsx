@@ -1,8 +1,8 @@
-import { BelongingAttributesCard } from "@/components/belonging/BelongingAttributesCard";
-import { BelongingHeroCard } from "@/components/belonging/BelongingHeroCard";
-import { BelongingHeroHeader } from "@/components/belonging/BelongingHeroHeader";
 import { Button } from "@/components/common_components/Button";
 import { Text } from "@/components/common_components/Text";
+import { BelongingAttributesCard } from "@/components/features/belonging/BelongingAttributesCard";
+import { BelongingHeroCard } from "@/components/features/belonging/BelongingHeroCard";
+import { BelongingHeroHeader } from "@/components/features/belonging/BelongingHeroHeader";
 import { palette } from "@/constants/Colors";
 import type { Belonging } from "@/src/api/belongings";
 import { ApiError } from "@/src/api/client";
@@ -61,11 +61,7 @@ function ownerId(owner: unknown): string {
   if (typeof owner === "object") {
     const o = owner as Record<string, unknown>;
     const id =
-      typeof o._id === "string"
-        ? o._id
-        : typeof o.id === "string"
-          ? o.id
-          : "";
+      typeof o._id === "string" ? o._id : typeof o.id === "string" ? o.id : "";
     return id ? String(id) : "";
   }
   return "";
@@ -97,7 +93,9 @@ export default function ScanChipDetailsScreen() {
         setError("");
 
         const res = await scanChip(chipUid);
-        const scanned = (res.data as any)?.item as (Belonging & { owner?: unknown }) | undefined;
+        const scanned = (res.data as any)?.item as
+          | (Belonging & { owner?: unknown })
+          | undefined;
         if (!scanned?._id) throw new Error(t("errors.failed"));
 
         const owner = scanned.owner ?? null;
@@ -107,7 +105,10 @@ export default function ScanChipDetailsScreen() {
 
         // If it’s ours, show the normal details screen (with buttons).
         if (myId && scannedOwnerId && scannedOwnerId === myId) {
-          router.replace({ pathname: "/belonging/[id]", params: { id: scanned._id } });
+          router.replace({
+            pathname: "/belonging/[id]",
+            params: { id: scanned._id },
+          });
           return;
         }
 
@@ -147,7 +148,10 @@ export default function ScanChipDetailsScreen() {
     [scrollY],
   );
 
-  const ownerDisplay = useMemo(() => ownerName(rawOwner) || t("scan.scannedOwnerUnknown"), [rawOwner, t]);
+  const ownerDisplay = useMemo(
+    () => ownerName(rawOwner) || t("scan.scannedOwnerUnknown"),
+    [rawOwner, t],
+  );
   const belongsText = useMemo(
     () => t("scan.belongsTo").replace("{{name}}", ownerDisplay),
     [ownerDisplay, t],
@@ -155,7 +159,11 @@ export default function ScanChipDetailsScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
 
       {loading ? (
         <View style={styles.center}>
@@ -168,7 +176,10 @@ export default function ScanChipDetailsScreen() {
         <View style={styles.center}>
           <Text style={styles.error}>{error}</Text>
           <View style={{ marginTop: 14, width: 220, gap: 10 }}>
-            <Button title={t("registerFlow.back")} onPress={() => router.back()} />
+            <Button
+              title={t("registerFlow.back")}
+              onPress={() => router.back()}
+            />
           </View>
         </View>
       ) : !item ? (
@@ -227,7 +238,12 @@ export default function ScanChipDetailsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#000000" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
   error: { color: "tomato", fontSize: 14, textAlign: "center" },
   body: {
     paddingHorizontal: 20,
@@ -249,4 +265,3 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
-

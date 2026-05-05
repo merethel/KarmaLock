@@ -5,8 +5,8 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/common_components/Text";
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 function getIcon(routeName: string) {
   if (routeName === "index") return "scan-outline";

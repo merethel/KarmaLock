@@ -1,4 +1,4 @@
-import { RegisterDraftProvider } from "@/components/register/RegisterDraftContext";
+import { RegisterDraftProvider } from "@/components/features/register/RegisterDraftContext";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 
@@ -15,4 +15,3 @@ export default function AddBelongingLayout() {
     </RegisterDraftProvider>
   );
 }
-

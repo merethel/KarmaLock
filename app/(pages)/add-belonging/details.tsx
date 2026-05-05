@@ -1,19 +1,19 @@
 import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
 import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard";
 import { useI18n } from "@/src/i18n/context";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform, ScrollView, View } from "react-native";
 import type { ScrollView as RNScrollView } from "react-native";
+import { Alert, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BelongingDetailsForm } from "@/components/belonging/BelongingDetailsForm";
-import { useRegisterDraft } from "@/components/register/RegisterDraftContext";
-import { RegisterWizardHeader } from "@/components/register/RegisterWizardHeader";
-import { registerStyles as s } from "@/components/register/registerStyles";
+import { BelongingDetailsForm } from "@/components/features/belonging/BelongingDetailsForm";
+import { useRegisterDraft } from "@/components/features/register/RegisterDraftContext";
+import { RegisterWizardHeader } from "@/components/features/register/RegisterWizardHeader";
+import { registerStyles as s } from "@/components/features/register/registerStyles";
 
 export default function AddBelongingDetailsScreen() {
   const { t } = useI18n();
@@ -119,7 +119,9 @@ export default function AddBelongingDetailsScreen() {
             { paddingBottom: 120 + Math.max(0, kb - insets.bottom) },
           ]}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={(e) => {
@@ -157,4 +159,3 @@ export default function AddBelongingDetailsScreen() {
     </View>
   );
 }
-

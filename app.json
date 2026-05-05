@@ -17,7 +17,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.KarmaLock",
       "entitlements": {
-        "com.apple.developer.nfc.readersession.formats": ["NDEF", "TAG"]
+        "com.apple.developer.nfc.readersession.formats": [
+          "NDEF",
+          "TAG"
+        ]
       },
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "KarmaLock uses the local network to reach your development API on this Wi‑Fi.",
@@ -61,7 +64,8 @@
         {
           "faceIDPermission": "KarmaLock uses Face ID to unlock the app after you sign in."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

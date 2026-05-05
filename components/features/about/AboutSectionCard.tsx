@@ -1,5 +1,5 @@
 import { Text } from "@/components/common_components/Text";
-import { settingsTheme } from "@/components/settings/theme";
+import { settingsTheme } from "@/components/features/settings/theme";
 import { type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 

@@ -1,11 +1,11 @@
 import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
 import {
-  describeBelongingFromPhotos,
-  pickPhotoFromLibrary,
-  takePhoto,
+    describeBelongingFromPhotos,
+    pickPhotoFromLibrary,
+    takePhoto,
 } from "@/src/api/ai";
 import { useI18n } from "@/src/i18n/context";
 import { useRouter } from "expo-router";
@@ -13,14 +13,14 @@ import { useMemo, useRef, useState } from "react";
 import { Alert, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useRegisterDraft } from "@/components/register/RegisterDraftContext";
-import { RegisterPhotosStep } from "@/components/register/RegisterPhotosStep";
-import { RegisterWizardHeader } from "@/components/register/RegisterWizardHeader";
-import { registerStyles as s } from "@/components/register/registerStyles";
+import { useRegisterDraft } from "@/components/features/register/RegisterDraftContext";
+import { RegisterPhotosStep } from "@/components/features/register/RegisterPhotosStep";
+import { RegisterWizardHeader } from "@/components/features/register/RegisterWizardHeader";
+import { registerStyles as s } from "@/components/features/register/registerStyles";
 import {
-  applySuggestionToFields,
-  PHOTO_COUNT,
-} from "@/components/register/registerTypes";
+    applySuggestionToFields,
+    PHOTO_COUNT,
+} from "@/components/features/register/registerTypes";
 
 export default function AddBelongingPhotosScreen() {
   const { t } = useI18n();

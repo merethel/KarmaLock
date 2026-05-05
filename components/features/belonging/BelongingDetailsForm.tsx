@@ -67,7 +67,9 @@ export function BelongingDetailsForm({
     <>
       {showHeader ? (
         <>
-          <Text style={s.accentEyebrow}>{t("registerFlow.stepEditEyebrow")}</Text>
+          <Text style={s.accentEyebrow}>
+            {t("registerFlow.stepEditEyebrow")}
+          </Text>
           <Text style={s.sectionTitle}>{t("registerFlow.stepEditTitle")}</Text>
           <Text dim style={s.sectionHint}>
             {t("registerFlow.stepEditHint")}
@@ -163,4 +165,3 @@ export function BelongingDetailsForm({
     </>
   );
 }
-

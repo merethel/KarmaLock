@@ -1,17 +1,17 @@
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
-import { AboutBulletList } from "@/components/about/AboutBulletList";
-import { AboutInfoHeader } from "@/components/about/AboutInfoHeader";
-import { AboutLearnMoreRow } from "@/components/about/AboutLearnMoreRow";
-import { AboutNumberedList } from "@/components/about/AboutNumberedList";
-import { AboutSectionCard } from "@/components/about/AboutSectionCard";
+import { AboutBulletList } from "@/components/features/about/AboutBulletList";
+import { AboutInfoHeader } from "@/components/features/about/AboutInfoHeader";
+import { AboutLearnMoreRow } from "@/components/features/about/AboutLearnMoreRow";
+import { AboutNumberedList } from "@/components/features/about/AboutNumberedList";
+import { AboutSectionCard } from "@/components/features/about/AboutSectionCard";
 import {
   KARMALOCK_INSTAGRAM_URL,
   KARMALOCK_WEB_URL,
-} from "@/components/about/urls";
-import { settingsTheme } from "@/components/settings/theme";
-import { openExternalUrl } from "@/src/settings/openExternalUrl";
+} from "@/components/features/about/urls";
+import { settingsTheme } from "@/components/features/settings/theme";
 import { useI18n } from "@/src/i18n/context";
+import { openExternalUrl } from "@/src/settings/openExternalUrl";
 import { useRouter } from "expo-router";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 

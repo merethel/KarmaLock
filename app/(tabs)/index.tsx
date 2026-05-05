@@ -1,15 +1,21 @@
-import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
 import { ConfirmModal } from "@/components/common_components/ConfirmModal";
+import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
+import { ScanButton } from "@/components/common_components/ScanButton";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
-import { ScanButton } from "@/components/ScanButton";
-import { TransfersClockButton } from "@/components/transfers/TransfersClockButton";
+import { TransfersClockButton } from "@/components/features/transfers/TransfersClockButton";
 import { palette } from "@/constants/Colors";
 import { listMyBelongings } from "@/src/api/belongings";
-import { scanChip } from "@/src/api/endpoints";
 import { ApiError } from "@/src/api/client";
-import { getUser } from "@/src/auth/session";
+import { scanChip } from "@/src/api/endpoints";
 import { listIncomingGrants, listOutgoingGrants } from "@/src/api/grants";
+import {
+  listIncomingTransfers,
+  listOutgoingTransfers,
+} from "@/src/api/transfers";
+import { getUser } from "@/src/auth/session";
+import { useI18n } from "@/src/i18n/context";
+import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { loadInboxActivity } from "@/src/notifications/inboxActivityLog";
 import {
   countUnseenOwnerGrantOutcomes,
@@ -20,9 +26,6 @@ import {
   loadRecipientGrantRevokedSeenIds,
 } from "@/src/notifications/recipientGrantRevokedBellSeen";
 import { loadSelfRevokedGrantIds } from "@/src/notifications/selfRevokedGrantIds";
-import { listIncomingTransfers, listOutgoingTransfers } from "@/src/api/transfers";
-import { useI18n } from "@/src/i18n/context";
-import { scanChipUid } from "@/src/nfc/scanChipUid";
 import { setBelongingTransferStatus } from "@/src/state/belongingCache";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -81,17 +84,25 @@ export default function HomeScreen() {
     useCallback(() => {
       void refreshStatus();
       void (async () => {
-        const [incR, outR, grantInR, grantOutR, activityR, seenR, seenRevokedR, selfRvR] =
-          await Promise.allSettled([
-            listIncomingTransfers(),
-            listOutgoingTransfers(),
-            listIncomingGrants(),
-            listOutgoingGrants(),
-            loadInboxActivity(),
-            loadSeenOwnerGrantIds(),
-            loadRecipientGrantRevokedSeenIds(),
-            loadSelfRevokedGrantIds(),
-          ]);
+        const [
+          incR,
+          outR,
+          grantInR,
+          grantOutR,
+          activityR,
+          seenR,
+          seenRevokedR,
+          selfRvR,
+        ] = await Promise.allSettled([
+          listIncomingTransfers(),
+          listOutgoingTransfers(),
+          listIncomingGrants(),
+          listOutgoingGrants(),
+          loadInboxActivity(),
+          loadSeenOwnerGrantIds(),
+          loadRecipientGrantRevokedSeenIds(),
+          loadSelfRevokedGrantIds(),
+        ]);
 
         let incomingPending = 0;
         if (incR.status === "fulfilled") {
@@ -114,7 +125,9 @@ export default function HomeScreen() {
         }
 
         const incomingGrantList =
-          grantInR.status === "fulfilled" ? (grantInR.value.data.grants ?? []) : [];
+          grantInR.status === "fulfilled"
+            ? (grantInR.value.data.grants ?? [])
+            : [];
 
         let pendingGrants = 0;
         pendingGrants = incomingGrantList.filter(
@@ -122,7 +135,9 @@ export default function HomeScreen() {
         ).length;
 
         const outgoingGrantList =
-          grantOutR.status === "fulfilled" ? (grantOutR.value.data.grants ?? []) : [];
+          grantOutR.status === "fulfilled"
+            ? (grantOutR.value.data.grants ?? [])
+            : [];
 
         const seenOwnerGrants =
           seenR.status === "fulfilled" ? seenR.value : new Set<string>();
@@ -135,7 +150,9 @@ export default function HomeScreen() {
         );
 
         const seenRecipientRevoked =
-          seenRevokedR.status === "fulfilled" ? seenRevokedR.value : new Set<string>();
+          seenRevokedR.status === "fulfilled"
+            ? seenRevokedR.value
+            : new Set<string>();
         const selfRevokedIds =
           selfRvR.status === "fulfilled" ? selfRvR.value : new Set<string>();
         const recipientRevokedBell = countUnseenRecipientGrantRevoked(
@@ -224,7 +241,10 @@ export default function HomeScreen() {
         onConfirm={() => {
           setUnregisteredOpen(false);
           if (!pendingChipUid) return;
-          router.push({ pathname: "/add-belonging", params: { chipUid: pendingChipUid } });
+          router.push({
+            pathname: "/add-belonging",
+            params: { chipUid: pendingChipUid },
+          });
         }}
         title={t("scan.chipNotRegisteredTitle")}
         body={t("scan.chipNotRegisteredBody")}
@@ -332,7 +352,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingHorizontal: 20 },
 
-  header: { gap: 6, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  header: {
+    gap: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   brand: { fontSize: 26, fontWeight: "900", letterSpacing: 0.5 },
   brandAccent: { color: palette.accent },
 

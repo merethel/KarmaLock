@@ -1,13 +1,19 @@
-import { BelongingDetailsForm } from "@/components/belonging/BelongingDetailsForm";
 import { BackButton } from "@/components/common_components/BackButton";
 import { Text } from "@/components/common_components/Text";
+import { BelongingDetailsForm } from "@/components/features/belonging/BelongingDetailsForm";
+import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
+import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard";
 import type { Belonging } from "@/src/api/belongings";
 import { listMyBelongings, updateBelonging } from "@/src/api/belongings";
 import { useI18n } from "@/src/i18n/context";
-import { useKeyboardBottomInset } from "@/hooks/useKeyboardBottomInset";
-import { useScrollFieldAboveKeyboard } from "@/hooks/useScrollFieldAboveKeyboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,

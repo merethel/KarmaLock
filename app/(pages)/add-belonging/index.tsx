@@ -1,15 +1,15 @@
 import { LoadingOverlay } from "@/components/common_components/LoadingOverlay";
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { useI18n } from "@/src/i18n/context";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, Platform, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { RegisterIntroStep } from "@/components/register/RegisterIntroStep";
-import { RegisterWizardHeader } from "@/components/register/RegisterWizardHeader";
-import { registerStyles as s } from "@/components/register/registerStyles";
+import { RegisterIntroStep } from "@/components/features/register/RegisterIntroStep";
+import { RegisterWizardHeader } from "@/components/features/register/RegisterWizardHeader";
+import { registerStyles as s } from "@/components/features/register/registerStyles";
 
 export default function AddBelongingIntroScreen() {
   const { t } = useI18n();
@@ -57,7 +57,9 @@ export default function AddBelongingIntroScreen() {
           style={s.scroll}
           contentContainerStyle={s.scrollContent}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
           showsVerticalScrollIndicator={false}
         >
           <RegisterIntroStep
@@ -79,4 +81,3 @@ export default function AddBelongingIntroScreen() {
     </View>
   );
 }
-

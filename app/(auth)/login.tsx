@@ -1,6 +1,6 @@
-import { LanguageFlagSwitcher } from "@/components/LanguagePicker";
 import { Button } from "@/components/common_components/Button";
 import { LabeledTextField } from "@/components/common_components/LabeledTextField";
+import { LanguageFlagSwitcher } from "@/components/common_components/LanguagePicker";
 import { Screen } from "@/components/common_components/Screen";
 import { Text } from "@/components/common_components/Text";
 import { useRouter } from "expo-router";
